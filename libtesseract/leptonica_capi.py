@@ -59,6 +59,12 @@ class Pixa(Structure):
                 ("boxa", POINTER(Boxa))]  # array of boxes
 
 
+LPPix = POINTER(Pix)
+LPBoxa = POINTER(Boxa)
+LPPixa = POINTER(Pixa)
+LPLPPixa = POINTER(LPPixa)
+
+
 class LeptonicaAPI:
 
     API = {

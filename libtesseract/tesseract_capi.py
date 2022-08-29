@@ -8,16 +8,25 @@ import os.path as osp
 import logging
 from enum import IntEnum
 from functools import wraps
+from typing import Callable
 from ctypes import (POINTER, CDLL, CFUNCTYPE, c_float, c_void_p, c_int,
                     c_ubyte, c_char_p, c_bool, c_size_t, c_double,
                     cast)
 from .common import TESS_DLL
-from .leptonica_capi import Pix, Boxa, Pixa
+from .datatype import c_int_p, c_bool_p
+from .leptonica_capi import Pix, LPPix, LPBoxa, LPLPPixa
 
 
 def bytes_list(data):
     for item in data:
         if item is None:
+            return
+        yield item
+
+
+def int_list(data):
+    for item in data:
+        if item == -1:
             return
         yield item
 
@@ -111,12 +120,6 @@ class TextlineOrder(IntEnum):
 
 
 LPETEXT_DESC = c_void_p
-
-
-LPPix = POINTER(Pix)
-LPBoxa = POINTER(Boxa)
-LPPixa = POINTER(Pixa)
-LPLPPixa = POINTER(LPPixa)
 
 
 TessCancelFunc = CFUNCTYPE(c_bool, c_void_p, c_int)
@@ -782,6 +785,9 @@ class TesseractAPI:
     # General free functions
 
     def capi_version(self) -> bytes:
+        '''
+        Returns the version identifier as a static string. Do not delete.
+        '''
         return self.TessVersion()
 
     def capi_delete_text(self, text: bytes):
@@ -795,62 +801,99 @@ class TesseractAPI:
 
     # Renderer API
     def capi_text_renderer_create(self, outputbase: bytes):
+        '''UTF8 Text Renderer interface implementation'''
         return self.TessTextRendererCreate(outputbase)
 
     def capi_hocr_renderer_create(self, outputbase: bytes):
+        '''HOcr Text Renderer interface implementation'''
         return self.TessHOcrRendererCreate(outputbase)
 
     def capi_hocr_renderer_create2(self, outputbase: bytes, font_info: bool):
+        '''HOcr Text Renderer interface implementation'''
         return self.TessHOcrRendererCreate2(outputbase, font_info)
 
     def capi_alto_renderer_create(self, outputbase: bytes):
+        '''ALTO XML Renderer interface implementation'''
         return self.TessAltoRendererCreate(outputbase)
 
     def capi_tsv_renderer_create(self, outputbase: bytes):
+        '''TSV Text Renderer interface implementation'''
         return self.TessTsvRendererCreate(outputbase)
 
     def capi_pdf_renderer_create(self, outputbase: bytes, datadir: bytes,
                                  textonly: bool):
+        '''PDF Renderer interface implementation'''
         return self.TessPDFRendererCreate(outputbase, datadir, textonly)
 
     def capi_unlv_renderer_create(self, outputbase: bytes):
+        '''UNLV Text Renderer interface implementation'''
         return self.TessUnlvRendererCreate(outputbase)
 
     def capi_box_text_renderer_create(self, outputbase: bytes):
+        '''BoxText Renderer interface implementation'''
         return self.TessBoxTextRendererCreate(outputbase)
 
     def capi_lstm_box_renderer_create(self, outputbase: bytes):
+        '''LSTMBox Renderer interface implementation'''
         return self.TessLSTMBoxRendererCreate(outputbase)
 
     def capi_word_str_box_renderer_create(self, outputbase: bytes):
+        '''WordStrBox Renderer interface implementation'''
         return self.TessWordStrBoxRendererCreate(outputbase)
 
-    def capi_delete_result_renderer(self, renderer):
+    def capi_delete_result_renderer(self,
+                                    renderer: c_void_p):
         self.TessDeleteResultRenderer(renderer)
 
-    def capi_result_renderer_insert(self, renderer, next):
-        self.TessResultRendererInsert(renderer, next)
+    def capi_result_renderer_insert(self,
+                                    renderer: c_void_p, next_):
+        self.TessResultRendererInsert(renderer, next_)
 
-    def capi_result_renderer_next(self, renderer):
+    def capi_result_renderer_next(
+            self, renderer: c_void_p) -> c_void_p:
         return self.TessResultRendererNext(renderer)
 
-    def capi_result_renderer_begin_document(self, renderer,
+    def capi_result_renderer_begin_document(self,
+                                            renderer: c_void_p,
                                             title: bytes) -> bool:
         return self.TessResultRendererBeginDocument(renderer, title)
 
-    def capi_result_renderer_add_image(self, renderer, api) -> bool:
+    def capi_result_renderer_add_image(self,
+                                       renderer: c_void_p,
+                                       api: c_void_p) -> bool:
         return self.TessResultRendererAddImage(renderer, api)
 
-    def capi_result_renderer_end_document(self, renderer) -> bool:
+    def capi_result_renderer_end_document(
+            self, renderer: c_void_p) -> bool:
         return self.TessResultRendererEndDocument(renderer)
 
-    def capi_result_renderer_extention(self, renderer) -> bytes:
+    def capi_result_renderer_extention(self,
+                                       renderer: c_void_p) -> bytes:
         return self.TessResultRendererExtention(renderer)
 
-    def capi_result_renderer_title(self, renderer) -> bytes:
+    def capi_result_renderer_title(self,
+                                   renderer: c_void_p) -> bytes:
         return self.TessResultRendererTitle(renderer)
 
-    def capi_result_renderer_image_num(self, renderer) -> int:
+    def capi_result_renderer_image_num(self,
+                                       renderer: c_void_p) -> int:
+        '''
+        This is always defined. It means either the number of the
+        current image, the last image ended, or in the completed document
+        depending on when in the document lifecycle you are looking at it.
+        Will return -1 if a document was never started.
+
+        Parameters
+        ----------
+        renderer : c_void_p
+            DESCRIPTION.
+
+        Returns
+        -------
+        int
+            Returns the index of the last image given to AddImage.
+            (i.e. images are incremented whether the image succeeded or not)
+        '''
         return self.TessResultRendererImageNum(renderer)
 
     # Base API
@@ -861,7 +904,7 @@ class TesseractAPI:
     def capi_base_api_delete(self, handle):
         self.TessBaseAPIDelete(handle)
 
-    def capi_base_api_get_open_cldevice(self, handle, device) -> int:
+    def capi_base_api_get_opencl_device(self, handle, device) -> int:
         return self.TessBaseAPIGetOpenCLDevice(handle, device)
 
     def capi_base_api_set_input_name(self, handle, name: bytes):
@@ -1015,16 +1058,21 @@ class TesseractAPI:
     def capi_base_api_get_regions(self, handle, pixa):
         return self.TessBaseAPIGetRegions(handle, pixa)
 
-    def capi_base_api_get_textlines(self, handle, pixa, blockids: int):
+    def capi_base_api_get_textlines(self, handle,
+                                    pixa: LPLPPixa,
+                                    blockids: POINTER(c_int_p)):
         return self.TessBaseAPIGetTextlines(handle, pixa, blockids)
 
     def capi_base_api_get_textlines1(self, handle,
                                      raw_image: bool, raw_padding: int,
-                                     pixa, blockids: int, paraids: int):
+                                     pixa: LPLPPixa,
+                                     blockids: POINTER(c_int_p),
+                                     paraids: POINTER(c_int_p)):
         return self.TessBaseAPIGetTextlines1(handle, raw_image, raw_padding,
                                              pixa, blockids, paraids)
 
-    def capi_base_api_get_strips(self, handle, pixa, blockids: int):
+    def capi_base_api_get_strips(self, handle, pixa,
+                                 blockids: POINTER(c_int_p)):
         return self.TessBaseAPIGetStrips(handle, pixa, blockids)
 
     def capi_base_api_get_words(self, handle, pixa):
@@ -1036,7 +1084,7 @@ class TesseractAPI:
     def capi_base_api_get_component_images(self, handle,
                                            level: PageIteratorLevel,
                                            text_only: bool,
-                                           pixa, blockids: int):
+                                           pixa, blockids: POINTER(c_int_p)):
         return self.TessBaseAPIGetComponentImages(handle, level, text_only,
                                                   pixa, blockids)
 
@@ -1044,19 +1092,19 @@ class TesseractAPI:
                                             level: PageIteratorLevel,
                                             text_only: bool, raw_image: bool,
                                             raw_padding: int,
-                                            pixa, blockids: int,
-                                            paraids: int):
+                                            pixa, blockids: POINTER(c_int_p),
+                                            paraids: POINTER(c_int_p)):
         return self.TessBaseAPIGetComponentImages1(handle, level, text_only,
                                                    raw_image, raw_padding,
                                                    pixa, blockids, paraids)
 
-    def capi_base_api_get_thresholded_image_scale_factor(self):
-        return self.TessBaseAPIGetThresholdedImageScaleFactor()
+    def capi_base_api_get_thresholded_image_scale_factor(self, handle):
+        return self.TessBaseAPIGetThresholdedImageScaleFactor(handle)
 
-    def capi_base_api_analyse_layout(self):
-        return self.TessBaseAPIAnalyseLayout()
+    def capi_base_api_analyse_layout(self, handle):
+        return self.TessBaseAPIAnalyseLayout(handle)
 
-    def capi_base_api_recognize(self, handle, monitor):
+    def capi_base_api_recognize(self, handle, monitor) -> int:
         return self.TessBaseAPIRecognize(handle, monitor)
 
     def capi_base_api_process_pages(self, handle,
@@ -1115,8 +1163,9 @@ class TesseractAPI:
     def capi_base_api_mean_text_conf(self, handle) -> int:
         return self.TessBaseAPIMeanTextConf(handle)
 
-    def capi_base_api_all_word_confidences(self, handle) -> int:
-        return self.TessBaseAPIAllWordConfidences(handle)
+    def capi_base_api_all_word_confidences(self, handle) -> list[int]:
+        ret = self.TessBaseAPIAllWordConfidences(handle)
+        return list(int_list(ret))
 
     def capi_base_api_adapt_toword_str(self, handle, mode: PageSegMode,
                                        wordstr: bytes) -> bool:
@@ -1128,7 +1177,7 @@ class TesseractAPI:
     def capi_base_api_end(self, handle):
         self.TessBaseAPIEnd(handle)
 
-    def capi_base_api_isvalid_word(self, handle, word: bytes) -> int:
+    def capi_base_api_is_valid_word(self, handle, word: bytes) -> int:
         return self.TessBaseAPIIsValidWord(handle, word)
 
     def capi_base_api_get_text_direction(self, handle, out_offset: int,
@@ -1159,38 +1208,40 @@ class TesseractAPI:
     def capi_base_api_oem(self, handle) -> int:
         return self.TessBaseAPIOem(handle)
 
-    def capi_base_get_block_text_orientations(self, handle,
-                                              block_orientation: int,
-                                              vertical_writing: bool):
-        self.TessBaseGetBlockTextOrientations(
-            handle, block_orientation, vertical_writing)
+    def capi_base_get_block_text_orientations(
+            self, handle,
+            block_orientation: POINTER(c_int_p),
+            vertical_writing: POINTER(c_bool_p)):
+        self.TessBaseGetBlockTextOrientations(handle, block_orientation,
+                                              vertical_writing)
 
     # Page iterator
 
-    def capi_page_iterator_delete(self, handle):
+    def capi_page_iterator_delete(self, handle: c_void_p):
         self.TessPageIteratorDelete(handle)
 
-    def capi_page_iterator_copy(self, handle):
+    def capi_page_iterator_copy(
+            self, handle: c_void_p) -> c_void_p:
         return self.TessPageIteratorCopy(handle)
 
-    def capi_page_iterator_begin(self, handle):
+    def capi_page_iterator_begin(self, handle: c_void_p):
         self.TessPageIteratorBegin(handle)
 
-    def capi_page_iterator_next(self, handle,
+    def capi_page_iterator_next(self, handle: c_void_p,
                                 level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorNext(handle, level)
 
-    def capi_page_iterator_isat_beginning_of(self, handle,
+    def capi_page_iterator_isat_beginning_of(self, handle: c_void_p,
                                              level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorIsAtBeginningOf(handle, level)
 
     def capi_page_iterator_isat_final_element(
-        self, handle,
+        self, handle: c_void_p,
             level: PageIteratorLevel,
             element: PageIteratorLevel) -> bool:
         return self.TessPageIteratorIsAtFinalElement(handle, level, element)
 
-    def capi_page_iterator_bounding_box(self, handle,
+    def capi_page_iterator_bounding_box(self, handle: c_void_p,
                                         level: PageIteratorLevel,
                                         left: int,
                                         top: int,
@@ -1200,34 +1251,41 @@ class TesseractAPI:
                                                 left, top,
                                                 right, bottom)
 
-    def capi_page_iterator_block_type(self, handle) -> int:
+    def capi_page_iterator_block_type(self, handle: c_void_p) -> int:
         return self.TessPageIteratorBlockType(handle)
 
-    def capi_page_iterator_get_binary_image(self, handle,
-                                            level: PageIteratorLevel):
+    def capi_page_iterator_get_binary_image(self, handle: c_void_p,
+                                            level: PageIteratorLevel) -> LPPix:
         return self.TessPageIteratorGetBinaryImage(handle, level)
 
-    def capi_page_iterator_get_image(self, handle, level: PageIteratorLevel,
+    def capi_page_iterator_get_image(self,
+                                     handle: c_void_p,
+                                     level: PageIteratorLevel,
                                      padding: int, original_image,
-                                     left: int, top: int):
-        return self.TessPageIteratorGetImage(
-            handle, level, padding, original_image, left, top)
+                                     left: int, top: int) -> LPPix:
+        return self.TessPageIteratorGetImage(handle,
+                                             level, padding, original_image,
+                                             left, top)
 
-    def capi_page_iterator_baseline(self, handle, level: PageIteratorLevel,
+    def capi_page_iterator_baseline(self,
+                                    handle: c_void_p,
+                                    level: PageIteratorLevel,
                                     x1: int, y1: int,
                                     x2: int, y2: int) -> bool:
         return self.TessPageIteratorBaseline(handle, level, x1, y1, x2, y2)
 
-    def capi_page_iterator_orientation(self, handle, orientation: Orientation,
+    def capi_page_iterator_orientation(self,
+                                       handle: c_void_p,
+                                       orientation: Orientation,
                                        writing_direction: WritingDirection,
                                        textline_order: TextlineOrder,
                                        deskew_angle: float):
-        self.TessPageIteratorOrientation(
-            handle, orientation, writing_direction, textline_order,
-            deskew_angle)
+        self.TessPageIteratorOrientation(handle, orientation,
+                                         writing_direction, textline_order,
+                                         deskew_angle)
 
     def capi_page_iterator_paragraph_info(
-            self, handle,
+            self, handle: c_void_p,
             justification: ParagraphJustification,
             is_list_item: bool, is_crown: bool,
             first_line_indent: int):
@@ -1236,37 +1294,48 @@ class TesseractAPI:
 
     # Result iterator
 
-    def capi_result_iterator_delete(self, handle):
+    def capi_result_iterator_delete(self, handle: c_void_p):
         self.TessResultIteratorDelete(handle)
 
-    def capi_result_iterator_copy(self, handle):
+    def capi_result_iterator_copy(
+            self,
+            handle: c_void_p) -> c_void_p:
         return self.TessResultIteratorCopy(handle)
 
-    def capi_result_iterator_get_page_iterator(self, handle):
+    def capi_result_iterator_get_page_iterator(
+            self,
+            handle: c_void_p) -> c_void_p:
         return self.TessResultIteratorGetPageIterator(handle)
 
-    def capi_result_iterator_get_page_iterator_const(self, handle):
+    def capi_result_iterator_get_page_iterator_const(
+            self,
+            handle: c_void_p) -> c_void_p:
         return self.TessResultIteratorGetPageIteratorConst(handle)
 
-    def capi_result_iterator_get_choice_iterator(self, handle):
+    def capi_result_iterator_get_choice_iterator(
+            self,
+            handle: c_void_p) -> c_void_p:
         return self.TessResultIteratorGetChoiceIterator(handle)
 
-    def capi_result_iterator_next(self, handle,
+    def capi_result_iterator_next(self, handle: c_void_p,
                                   level: PageIteratorLevel) -> bool:
         return self.TessResultIteratorNext(handle, level)
 
-    def capi_result_iterator_get_utf8text(self, handle,
+    def capi_result_iterator_get_utf8text(self, handle: c_void_p,
                                           level: PageIteratorLevel) -> bytes:
         return self.TessResultIteratorGetUTF8Text(handle, level)
 
-    def capi_result_iterator_confidence(self, handle,
+    def capi_result_iterator_confidence(self, handle: c_void_p,
                                         level: PageIteratorLevel) -> float:
         return self.TessResultIteratorConfidence(handle, level)
 
-    def capi_result_iterator_word_recognition_language(self, handle) -> bytes:
+    def capi_result_iterator_word_recognition_language(
+            self,
+            handle: c_void_p) -> bytes:
         return self.TessResultIteratorWordRecognitionLanguage(handle)
 
-    def capi_result_iterator_word_font_attributes(self, handle,
+    def capi_result_iterator_word_font_attributes(self,
+                                                  handle: c_void_p,
                                                   is_bold: bool,
                                                   is_italic: bool,
                                                   is_underlined: bool,
@@ -1283,57 +1352,75 @@ class TesseractAPI:
                                                          is_smallcaps,
                                                          pointsize, font_id)
 
-    def capi_result_iterator_word_isfrom_dictionary(self, handle) -> bool:
+    def capi_result_iterator_word_is_from_dictionary(
+            self,
+            handle: c_void_p) -> bool:
         return self.TessResultIteratorWordIsFromDictionary(handle)
 
-    def capi_result_iterator_word_isnumeric(self, handle) -> bool:
+    def capi_result_iterator_word_is_numeric(
+            self,
+            handle: c_void_p) -> bool:
         return self.TessResultIteratorWordIsNumeric(handle)
 
-    def capi_result_iterator_symbol_issuperscript(self, handle) -> bool:
+    def capi_result_iterator_symbol_is_superscript(
+            self,
+            handle: c_void_p) -> bool:
         return self.TessResultIteratorSymbolIsSuperscript(handle)
 
-    def capi_result_iterator_symbol_issubscript(self, handle) -> bool:
+    def capi_result_iterator_symbol_is_subscript(
+            self,
+            handle: c_void_p) -> bool:
         return self.TessResultIteratorSymbolIsSubscript(handle)
 
-    def capi_result_iterator_symbol_isdropcap(self, handle) -> bool:
+    def capi_result_iterator_symbol_is_dropcap(
+            self,
+            handle: c_void_p) -> bool:
         return self.TessResultIteratorSymbolIsDropcap(handle)
 
-    def capi_choice_iterator_delete(self, handle):
+    def capi_choice_iterator_delete(self, handle: c_void_p):
         self.TessChoiceIteratorDelete(handle)
 
-    def capi_choice_iterator_next(self, handle) -> bool:
+    def capi_choice_iterator_next(self, handle: c_void_p) -> bool:
         return self.TessChoiceIteratorNext(handle)
 
-    def capi_choice_iterator_get_utf8text(self, handle) -> bytes:
+    def capi_choice_iterator_get_utf8text(
+            self,
+            handle: c_void_p) -> bytes:
         return self.TessChoiceIteratorGetUTF8Text(handle)
 
-    def capi_choice_iterator_confidence(self, handle) -> float:
+    def capi_choice_iterator_confidence(self,
+                                        handle: c_void_p) -> float:
         return self.TessChoiceIteratorConfidence(handle)
 
     # Progress monitor
 
-    def capi_monitor_create(self):
+    def capi_monitor_create(self) -> LPETEXT_DESC:
         return self.TessMonitorCreate()
 
-    def capi_monitor_delete(self, monitor):
+    def capi_monitor_delete(self, monitor: LPETEXT_DESC):
         self.TessMonitorDelete(monitor)
 
-    def capi_monitor_set_cancel_func(self, monitor, cancelFunc):
+    def capi_monitor_set_cancel_func(self, monitor: LPETEXT_DESC,
+                                     cancelFunc: Callable[[c_void_p, int], bool]):
         self.TessMonitorSetCancelFunc(monitor, cancelFunc)
 
-    def capi_monitor_set_cancel_this(self, monitor, cancelThis):
+    def capi_monitor_set_cancel_this(self, monitor: LPETEXT_DESC, cancelThis):
         self.TessMonitorSetCancelThis(monitor, cancelThis)
 
-    def capi_monitor_get_cancel_this(self, monitor):
+    def capi_monitor_get_cancel_this(self, monitor: LPETEXT_DESC) -> c_void_p:
         return self.TessMonitorGetCancelThis(monitor)
 
-    def capi_monitor_set_progress_func(self, monitor, progressFunc):
+    def capi_monitor_set_progress_func(self, monitor: LPETEXT_DESC,
+                                       progressFunc: Callable[[LPETEXT_DESC,
+                                                               int, int,
+                                                               int, int], bool]):
         self.TessMonitorSetProgressFunc(monitor, progressFunc)
 
-    def capi_monitor_get_progress(self, monitor) -> int:
+    def capi_monitor_get_progress(self, monitor: LPETEXT_DESC) -> int:
         return self.TessMonitorGetProgress(monitor)
 
-    def capi_monitor_set_deadline_msecs(self, monitor, deadline: int):
+    def capi_monitor_set_deadline_msecs(self, monitor: LPETEXT_DESC,
+                                        deadline: int):
         self.TessMonitorSetDeadlineMSecs(monitor, deadline)
 
 
