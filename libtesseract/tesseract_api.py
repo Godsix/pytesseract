@@ -1,274 +1,266 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jul 15 08:45:54 2021
+Created on Thu Aug 25 13:41:23 2022
 
 @author: 皓
 """
 import os.path as osp
-import sys
-from ctypes import (POINTER, pointer, byref, cast, c_float, c_double, c_int,
-                    c_bool, c_void_p, c_char_p)
-import locale
-from functools import wraps
+import weakref
+from ctypes import c_void_p
 from .common import TESSDATA_PREFIX
-from .error import TesseractError
-from .leptonica_capi import Pix
-from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
-                             PageIteratorLevel, Orientation, WritingDirection,
-                             TextlineOrder, ParagraphJustification)
-from .libc import fdopen
+from .leptonica_capi import LPBoxa, LPPixa, LPPix
+from .tesseract_capi import (OcrEngineMode, PageSegMode, PolyBlockType,
+                             PageIteratorLevel)
+from .tesseract_papi import (BaseAPI, ProgressMonitorAPI, RendererAPI,
+                             PageIteratorAPI, ResultIteratorAPI,
+                             ChoiceIteratorAPI,
+                             OrientationScript, Bounding, Font)
 
 
-class CommonAPI:
-    ENCODING = 'ascii'
-
-    @classmethod
-    def setlocale(cls, encoding=None):
-        try:
-            'encoding'.encode(encoding).decode(encoding)
-        except Exception:
-            encoding = locale.getdefaultlocale()[1]
-        cls.ENCODING = encoding
-        return
-
-    @classmethod
-    def decode(cls, value):
-        if isinstance(value, bytes):
-            return value.decode(cls.ENCODING)
-        return value
-
-    @classmethod
-    def encode(cls, value):
-        if isinstance(value, str):
-            return value.encode(cls.ENCODING)
-        return value
-
-    @classmethod
-    def decode_utf8(cls, value):
-        if isinstance(value, bytes):
-            return value.decode('utf-8')
-        return value
-
-    @classmethod
-    def encode_utf8(cls, value):
-        if isinstance(value, str):
-            return value.encode('utf-8')
-        return value
-
-    def __getattr__(self, attr):
-        if hasattr(TESSERACT_API, attr):
-            return getattr(TESSERACT_API, attr)
-        raise AttributeError(
-            "'{}' object has no attribute '{}'".format(self.__class__.__name__,
-                                                       attr))
-
-
-CommonAPI.setlocale()
-
-
-class HandleAPI:
-    HANDLES = {}
-
-    @classmethod
-    def get_point(cls, obj):
-        if isinstance(obj, c_void_p):
-            return obj
-        if hasattr(obj, 'handle'):
-            if isinstance(obj.handle, c_void_p):
-                return obj.handle
-        return obj
+class BaseObject:
+    API = None
 
     def __init__(self, handle):
         self.handle = handle
-        self.HANDLES[self.handle] = True
 
-    def close(self):
-        if self.handle:
-            if self.handle in self.HANDLES:
-                self.delete(self.handle)
-                del self.HANDLES[self.handle]
-            self.handle = None
+    def delete(self, handle):
+        self.API.delete(handle)
 
     def __del__(self):
-        self.close()
+        if hasattr(self, 'handle') and self.handle:
+            handle = self.handle
+            self.handle = None
+            self.delete(handle)
 
 
-class ContextAPI(HandleAPI, CommonAPI):
+class BaseTessObject(BaseObject):
+
     def __init__(self):
         super().__init__(self.create())
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, trace):
-        self.close()
+    def create(self):
+        return self.API.create()
 
 
-class GeneralAPI(CommonAPI):
+class BaseIterObject(BaseObject):
 
-    def version(self) -> str:
-        return self.decode(self.capi_version())
+    def __init__(self, handle, parent=None):
+        self.handle = handle
+        self.parent = parent if parent is None else weakref.ref(parent)
 
-    def delete_text(self, text: bytes):
-        self.capi_delete_text(text)
-
-    def delete_text_array(self, arr: bytes):
-        self.capi_delete_text_array(arr)
-
-    def delete_int_array(self, arr: int):
-        self.capi_delete_int_array(arr)
+    def __del__(self):
+        if self.parent is not None and self.parent() is None:
+            return
+        super().__del__()
 
 
-def pythonic_classmethod(func):
+class CopyIterator(BaseIterObject):
+
+    def copy(self):
+        return self.API.copy(self.handle)
+
+    def __copy__(self):
+        cls_ = self.__class__
+        handle = self.copy(self.handle)
+        return cls_(handle)
+
+
+class ResultRenderer(BaseObject):
+    API = RendererAPI
+    CREATE_FUNC = {
+        'text': API.text_renderer_create,
+        'hocr': API.hocr_renderer_create,
+        'alto': API.alto_renderer_create,
+        'tsv': API.tsv_renderer_create,
+        'pdf': API.pdf_renderer_create,
+        'unlv': API.unlv_renderer_create,
+        'box': API.box_text_renderer_create,
+        'lstm': API.lstm_box_renderer_create,
+        'word': API.word_str_box_renderer_create
+    }
+
+    def __init__(self, handle, filetype=None):
+        super().__init__(handle)
+        self.filetype = filetype
 
     @classmethod
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        cls, *_ = args
-        result = func(*args, **kwargs)
+    def create(cls, outputbase: str, filetype: str, *args):
+        func_name = f'{filetype.lower()}_renderer_create'
+        if hasattr(cls.API, func_name):
+            func = getattr(cls.API, func_name)
+        elif filetype in cls.CREATE_FUNC:
+            func = cls.CREATE_FUNC[filetype]
+        else:
+            raise AttributeError('filetype must be in {}'.format(
+                ','.join(cls.CREATE_FUNC)))
+        result = func(outputbase, *args)
         return cls(result)
-    return wrapper
 
+    def insert(self, next_):
+        if isinstance(next_, self.__class__):
+            next_value = next_.handle
+        else:
+            next_value = next_
+        self.API.insert(self.handle, next_value)
 
-def pythonic(func):
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        self, *_ = args
-        cls = self.__class__
-        result = func(*args, **kwargs)
-        return cls(result)
-    return wrapper
-
-
-class RendererAPI(HandleAPI, CommonAPI):
-
-    def delete(self, renderer):
-        self.delete_result_renderer(self.get_point(renderer))
-
-    def insert(self, renderer, next_):
-        self.result_renderer_insert(self.get_point(renderer),
-                                    self.get_point(next_))
-
-    @pythonic
     def next(self):
-        return self.result_renderer_next(self.handle)
+        result = self.API.next(self.handle)
+        return self.__class__(result)
 
     def extention(self) -> str:
-        return self.result_renderer_extention(self.handle)
+        return self.API.extention(self.handle)
 
     def title(self) -> str:
-        return self.result_renderer_title(self.handle)
+        return self.API.title(self.handle)
 
     def begin_document(self, title: str) -> bool:
-        return self.result_renderer_begin_document(self.handle, title)
+        return self.API.begin_document(self.handle, title)
 
     def end_document(self) -> bool:
-        return self.result_renderer_end_document(self.handle)
+        return self.API.end_document(self.handle)
 
     def add_image(self, api) -> bool:
-        return self.result_renderer_add_image(self.handle, api)
+        return self.API.add_image(self.handle, api)
 
     def image_num(self) -> int:
-        return self.result_renderer_image_num(self.handle)
-
-    @pythonic_classmethod
-    def text_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_text_renderer_create(cls.encode(outputbase))
-
-    @classmethod
-    def hocr_renderer_create(cls, outputbase: str, font_info: bool = False):
-        if font_info is False:
-            return cls._hocr_renderer_create(outputbase)
-        else:
-            return cls._hocr_renderer_create2(outputbase, font_info)
-
-    @pythonic_classmethod
-    def _hocr_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_hocr_renderer_create(cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def _hocr_renderer_create2(cls, outputbase: str, font_info: bool):
-        return TESSERACT_API.capi_hocr_renderer_create2(cls.encode(outputbase),
-                                                        font_info)
-
-    @pythonic_classmethod
-    def alto_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_alto_renderer_create(cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def tsv_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_tsv_renderer_create(cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def pdf_renderer_create(cls, outputbase: str, datadir: str,
-                            textonly: bool):
-        return TESSERACT_API.capi_pdf_renderer_create(cls.encode(outputbase),
-                                                      cls.encode(datadir),
-                                                      textonly)
-
-    @pythonic_classmethod
-    def unlv_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_unlv_renderer_create(cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def box_text_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_box_text_renderer_create(
-            cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def lstm_box_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_lstm_box_renderer_create(
-            cls.encode(outputbase))
-
-    @pythonic_classmethod
-    def word_str_box_renderer_create(cls, outputbase: str):
-        return TESSERACT_API.capi_word_str_box_renderer_create(
-            cls.encode(outputbase))
-
-    @classmethod
-    def delete_result_renderer(cls, renderer):
-        TESSERACT_API.capi_delete_result_renderer(renderer)
-
-    @classmethod
-    def result_renderer_insert(cls, renderer, next_):
-        TESSERACT_API.capi_result_renderer_insert(renderer, next_)
-
-    @classmethod
-    def result_renderer_next(cls, renderer):
-        return TESSERACT_API.capi_result_renderer_next(renderer)
-
-    @classmethod
-    def result_renderer_begin_document(cls, renderer,
-                                       title: str) -> bool:
-        return TESSERACT_API.capi_result_renderer_begin_document(
-            renderer,
-            cls.encode(title))
-
-    @classmethod
-    def result_renderer_add_image(cls, renderer, api) -> bool:
-        return TESSERACT_API.capi_result_renderer_add_image(renderer, api)
-
-    @classmethod
-    def result_renderer_end_document(cls, renderer) -> bool:
-        return TESSERACT_API.capi_result_renderer_end_document(renderer)
-
-    @classmethod
-    def result_renderer_extention(cls, renderer) -> str:
-        ret = TESSERACT_API.capi_result_renderer_extention(renderer)
-        return cls.decode(ret)
-
-    @classmethod
-    def result_renderer_title(cls, renderer) -> str:
-        ret = TESSERACT_API.capi_result_renderer_title(renderer)
-        return cls.decode(ret)
-
-    @classmethod
-    def result_renderer_image_num(cls, renderer) -> int:
-        return TESSERACT_API.capi_result_renderer_image_num(renderer)
+        return self.API.image_num(self.handle)
 
 
-class BaseAPI(ContextAPI):
+class PageIterator(BaseIterObject):
+    API = PageIteratorAPI
+
+    def begin(self):
+        self.API.begin(self.handle)
+
+    def next(self, level: PageIteratorLevel) -> bool:
+        return self.API.next(self.handle, level)
+
+    def is_at_beginning_of(self, level: PageIteratorLevel) -> bool:
+        return self.API.is_at_beginning_of(self.handle, level)
+
+    def is_at_final_element(self, level: PageIteratorLevel,
+                            element: PageIteratorLevel) -> bool:
+        return self.API.is_at_final_element(self.handle, level, element)
+
+    def bounding_box(self, level: PageIteratorLevel) -> Bounding:
+        return self.API.bounding_box(self.handle, level)
+
+    def block_type(self) -> PolyBlockType:
+        return self.API.block_type(self.handle)
+
+    def get_binary_image(self, level: PageIteratorLevel) -> LPPix:
+        return self.API.get_binary_image(self.handle, level)
+
+    def get_image(self, level: PageIteratorLevel, padding: int,
+                  original_image: LPPix) -> LPPix:
+        return self.API.get_image(self.handle, level, padding, original_image)
+
+    def baseline(self, level: PageIteratorLevel) -> bool:
+        return self.API.baseline(self.handle, level)
+
+    def orientation(self) -> tuple[int, int, int, float]:
+        return self.API.orientation(self.handle)
+
+    def paragraph_info(self) -> tuple[int, bool, bool, int]:
+        return self.API.paragraph_info(self.handle)
+
+
+class ChoiceIterator(BaseIterObject):
+    API = ChoiceIteratorAPI
+
+    def next(self) -> bool:
+        return self.API.next(self.handle)
+
+    def get_utf8_text(self) -> str:
+        return self.API.get_utf8_text(self.handle)
+
+    def confidence(self) -> float:
+        return self.API.confidence(self.handle)
+
+
+class ResultIterator(CopyIterator):
+    API = ResultIteratorAPI
+
+    def get_page_iterator(self):
+        handle = self.API.get_page_iterator(self.handle)
+        if not bool(handle):
+            return None
+        return PageIterator(handle, self)
+
+    def get_page_iterator_const(self):
+        handle = self.API.get_page_iterator_const(self.handle)
+        if not bool(handle):
+            return None
+        return PageIterator(handle, self)
+
+    def get_choice_iterator(self):
+        handle = self.API.get_choice_iterator(self.handle)
+        if not bool(handle):
+            return None
+        return ChoiceIterator(handle, self)
+
+    def next(self, level: PageIteratorLevel) -> bool:
+        return self.API.next(self.handle, level)
+
+    def get_utf8_text(self, level: PageIteratorLevel) -> str:
+        return self.API.get_utf8_text(self.handle, level)
+
+    def confidence(self, level: PageIteratorLevel) -> float:
+        return self.API.confidence(self.handle, level)
+
+    def word_recognition_language(self) -> bytes:
+        return self.API.word_recognition_language(self.handle)
+
+    def word_font_attributes(self) -> Font:
+        return self.API.word_font_attributes(self.handle)
+
+    def word_is_from_dictionary(self) -> bool:
+        return self.API.word_is_from_dictionary(self.handle)
+
+    def word_is_numeric(self) -> bool:
+        return self.API.word_is_numeric(self.handle)
+
+    def symbol_is_superscript(self) -> bool:
+        return self.API.symbol_is_superscript(self.handle)
+
+    def symbol_is_subscript(self) -> bool:
+        return self.API.symbol_is_subscript(self.handle)
+
+    def symbol_is_dropcap(self) -> bool:
+        return self.API.symbol_is_dropcap(self.handle)
+
+
+class MutableIterator(ResultIterator):
+    pass
+
+
+class ProgressMonitor(BaseTessObject):
+    API = ProgressMonitorAPI
+
+    @property
+    def progress(self) -> int:
+        return self.API.get_progress(self.handle)
+
+    @property
+    def cancel_this(self) -> c_void_p:
+        return self.API.get_cancel_this(self.handle)
+
+    @cancel_this.setter
+    def cancel_this(self, value: c_void_p):
+        self.API.set_cancel_this(self.handle, value)
+
+    def set_cancel_func(self, cancel_func):
+        self.API.set_cancel_func(self.handle, cancel_func)
+
+    def set_progress_func(self, progress_func):
+        self.API.set_progress_func(self.handle, progress_func)
+
+    def set_deadline_msecs(self, deadline: int):
+        self.API.set_deadline_msecs(self.handle, deadline)
+
+
+class TessBase(BaseTessObject):
+    API = BaseAPI
 
     def __init__(self,
                  datapath: str = TESSDATA_PREFIX,
@@ -280,568 +272,336 @@ class BaseAPI(ContextAPI):
         if rc:
             raise RuntimeError("Could not initialize tesseract.")
 
-    def init(self, datapath: str, language: str,
-             mode: OcrEngineMode, *configs, **kwargs):
+    @property
+    def opencl_device(self) -> (c_void_p, int):
+        return self.get_opencl_device()
+
+    @property
+    def input_name(self) -> str:
+        return self.get_input_name()
+
+    @input_name.setter
+    def input_name(self, value: str):
+        self.set_input_name(value)
+
+    @property
+    def input_image(self) -> LPPix:
+        return self.get_input_image()
+
+    @input_image.setter
+    def input_image(self, value: LPPix):
+        self.set_input_image(value)
+
+    @property
+    def source_y_resolution(self) -> int:
+        return self.get_source_y_resolution()
+
+    @property
+    def datapath(self) -> str:
+        return self.get_datapath()
+
+    @property
+    def init_languages(self) -> str:
+        return self.get_init_languages()
+
+    @property
+    def loaded_languages(self) -> list[str]:
+        return self.get_loaded_languages()
+
+    @property
+    def available_languages(self) -> list[str]:
+        return self.get_available_languages()
+
+    @property
+    def page_seg_mode(self) -> PageSegMode:
+        return self.get_page_seg_mode()
+
+    @page_seg_mode.setter
+    def page_seg_mode(self, mode: PageSegMode):
+        self.set_page_seg_mode(mode)
+
+    def get_opencl_device(self) -> tuple[c_void_p, int]:
+        return self.API.get_opencl_device(self.handle)
+
+    def set_input_name(self, name: str):
+        self.API.set_input_name(self.handle, name)
+
+    def get_input_name(self) -> str:
+        return self.API.get_input_name(self.handle)
+
+    def set_input_image(self, pix: LPPix):
+        self.API.set_input_image(self.handle, pix)
+
+    def get_input_image(self) -> LPPix:
+        return self.API.get_input_image(self.handle)
+
+    def get_source_y_resolution(self) -> int:
+        return self.API.get_source_y_resolution(self.handle)
+
+    def get_datapath(self) -> str:
+        return self.API.get_datapath(self.handle)
+
+    def set_output_name(self, name: str):
+        self.API.set_output_name(self.handle, name)
+
+    def set_variable(self, name: str, value: str) -> bool:
+        return self.API.set_variable(self.handle, name, value)
+
+    def set_debug_variable(self, name: str, value: str) -> bool:
+        return self.API.set_debug_variable(self.handle, name, value)
+
+    def get_int_variable(self, name: str) -> int:
+        return self.API.get_int_variable(self.handle, name)
+
+    def get_bool_variable(self, name: str) -> bool:
+        return self.API.get_bool_variable(self.handle, name)
+
+    def get_double_variable(self, name: str) -> float:
+        return self.API.get_double_variable(self.handle, name)
+
+    def get_string_variable(self, name: str) -> str:
+        return self.API.get_string_variable(self.handle, name)
+
+    def print_variables(self, fp):
+        self.API.print_variables(self.handle, fp)
+
+    def print_variables_tofile(self, filename: str) -> bool:
+        return self.API.print_variables_tofile(self.handle, filename)
+
+    def init(self, datapath: str, language: str, mode: OcrEngineMode,
+             *configs, **kwargs):
         if not datapath:
-            raise TypeError(
-                'Datapath is necessary, but get None.')
-        language_value = self.encode(language) if language else b'eng'
-        if osp.exists(datapath):
-            datapath_value = self.encode(datapath)
+            raise TypeError('The datapath is necessary, but get None.')
+        if not language:
+            raise TypeError('The language is necessary, but get None.')
+        if osp.isdir(datapath):
             if mode is None:
-                return self.capi_base_api_init3(self.handle, datapath_value,
-                                                language_value)
+                return self.init3(datapath, language)
             if not configs:
-                return self.capi_base_api_init2(self.handle, datapath_value,
-                                                language_value, mode)
+                return self.init2(datapath, language, mode)
             if not kwargs:
-                return self.capi_base_api_init1(self.handle, datapath_value,
-                                                language_value, mode,
-                                                configs, len(configs))
+                return self.init1(datapath, language, mode, configs)
             if 'set_only_non_debug_params' in kwargs:
                 set_only_non_debug_params = kwargs['set_only_non_debug_params']
                 del kwargs['set_only_non_debug_params']
             else:
                 set_only_non_debug_params = False
-            return self.capi_base_api_init4(self.handle,
-                                            datapath_value,
-                                            language_value,
-                                            mode,
-                                            configs, len(configs),
-                                            tuple(kwargs.keys()),
-                                            tuple(kwargs.values()),
-                                            len(kwargs),
-                                            set_only_non_debug_params)
+            return self.init4(datapath, language, mode, configs, kwargs,
+                              set_only_non_debug_params)
+        elif isinstance(datapath, bytes) or hasattr(datapath, 'read'):
+            if isinstance(datapath, bytes):
+                data = datapath
+            else:
+                data = datapath.read()
+            if 'set_only_non_debug_params' in kwargs:
+                set_only_non_debug_params = kwargs['set_only_non_debug_params']
+                del kwargs['set_only_non_debug_params']
+            else:
+                set_only_non_debug_params = False
+            return self.init5(data, language, mode, configs, kwargs,
+                              set_only_non_debug_params)
         else:
-            raise TypeError('Datapath must be an exist dir for traindata.')
+            raise TypeError(
+                'Datapath must be an exist dir, traindata bytes or IO.')
 
-    def create(self):
-        return self.capi_base_api_create()
+    def init1(self, datapath: str, language: str,
+              oem: OcrEngineMode, configs: list[str]) -> int:
+        return self.API.init1(self.handle, datapath, language, oem, configs)
 
-    def delete(self, handle):
-        self.capi_base_api_delete(handle)
+    def init2(self, datapath: str, language: str, oem: OcrEngineMode) -> int:
+        return self.API.init2(self.handle, datapath, language, oem)
 
-    def get_open_cldevice(self, device) -> int:
-        return self.capi_base_api_get_open_cldevice(self.handle, device)
+    def init3(self, datapath: str, language: str) -> int:
+        return self.API.init3(self.handle, datapath, language)
 
-    def set_input_name(self, name: str):
-        self.capi_base_api_set_input_name(self.handle, self.encode(name))
+    def init4(self, datapath: str, language: str, mode: OcrEngineMode,
+              configs: list[str], variables: dict[str, str],
+              set_only_non_debug_params: bool) -> int:
+        return self.API.init4(self.handle, datapath, language, mode,
+                              configs, variables, set_only_non_debug_params)
 
-    def get_input_name(self) -> str:
-        ret = self.capi_base_api_get_input_name(self.handle)
-        return self.decode(ret)
-
-    def set_input_image(self, pix):
-        self.capi_base_api_set_input_image(self.handle, pix)
-
-    def get_input_image(self):
-        self.capi_base_api_get_input_image(self.handle)
-
-    def get_source_y_resolution(self) -> int:
-        return self.capi_base_api_get_source_y_resolution(self.handle)
-
-    def get_datapath(self) -> str:
-        ret = self.capi_base_api_get_datapath(self.handle)
-        return self.decode(ret)
-
-    def set_output_name(self, name: str):
-        self.capi_base_api_set_output_name(self.handle, self.encode(name))
-
-    def set_is_numeric(self, mode):
-        whitelist = "0123456789." if mode else ''
-        return self.set_variable("tessedit_char_whitelist", whitelist)
-
-    def set_debug_file(self, filename):
-        return self.set_variable("debug_file", filename)
-
-    def set_variable(self, name: str, value: str) -> bool:
-        name_value = self.encode(name)
-        value_value = self.encode(value)
-        return self.capi_base_api_set_variable(self.handle,
-                                               name_value,
-                                               value_value)
-
-    def set_debug_variable(self, name: bytes, value: bytes) -> bool:
-        return self.capi_base_api_set_debug_variable(self.handle, name, value)
-
-    def get_int_variable(self, name: str) -> int:
-        value = c_int()
-        ret = self.capi_base_api_get_int_variable(self.handle,
-                                                  self.encode(name),
-                                                  pointer(value))
-        if not ret:
-            return None
-        return value.value
-
-    def get_bool_variable(self, name: str) -> bool:
-        value = c_bool()
-        ret = self.capi_base_api_get_bool_variable(self.handle,
-                                                   self.encode(name),
-                                                   byref(value))
-        if not ret:
-            return None
-        return value.value
-
-    def get_double_variable(self, name: str) -> float:
-        value = c_double()
-        ret = self.capi_base_api_get_double_variable(self.handle,
-                                                     self.encode(name),
-                                                     byref(value))
-        if not ret:
-            return None
-        return value.value
-
-    def get_string_variable(self, name: str) -> str:
-        ret = self.capi_base_api_get_string_variable(self.handle,
-                                                     self.encode(name))
-        return self.decode(ret)
-
-    def print_variables(self, fp=sys.stdout):
-        if hasattr(fp, 'fileno') and hasattr(fp, 'mode'):
-            fileno = fp.fileno()
-            mode = fp.mode
-        elif isinstance(fp, int):
-            fileno = fp
-            mode = 'w'
-        else:
-            raise TypeError('fp type is not io or fileno:{}'.format(type(fp)))
-        file_point = fdopen(fileno, mode)
-        self.capi_base_api_print_variables(self.handle, file_point)
-
-    def print_variables_tofile(self, filename: str) -> bool:
-        return self.capi_base_api_print_variables_tofile(self.handle,
-                                                         self.encode(filename))
+    def init5(self, data: bytes, language: str, mode: OcrEngineMode,
+              configs: list[str], variables: dict[str, str],
+              set_only_non_debug_params: bool) -> int:
+        return self.API.init5(self.handle, data, language, mode,
+                              configs, variables, set_only_non_debug_params)
 
     def get_init_languages(self) -> str:
-        ret = self.capi_base_api_get_init_languages(self.handle)
-        return self.decode(ret)
+        return self.API.get_init_languages(self.handle)
 
     def get_loaded_languages(self) -> list[str]:
-        ret = self.capi_base_api_get_loaded_languages(self.handle)
-        return [self.decode(x) for x in ret]
+        return self.API.get_loaded_languages(self.handle)
 
     def get_available_languages(self) -> list[str]:
-        ret = self.capi_base_api_get_available_languages(self.handle)
-        return [self.decode(x) for x in ret]
-
-    def init_lang_mod(self, datapath: str, language: str) -> int:
-        datapath_value = self.encode(datapath)
-        language_value = self.encode(language)
-        return self.capi_base_api_init_lang_mod(self.handle,
-                                                datapath_value,
-                                                language_value)
+        return self.API.get_available_languages(self.handle)
 
     def init_for_analyse_page(self):
-        self.capi_base_api_init_for_analyse_page(self.handle)
+        self.API.init_for_analyse_page(self.handle)
 
-    def read_config_file(self, filename: bytes):
-        self.capi_base_api_read_config_file(self.handle, filename)
+    def read_config_file(self, filename: str):
+        self.API.read_config_file(self.handle, filename)
 
-    def read_debug_config_file(self, filename: bytes):
-        self.capi_base_api_read_debug_config_file(self.handle, filename)
+    def read_debug_config_file(self, filename: str):
+        self.API.read_debug_config_file(self.handle, filename)
 
     def set_page_seg_mode(self, mode: PageSegMode):
-        self.capi_base_api_set_page_seg_mode(self.handle, mode)
+        self.API.set_page_seg_mode(self.handle, mode)
 
     def get_page_seg_mode(self) -> PageSegMode:
-        ret = self.capi_base_api_get_page_seg_mode(self.handle)
-        return PageSegMode(ret)
+        return self.API.get_page_seg_mode(self.handle)
 
-    def rect(self, imagedata: bytes,
-             bytes_per_pixel: int,
-             bytes_per_line: int,
-             left: int,
-             top: int,
-             width: int,
-             height: int) -> str:
-        return self.capi_base_api_rect(self.handle, imagedata,
-                                       bytes_per_pixel, bytes_per_line,
-                                       left, top,
-                                       width, height).encode('utf-8')
+    def rect(self, imagedata: bytes, bytes_per_pixel: int, bytes_per_line: int,
+             left: int, top: int, width: int, height: int) -> str:
+        return self.API.rect(self.handle, imagedata, bytes_per_pixel,
+                             bytes_per_line, left, top, width, height)
 
     def clear_adaptive_classifier(self):
-        self.capi_base_api_clear_adaptive_classifier(self.handle)
+        self.API.clear_adaptive_classifier(self.handle)
 
-    def set_image(self, imagedata: bytes,
-                  width: int,
-                  height: int,
-                  bytes_per_pixel: int,
-                  bytes_per_line: int):
+    def set_image(self, imagedata: bytes, width: int, height: int,
+                  bytes_per_pixel: int, bytes_per_line: int):
+        self.API.set_image(self.handle, imagedata, width, height,
+                           bytes_per_pixel, bytes_per_line)
 
-        self.capi_base_api_set_image(self.handle, imagedata,
-                                     width, height,
-                                     bytes_per_pixel, bytes_per_line)
-
-    def set_image2(self, pix: POINTER(Pix)):
-        self.capi_base_api_set_image2(self.handle, pix)
+    def set_image2(self, pix: LPPix):
+        self.API.set_image2(self.handle, pix)
 
     def set_source_resolution(self, ppi: int):
-        self.capi_base_api_set_source_resolution(self.handle, int(ppi))
+        self.API.set_source_resolution(self.handle, ppi)
 
-    def set_rectangle(self,
-                      left: int, top: int,
-                      width: int, height: int):
-        self.capi_base_api_set_rectangle(self.handle, left, top, width, height)
+    def set_rectangle(self, left: int, top: int, width: int, height: int):
+        self.API.set_rectangle(self.handle, left, top, width, height)
 
-    def get_thresholded_image_scale_factor(self):
-        return self.capi_base_api_get_thresholded_image_scale_factor()
+    def get_thresholded_image(self) -> LPPix:
+        return self.API.get_thresholded_image(self.handle)
 
-    def analyse_layout(self):
-        return self.capi_base_api_analyse_layout()
+    def get_regions(self) -> tuple[LPBoxa, LPPixa]:
+        return self.API.get_regions(self.handle)
 
-    def recognize(self, monitor=None):
-        return self.capi_base_api_recognize(self.handle, monitor)
+    def get_textlines(self) -> tuple[LPBoxa, LPPixa, int]:
+        return self.API.get_textlines(self.handle)
 
-    def process_pages(self,
-                      filename: str,
-                      retry_config: str,
-                      timeout_millisec: int,
-                      renderer) -> bool:
-        return self.capi_base_api_process_pages(self.handle,
-                                                self.encode(filename),
-                                                self.encode(retry_config),
-                                                timeout_millisec,
-                                                self.get_point(renderer))
+    def get_textlines1(self, raw_image: bool,
+                       raw_padding: int) -> tuple[LPBoxa, LPPixa, int, int]:
+        return self.API.get_textlines1(self.handle, raw_image, raw_padding)
 
-    def process_page(self,
-                     pix: POINTER(Pix),
-                     page_index: int,
-                     filename: bytes,
-                     retry_config: bytes,
-                     timeout_millisec: int, renderer) -> bool:
-        return self.capi_base_api_process_page(self.handle,
-                                               pix,
-                                               page_index,
-                                               self.encode(filename),
-                                               self.encode(retry_config),
-                                               timeout_millisec,
-                                               self.get_point(renderer))
+    def get_strips(self) -> tuple[LPBoxa, LPPixa, int]:
+        return self.API.get_strips(self.handle)
 
-    def get_iterator(self):
-        iterator = self.capi_base_api_get_iterator(self.handle)
-        if iterator is None:
-            return
-        return ResultIterator(iterator)
+    def get_words(self) -> tuple[LPBoxa, LPPixa]:
+        return self.API.get_words(self.handle)
 
-    def get_mutable_iterator(self):
-        return self.capi_base_api_get_mutable_iterator(self.handle)
+    def get_connected_components(self) -> tuple[LPBoxa, LPPixa]:
+        return self.API.get_connected_components(self.handle)
 
-    def get_utf8_text(self) -> str:
-        ret = self.capi_base_api_get_utf8_text(self.handle)
-        return self.decode_utf8(ret)
+    def get_component_images(self, level: PageIteratorLevel,
+                             text_only: bool) -> tuple[LPBoxa, LPPixa, int]:
+        return self.API.get_component_images(self.handle, level, text_only)
 
-    def get_hocr_text(self, page_number: int) -> str:
-        ret = self.capi_base_api_get_hocr_text(self.handle,
-                                               page_number)
-        return self.decode(ret)
+    def get_component_images1(self, level: PageIteratorLevel, text_only: bool,
+                              raw_image: bool, raw_padding: int) -> tuple[LPBoxa, LPPixa, int, int]:
+        return self.API.get_component_images1(self.handle, level, text_only,
+                                              raw_image, raw_padding)
 
-    def get_alto_text(self, page_number: int) -> str:
-        ret = self.capi_base_api_get_alto_text(self.handle,
-                                               page_number)
-        return self.decode(ret)
+    def get_thresholded_image_scale_factor(self) -> int:
+        return self.API.get_thresholded_image_scale_factor(self.handle)
 
-    def get_tsv_text(self, page_number: int) -> str:
-        ret = self.capi_base_api_get_tsv_text(self.handle,
-                                              page_number)
-        return self.decode(ret)
-
-    def get_box_text(self, page_number: int) -> str:
-        ret = self.capi_base_api_get_box_text(self.handle,
-                                              page_number)
-        return self.decode(ret)
-
-    def get_lstm_box_text(self, page_number: int) -> str:
-        ret = self.capi_base_api_get_lstm_box_text(self.handle,
-                                                   page_number)
-        return self.decode(ret)
-
-    def get_word_str_box_text(self,
-                              page_number: int) -> str:
-        ret = self.capi_base_api_get_word_str_box_text(self.handle,
-                                                       page_number)
-        return self.decode(ret)
-
-    def get_unlv_text(self) -> str:
-        ret = self.capi_base_api_get_unlv_text(self.handle)
-        return self.decode(ret)
-
-    def mean_text_conf(self) -> int:
-        return self.capi_base_api_mean_text_conf(self.handle)
-
-    def all_word_confidences(self) -> int:
-        return self.capi_base_api_all_word_confidences(self.handle)
-
-    def adapt_toword_str(self, mode: PageSegMode,
-                         wordstr: bytes) -> bool:
-        return self.capi_base_api_adapt_toword_str(self.handle, mode, wordstr)
-
-    def clear(self):
-        self.capi_base_api_clear(self.handle)
-
-    def end(self):
-        self.capi_base_api_end(self.handle)
-
-    def isvalid_word(self, word: bytes) -> int:
-        return self.capi_base_api_isvalid_word(self.handle, word)
-
-    def get_text_direction(self, out_offset: int,
-                           out_slope: float) -> bool:
-        return self.capi_base_api_get_text_direction(self.handle,
-                                                     out_offset,
-                                                     out_slope)
-
-    def get_unichar(self, unichar_id: int) -> bytes:
-        return self.capi_base_api_get_unichar(self.handle, unichar_id)
-
-    def clear_persistent_cache(self):
-        self.capi_base_api_clear_persistent_cache(self.handle)
-
-    def detect_orientation_script(self) -> bool:
-        orientation_deg = c_int()
-        orientation_confidence = c_float()
-        script_name = pointer(c_char_p())
-        script_conf = c_float()
-        ret = self.capi_base_api_detect_orientation_script(
-            self.handle,
-            byref(orientation_deg),
-            byref(orientation_confidence),
-            script_name,
-            byref(script_conf))
-        if not ret:
-            raise TesseractError("detect_orientation failed",
-                                 "TessBaseAPIDetectOrientationScript() failed")
-        return {"orientation": orientation_deg.value,
-                "orientation_enum": round(orientation_deg.value / 90),
-                "confidence": orientation_confidence.value}
-
-    def set_min_orientation_margin(self, margin: float):
-        self.capi_base_api_set_min_orientation_margin(self.handle, margin)
-
-    def num_dawgs(self) -> int:
-        return self.capi_base_api_num_dawgs(self.handle)
-
-    def oem(self) -> int:
-        return self.capi_base_api_oem(self.handle)
-
-    def get_block_text_orientations(self, handle,
-                                    block_orientation: int,
-                                    vertical_writing: bool):
-        self.capi_base_get_block_text_orientations(
-            handle, block_orientation, vertical_writing)
-
-
-class ProgressMonitor(ContextAPI):
-
-    def create(self):
-        return self.capi_monitor_create()
-
-    def delete(self, monitor):
-        self.capi_monitor_delete(monitor)
-
-    def set_cancel_func(self, cancelFunc):
-        self.capi_monitor_set_cancel_func(self.handle, cancelFunc)
-
-    def set_cancel_this(self, cancelThis):
-        self.capi_monitor_set_cancel_this(self.handle, cancelThis)
-
-    def get_cancel_this(self):
-        return self.capi_monitor_get_cancel_this(self.handle)
-
-    def set_progress_func(self, progressFunc):
-        self.capi_monitor_set_progress_func(self.handle, progressFunc)
-
-    def get_progress(self) -> int:
-        return self.capi_monitor_get_progress(self.handle)
-
-    def set_deadline_msecs(self, deadline: int):
-        self.capi_monitor_set_deadline_msecs(self.handle, deadline)
-
-
-class BaseIterator(HandleAPI, CommonAPI):
-    pass
-
-
-class PageIterator(BaseIterator):
-
-    def delete(self, handle):
-        self.capi_page_iterator_delete(handle)
-
-    def copy(self, handle):
-        return self.capi_page_iterator_copy(handle)
-
-    def begin(self):
-        self.capi_page_iterator_begin(self.handle)
-
-    def next(self, level: PageIteratorLevel) -> bool:
-        return self.capi_page_iterator_next(self.handle, level)
-
-    def is_at_beginning_of(self, level: PageIteratorLevel) -> bool:
-        return self.capi_page_iterator_isat_beginning_of(self.handle, level)
-
-    def is_at_final_element(self, level: PageIteratorLevel,
-                            element: PageIteratorLevel) -> bool:
-        return self.capi_page_iterator_isat_final_element(self.handle,
-                                                          level, element)
-
-    def bounding_box(self, level: PageIteratorLevel) -> bool:
-        left = c_int()
-        left_p = pointer(left)
-        top = c_int()
-        top_p = pointer(top)
-        right = c_int()
-        right_p = pointer(right)
-        bottom = c_int()
-        bottom_p = pointer(bottom)
-        ret = self.capi_page_iterator_bounding_box(self.handle, level,
-                                                   left_p, top_p,
-                                                   right_p, bottom_p)
-        if not ret:
-            raise TesseractError("bounding_box failed",
-                                 "TessPageIteratorBoundingBox() failed")
-        return left.value, top.value, right.value, bottom.value
-
-    def block_type(self) -> int:
-        return self.capi_page_iterator_block_type(self.handle)
-
-    def get_binary_image(self, level: PageIteratorLevel):
-        return self.capi_page_iterator_get_binary_image(self.handle, level)
-
-    def get_image(self, level: PageIteratorLevel,
-                  padding: int, original_image,
-                  left: int, top: int):
-        self.capi_page_iterator_get_image(
-            self.handle, level, padding, original_image, left, top)
-
-    def baseline(self, level: PageIteratorLevel,
-                 x1: int, y1: int,
-                 x2: int, y2: int) -> bool:
-        return self.capi_page_iterator_baseline(self.handle, level,
-                                                x1, y1, x2, y2)
-
-    def orientation(self, orientation: Orientation,
-                    writing_direction: WritingDirection,
-                    textline_order: TextlineOrder,
-                    deskew_angle: float):
-        self.capi_page_iterator_orientation(
-            self.handle, orientation, writing_direction, textline_order,
-            deskew_angle)
-
-    def paragraph_info(
-            self,
-            justification: ParagraphJustification,
-            is_list_item: bool, is_crown: bool,
-            first_line_indent: int):
-        self.capi_page_iterator_paragraph_info(
-            self.handle, justification, is_list_item,
-            is_crown, first_line_indent)
-
-    def __copy__(self):
-        _cls = self.__class__
-        handle = self.copy(self.handle)
-        return _cls(handle)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self.data2 < self.data1:
-            self.data2 += 1
-            return self.data2
-        else:
-            raise StopIteration
-
-
-class ResultIterator(BaseIterator):
-
-    def delete(self, handle):
-        self.capi_result_iterator_delete(handle)
-
-    def copy(self, handle):
-        return self.capi_result_iterator_copy(handle)
-
-    def get_page_iterator(self):
-        iterator = self.capi_result_iterator_get_page_iterator(self.handle)
-        if iterator is None:
-            return
+    def analyse_layout(self) -> PageIterator:
+        iterator = self.API.analyse_layout(self.handle)
+        if not bool(iterator):
+            return None
         return PageIterator(iterator)
 
-    def get_page_iterator_const(self):
-        return self.capi_result_iterator_get_page_iterator_const(self.handle)
+    def recognize(self, monitor: ProgressMonitor = None) -> int:
+        monitor = monitor if monitor else None
+        return self.API.recognize(self.handle, monitor)
 
-    def get_choice_iterator(self):
-        return self.capi_result_iterator_get_choice_iterator(self.handle)
+    def process_pages(self, filename: str, retry_config: str,
+                      timeout_millisec: int, renderer: ResultRenderer) -> bool:
+        return self.API.process_pages(self.handle, filename, retry_config,
+                                      timeout_millisec, renderer.handle)
 
-    def next(self, level: PageIteratorLevel) -> bool:
-        return self.capi_result_iterator_next(self.handle, level)
+    def process_page(self, pix: LPPix, page_index: int, filename: bytes,
+                     retry_config: bytes, timeout_millisec: int,
+                     renderer: ResultRenderer) -> bool:
+        return self.API.process_page(self.handle, pix, page_index, filename,
+                                     retry_config, timeout_millisec,
+                                     renderer.handle)
 
-    def get_utf8_text(self, level: PageIteratorLevel) -> str:
-        ret = self.capi_result_iterator_get_utf8text(self.handle, level)
-        return self.decode_utf8(ret)
+    def get_iterator(self) -> ResultIterator:
+        iterator = self.API.get_iterator(self.handle)
+        if not bool(iterator):
+            return None
+        return ResultIterator(iterator)
 
-    def confidence(self, level: PageIteratorLevel) -> float:
-        return self.capi_result_iterator_confidence(self.handle, level)
-
-    def word_recognition_language(self) -> bytes:
-        return self.capi_result_iterator_word_recognition_language(self.handle)
-
-    def word_font_attributes(self,
-                             is_bold: bool,
-                             is_italic: bool,
-                             is_underlined: bool,
-                             is_monospace: bool,
-                             is_serif: bool,
-                             is_smallcaps: bool,
-                             pointsize: int,
-                             font_id: int) -> bytes:
-        return self.capi_result_iterator_word_font_attributes(
-            self.handle, is_bold,
-            is_italic,
-            is_underlined,
-            is_monospace,
-            is_serif,
-            is_smallcaps,
-            pointsize, font_id)
-
-    def word_isfrom_dictionary(self) -> bool:
-        return self.capi_result_iterator_word_isfrom_dictionary(self.handle)
-
-    def word_isnumeric(self) -> bool:
-        return self.capi_result_iterator_word_isnumeric(self.handle)
-
-    def symbol_issuperscript(self) -> bool:
-        return self.capi_result_iterator_symbol_issuperscript(self.handle)
-
-    def symbol_issubscript(self) -> bool:
-        return self.capi_result_iterator_symbol_issubscript(self.handle)
-
-    def symbol_isdropcap(self) -> bool:
-        return self.capi_result_iterator_symbol_isdropcap(self.handle)
-
-    def __copy__(self):
-        _cls = self.__class__
-        handle = self.copy(self.handle)
-        return _cls(handle)
-
-
-class ChoiceIterator(BaseIterator):
-
-    def delete(self, handle):
-        self.capi_choice_iterator_delete(handle)
-
-    def next(self) -> bool:
-        return self.capi_choice_iterator_next(self.handle)
+    def get_mutable_iterator(self) -> MutableIterator:
+        iterator = self.API.get_mutable_iterator(self.handle)
+        if not bool(iterator):
+            return None
+        return MutableIterator(iterator)
 
     def get_utf8_text(self) -> str:
-        ret = self.capi_choice_iterator_get_utf8_text(self.handle)
-        return self.decode_utf8(ret)
+        return self.API.get_utf8_text(self.handle)
 
-    def confidence(self) -> float:
-        return self.capi_choice_iterator_confidence(self.handle)
+    def get_hocr_text(self, page_number: int) -> str:
+        return self.API.get_hocr_text(self.handle, page_number)
 
+    def get_alto_text(self, page_number: int) -> str:
+        return self.API.get_alto_text(self.handle, page_number)
 
-def main():
-    pass
+    def get_tsv_text(self, page_number: int) -> str:
+        return self.API.get_tsv_text(self.handle, page_number)
 
+    def get_box_text(self, page_number: int) -> str:
+        return self.API.get_box_text(self.handle, page_number)
 
-if __name__ == '__main__':
-    main()
+    def get_lstm_box_text(self, page_number: int) -> str:
+        return self.API.get_lstm_box_text(self.handle, page_number)
+
+    def get_word_str_box_text(self, page_number: int) -> str:
+        return self.API.get_word_str_box_text(self.handle, page_number)
+
+    def get_unlv_text(self) -> str:
+        return self.API.get_unlv_text(self.handle)
+
+    def mean_text_conf(self) -> int:
+        return self.API.mean_text_conf(self.handle)
+
+    def all_word_confidences(self) -> list[int]:
+        return self.API.all_word_confidences(self.handle)
+
+    def adapt_toword_str(self, mode: PageSegMode, wordstr: str) -> bool:
+        return self.API.adapt_toword_str(self.handle, mode, wordstr)
+
+    def clear(self):
+        self.API.clear(self.handle)
+
+    def end(self):
+        self.API.end(self.handle)
+
+    def is_valid_word(self, word: str) -> int:
+        return self.API.is_valid_word(self.handle, word)
+
+    def get_text_direction(self) -> tuple[int, float]:
+        return self.API.get_text_direction(self.handle)
+
+    def get_unichar(self, unichar_id: int) -> bytes:
+        return self.API.get_unichar(self.handle, unichar_id)
+
+    def clear_persistent_cache(self):
+        self.API.clear_persistent_cache(self.handle)
+
+    def detect_orientation_script(self) -> OrientationScript:
+        return self.API.detect_orientation_script(self.handle)
+
+    def set_min_orientation_margin(self, margin: float):
+        self.API.set_min_orientation_margin(self.handle, margin)
+
+    def num_dawgs(self) -> int:
+        return self.API.num_dawgs(self.handle)
+
+    def oem(self) -> int:
+        return self.API.oem(self.handle)
+
+    def get_block_text_orientations(self) -> tuple[int, bool]:
+        return self.API.get_block_text_orientations(self.handle)

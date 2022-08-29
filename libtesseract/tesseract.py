@@ -9,12 +9,14 @@ import re
 from functools import lru_cache
 from PIL import Image
 from ctypes import POINTER
+from .common import TESSDATA_PREFIX
+from .error import TesseractError
 from .leptonica_capi import Pix
 from .leptonica import Leptonica
-from .tesseract_api import (GeneralAPI, RendererAPI, BaseAPI,
-                            TESSDATA_PREFIX, TesseractError,
-                            OcrEngineMode, Orientation, PageSegMode,
-                            PageIteratorLevel)
+from .tesseract_capi import (Orientation, OcrEngineMode, PageSegMode,
+                             PageIteratorLevel)
+from .tesseract_papi import GeneralAPI
+from .tesseract_api import TessBase, ProgressMonitor, ResultRenderer
 
 
 DPI_DEFAULT = 70
@@ -31,56 +33,91 @@ def digits_only(string):
 class Tesseract:
     LVL_LINE = PageIteratorLevel.TEXTLINE
     LVL_WORD = PageIteratorLevel.WORD
+    GENERAL_API = GeneralAPI
 
-    def __init__(self):
-        self.generalapi = GeneralAPI()
-        self.rendererapi = RendererAPI
-        self.baseapi = self.create_baseapi()
-        self.api_list = self.generalapi, self.rendererapi, self.baseapi
-
-    def create_baseapi(self,
-                       datapath: str = TESSDATA_PREFIX,
-                       language: str = 'eng',
-                       mode: OcrEngineMode = None, *configs, **kwargs):
-        return BaseAPI(datapath, language, mode, *configs, **kwargs)
-
-    def get_baseapi(self,
-                    datapath: str = TESSDATA_PREFIX,
-                    language: str = 'eng',
-                    mode: OcrEngineMode = None, *configs, **kwargs):
-        self.baseapi.init(datapath, language, mode, *configs, **kwargs)
-        return self
+    def __init__(self,
+                 datapath: str = TESSDATA_PREFIX,
+                 language: str = 'eng',
+                 mode: OcrEngineMode = None,
+                 *configs, **kwargs):
+        self.api = TessBase(datapath, language, mode, *configs, **kwargs)
 
     def __getattr__(self, attr):
-        for api in self.api_list:
-            if hasattr(api, attr):
-                return getattr(api, attr)
+        if hasattr(self.api, attr):
+            return getattr(self.api, attr)
         raise AttributeError(
             "'{}' object has no attribute '{}'".format(self.__class__.__name__,
                                                        attr))
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, trace):
-        del self.generalapi
-        del self.rendererapi
-        del self.baseapi
-
     @lru_cache
     def api_dir(self):
-        apis = set()
-        for api in self.api_list:
-            apis = apis | set(dir(api))
-        ret = [x for x in apis if not x.startswith('__')]
-        ret.sort()
+        if hasattr(self, 'api'):
+            ret = [x for x in dir(self.api) if not x.startswith('__')]
+            ret.sort()
+        else:
+            ret = []
         return ret
 
     def __dir__(self):
         return super().__dir__() + self.api_dir()
 
+    @property
+    def opencl_device(self):
+        return self.api.opencl_device
+
+    @property
+    def input_name(self) -> str:
+        return self.api.input_name
+
+    @input_name.setter
+    def input_name(self, value: str):
+        self.api.input_name = value
+
+    @property
+    def input_image(self):
+        return self.api.input_image
+
+    @input_image.setter
+    def input_image(self, value):
+        self.api.input_image = value
+
+    @property
+    def source_y_resolution(self) -> int:
+        return self.api.source_y_resolution
+
+    @property
+    def datapath(self) -> str:
+        return self.api.datapath
+
+    @property
+    def init_languages(self) -> str:
+        return self.api.init_languages
+
+    @property
+    def loaded_languages(self) -> list[str]:
+        return self.api.loaded_languages
+
+    @property
+    def available_languages(self) -> list[str]:
+        return self.api.available_languages
+
+    @property
+    def page_seg_mode(self) -> PageSegMode:
+        return self.api.page_seg_mode
+
+    @page_seg_mode.setter
+    def page_seg_mode(self, mode: PageSegMode):
+        self.api.page_seg_mode = mode
+
+    def set_is_numeric(self, mode):
+        whitelist = "0123456789." if mode else ''
+        return self.api.set_variable("tessedit_char_whitelist", whitelist)
+
+    def set_debug_file(self, filename):
+        return self.api.set_variable("debug_file", filename)
+
     def get_version(self) -> tuple:
-        version = self.version()
+        version = self.GENERAL_API.version()
         version = version.split(" ", 1)[0]
 
         # cut off "dev" string if exists for proper int conversion
@@ -95,7 +132,7 @@ class Tesseract:
         return (major, minor, release)
 
     def list_langs(self) -> list[str]:
-        return self.get_available_languages()
+        return self.available_languages
 
     def set_image_data(self, img, use_leptonica=True):
         use_pix = False
@@ -129,54 +166,40 @@ class Tesseract:
         else:
             self.set_image2(image)
 
-    def can_detect_orientation(self):
-        return 'osd' in self.list_langs()
-
     @classmethod
     def detect_orientation(cls, image, lang=None):
         # C-API with Tesseract 4 segfaults if running OSD_ONLY
         # psm mode with other than osd language
         # lang argument left purely for compatibility reasons
         # tested on 4.0.0-rc2
-        api = cls()
-        with api.get_baseapi(TESSDATA_PREFIX, 'osd') as handle:
-            handle.set_page_seg_mode(PageSegMode.OSD_ONLY)
-            handle.set_image_data(image)
-            res = handle.detect_orientation_script()
-            if res['confidence'] <= 0:
-                raise TesseractError(
-                    "no script", "no script detected"
-                )
-            orientation = {
-                Orientation.PAGE_UP: 0,
-                Orientation.PAGE_RIGHT: 90,
-                Orientation.PAGE_DOWN: 180,
-                Orientation.PAGE_LEFT: 270,
-            }[res['orientation_enum']]
-            return {'angle': orientation,
-                    'confidence': res['confidence']}
+        tesseract = cls(TESSDATA_PREFIX, 'osd')
+        tesseract.page_seg_mode = PageSegMode.OSD_ONLY
+        tesseract.set_image_data(image)
+        res = tesseract.detect_orientation_script()
+        if res.confidence <= 0:
+            raise TesseractError("no script", "no script detected")
+        return res
 
     @classmethod
     def image_to_string(cls, image, lang=None, builder=None):
         clang = lang if lang else "eng"
-        api = cls()
-        handle = api.get_baseapi(TESSDATA_PREFIX, clang)
+        tesseract = cls(TESSDATA_PREFIX, clang)
         for lang_item in clang.split("+"):
-            if lang_item not in handle.get_available_languages():
+            if lang_item not in tesseract.list_langs():
                 raise TesseractError(
                     "no lang",
                     f"language {lang_item} is not available"
                 )
 
-        handle.set_page_seg_mode(builder.tesseract_layout)
-        handle.set_debug_file(osp.devnull)
+        tesseract.page_seg_mode = builder.tesseract_layout
+        tesseract.set_debug_file(osp.devnull)
 
-        handle.set_image_data(image)
+        tesseract.set_image_data(image)
         if "digits" in builder.tesseract_configs:
-            handle.set_is_numeric(True)
+            tesseract.set_is_numeric(True)
 
-        handle.recognize()
-        result_iterator = handle.get_iterator()
+        tesseract.recognize()
+        result_iterator = tesseract.get_iterator()
         if result_iterator is None:
             raise TesseractError("no script", "no script detected")
         page_iterator = result_iterator.get_page_iterator()

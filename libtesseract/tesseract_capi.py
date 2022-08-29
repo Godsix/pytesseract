@@ -11,10 +11,11 @@ from functools import wraps
 from typing import Callable
 from ctypes import (POINTER, CDLL, CFUNCTYPE, c_float, c_void_p, c_int,
                     c_ubyte, c_char_p, c_bool, c_size_t, c_double,
-                    cast)
+                    cast, addressof)
 from .common import TESS_DLL
 from .datatype import c_int_p, c_bool_p
 from .leptonica_capi import Pix, LPPix, LPBoxa, LPLPPixa
+# from .utils import arch_hex_bit
 
 
 def bytes_list(data):
@@ -119,7 +120,57 @@ class TextlineOrder(IntEnum):
     ORDER_TOP_TO_BOTTOM = 2
 
 
+# class LP(c_void_p):
+#     def __repr__(self):
+#         address = addressof(self)
+#         class_name = self.__class__.__name__
+#         bit = arch_hex_bit()
+#         return f'<{class_name} address at 0x{address:0{bit}X}>'
+
+#     def __hash__(self):
+#         return hash(addressof(self))
+
+
+# class LPTessResultRenderer(LP):
+#     pass
+
+
+# class LPTessBaseAPI(LP):
+#     pass
+
+
+# class LPTessPageIterator(LP):
+#     pass
+
+
+# class LPTessResultIterator(LP):
+#     pass
+
+
+# class LPTessMutableIterator(LP):
+#     pass
+
+
+# class LPTessChoiceIterator(LP):
+#     pass
+
+
+# class LPETEXT_DESC(LP):
+#     pass
+
+
+# class LPFILE(LP):
+#     pass
+
+
+LPTessResultRenderer = c_void_p
+LPTessBaseAPI = c_void_p
+LPTessPageIterator = c_void_p
+LPTessResultIterator = c_void_p
+LPTessMutableIterator = c_void_p
+LPTessChoiceIterator = c_void_p
 LPETEXT_DESC = c_void_p
+LPFILE = c_void_p
 
 
 TessCancelFunc = CFUNCTYPE(c_bool, c_void_p, c_int)
@@ -146,604 +197,693 @@ TessProgressFunc = CFUNCTYPE(c_bool, LPETEXT_DESC, c_int, c_int, c_int, c_int)
 #     ]
 
 
-class TesseractAPI:
+class TessCAPI:
     API = {
         # General free functions
         'TessVersion': (c_char_p, ),
-        'TessDeleteText': (None, c_char_p),
-        'TessDeleteTextArray': (None, POINTER(c_char_p)),
-        'TessDeleteIntArray': (None, POINTER(c_int)),
+        'TessDeleteText': (None,
+                           c_char_p,  # const char * text
+                           ),
+        'TessDeleteTextArray': (None,
+                                POINTER(c_char_p),  # char ** arr
+                                ),
+        'TessDeleteIntArray': (None,
+                               POINTER(c_int),  # const int * arr
+                               ),
+
         # Renderer API
-        'TessTextRendererCreate': (c_void_p,
-                                   c_char_p),  # const char* outputbase
-        'TessHOcrRendererCreate': (c_void_p,
-                                   c_char_p),  # const char* outputbase
-        'TessHOcrRendererCreate2': (c_void_p,
-                                    c_char_p,  # const char* outputbase
-                                    c_bool),  # BOOL font_info
-        'TessAltoRendererCreate': (c_void_p,
-                                   c_char_p),  # const char* outputbase
-        'TessTsvRendererCreate': (c_void_p,
-                                  c_char_p),  # const char* outputbase
-        'TessPDFRendererCreate': (c_void_p,
-                                  c_char_p,  # const char* outputbase
-                                  c_char_p,  # const char* datadir
-                                  c_bool  # BOOL textonly
+        'TessTextRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                   c_char_p,  # const char * outputbase
+                                   ),
+        'TessHOcrRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                   c_char_p,  # const char * outputbase
+                                   ),
+        'TessHOcrRendererCreate2': (LPTessResultRenderer,  # TessResultRenderer *
+                                    c_char_p,  # const char * outputbase
+                                    c_bool,  # BOOL font_info
+                                    ),
+        'TessAltoRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                   c_char_p,  # const char * outputbase
+                                   ),
+        'TessTsvRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                  c_char_p,  # const char * outputbase
                                   ),
-        'TessUnlvRendererCreate': (c_void_p,
-                                   c_char_p),  # const char* outputbase
-        'TessBoxTextRendererCreate': (c_void_p,
-                                      c_char_p),  # const char* outputbase
-        'TessLSTMBoxRendererCreate': (c_void_p,
-                                      c_char_p),  # const char* outputbase
-        'TessWordStrBoxRendererCreate': (c_void_p,
-                                         c_char_p),  # const char* outputbase
+        'TessPDFRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                  c_char_p,  # const char * outputbase
+                                  c_char_p,  # const char * datadir
+                                  c_bool,  # BOOL textonly
+                                  ),
+        'TessUnlvRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                   c_char_p,  # const char * outputbase
+                                   ),
+        'TessBoxTextRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                      c_char_p,  # const char * outputbase
+                                      ),
+        'TessLSTMBoxRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                      c_char_p,  # const char * outputbase
+                                      ),
+        'TessWordStrBoxRendererCreate': (LPTessResultRenderer,  # TessResultRenderer *
+                                         c_char_p,  # const char * outputbase
+                                         ),
         'TessDeleteResultRenderer': (None,
-                                     # TessResultRenderer *renderer
-                                     c_void_p
+                                     # TessResultRenderer * renderer
+                                     LPTessResultRenderer,
                                      ),
         'TessResultRendererInsert': (None,
-                                     # TessResultRenderer *renderer
-                                     c_void_p,
-                                     # TessResultRenderer *next
-                                     c_void_p),
-        'TessResultRendererNext': (c_void_p,
-                                   # TessResultRenderer *renderer
-                                   c_void_p),
+                                     # TessResultRenderer * renderer
+                                     LPTessResultRenderer,
+                                     # TessResultRenderer * next
+                                     LPTessResultRenderer,
+                                     ),
+        'TessResultRendererNext': (LPTessResultRenderer,  # TessResultRenderer *
+                                   # TessResultRenderer * renderer
+                                   LPTessResultRenderer,
+                                   ),
         'TessResultRendererBeginDocument': (c_bool,
-                                            # TessResultRenderer* renderer
-                                            c_void_p,
-                                            # const char* title
-                                            c_char_p
+                                            # TessResultRenderer * renderer
+                                            LPTessResultRenderer,
+                                            c_char_p,  # const char * title
                                             ),
         'TessResultRendererAddImage': (c_bool,
-                                       # TessResultRenderer* renderer
-                                       c_void_p,
-                                       # TessBaseAPI* api
-                                       c_void_p
+                                       # TessResultRenderer * renderer
+                                       LPTessResultRenderer,
+                                       LPTessBaseAPI,  # TessBaseAPI * api
                                        ),
         'TessResultRendererEndDocument': (c_bool,
-                                          # TessResultRenderer* renderer
-                                          c_void_p
+                                          # TessResultRenderer * renderer
+                                          LPTessResultRenderer,
                                           ),
         'TessResultRendererExtention': (c_char_p,
-                                        # TessResultRenderer *renderer
-                                        c_void_p),
+                                        # TessResultRenderer * renderer
+                                        LPTessResultRenderer,
+                                        ),
         'TessResultRendererTitle': (c_char_p,
-                                    # TessResultRenderer *renderer
-                                    c_void_p),
+                                    # TessResultRenderer * renderer
+                                    LPTessResultRenderer,
+                                    ),
         'TessResultRendererImageNum': (c_int,
-                                       # TessResultRenderer *renderer
-                                       c_void_p),
+                                       # TessResultRenderer * renderer
+                                       LPTessResultRenderer,
+                                       ),
         # Base API
-        'TessBaseAPICreate': (c_void_p,  # TessBaseAPI*
-                              ),
+        'TessBaseAPICreate': (LPTessBaseAPI, ),  # TessBaseAPI *
         'TessBaseAPIDelete': (None,
-                              c_void_p),  # TessBaseAPI*
+                              LPTessBaseAPI,  # TessBaseAPI * handle
+                              ),
         'TessBaseAPIGetOpenCLDevice': (c_size_t,
-                                       c_void_p,  # TessBaseAPI* handle
-                                       POINTER(c_void_p)  # void **device
+                                       LPTessBaseAPI,  # TessBaseAPI * handle
+                                       POINTER(c_void_p),  # void * * device
                                        ),
         'TessBaseAPISetInputName': (None,
-                                    c_void_p,  # TessBaseAPI* handle
-                                    c_char_p  # const char* name
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
+                                    c_char_p,  # const char * name
                                     ),
         'TessBaseAPIGetInputName': (c_char_p,
-                                    # TessResultRenderer* renderer
-                                    c_void_p),
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
+                                    ),
         'TessBaseAPISetInputImage': (None,
-                                     c_void_p,  # TessResultRenderer* renderer
-                                     LPPix),  # struct Pix *pix
+                                     LPTessBaseAPI,  # TessBaseAPI * handle
+                                     LPPix,  # struct Pix * pix
+                                     ),
         'TessBaseAPIGetInputImage': (LPPix,  # struct Pix *
-                                     c_void_p),  # TessResultRenderer* renderer
-        'TessBaseAPIGetSourceYResolution': (c_int, c_void_p),  # TessBaseAPI*
-        'TessBaseAPIGetDatapath': (c_char_p, c_void_p),  # TessBaseAPI*
+                                     LPTessBaseAPI,  # TessBaseAPI * handle
+                                     ),
+        'TessBaseAPIGetSourceYResolution': (c_int,
+                                            # TessBaseAPI * handle
+                                            LPTessBaseAPI,
+                                            ),
+        'TessBaseAPIGetDatapath': (c_char_p,
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   ),
         'TessBaseAPISetOutputName': (None,
-                                     c_void_p,  # TessBaseAPI*
-                                     c_char_p,  # name
+                                     LPTessBaseAPI,  # TessBaseAPI * handle
+                                     c_char_p,  # const char * name
                                      ),
         'TessBaseAPISetVariable': (c_bool,
-                                   c_void_p,  # TessBaseAPI*
-                                   c_char_p,  # name
-                                   c_char_p,  # value
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   c_char_p,  # const char * name
+                                   c_char_p,  # const char * value
                                    ),
         'TessBaseAPISetDebugVariable': (c_bool,
-                                        c_void_p,  # TessBaseAPI*
-                                        c_char_p,  # name
-                                        c_char_p,  # value
+                                        LPTessBaseAPI,  # TessBaseAPI * handle
+                                        c_char_p,  # const char * name
+                                        c_char_p,  # const char * value
                                         ),
         'TessBaseAPIGetIntVariable': (c_bool,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_char_p,  # name
-                                      POINTER(c_int),  # value
+                                      # const TessBaseAPI * handle
+                                      LPTessBaseAPI,
+                                      c_char_p,  # const char * name
+                                      POINTER(c_int),  # int * value
                                       ),
         'TessBaseAPIGetBoolVariable': (c_bool,
-                                       c_void_p,  # TessBaseAPI*
-                                       c_char_p,  # name
-                                       POINTER(c_bool),  # value
+                                       # const TessBaseAPI * handle
+                                       LPTessBaseAPI,
+                                       c_char_p,  # const char * name
+                                       POINTER(c_bool),  # BOOL * value
                                        ),
         'TessBaseAPIGetDoubleVariable': (c_bool,
-                                         c_void_p,  # TessBaseAPI*
-                                         c_char_p,  # name
-                                         POINTER(c_double),  # value
+                                         # const TessBaseAPI * handle
+                                         LPTessBaseAPI,
+                                         c_char_p,  # const char * name
+                                         POINTER(c_double),  # double * value
                                          ),
         'TessBaseAPIGetStringVariable': (c_char_p,
-                                         c_void_p,  # TessBaseAPI*
-                                         c_char_p,  # name
+                                         # const TessBaseAPI * handle
+                                         LPTessBaseAPI,
+                                         c_char_p,  # const char * name
                                          ),
         'TessBaseAPIPrintVariables': (None,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_void_p  # FILE *fp
+                                      # const TessBaseAPI * handle
+                                      LPTessBaseAPI,
+                                      LPFILE,  # FILE * fp
                                       ),
         'TessBaseAPIPrintVariablesToFile': (c_bool,
-                                            c_void_p,  # TessBaseAPI*
-                                            c_char_p,  # filename
+                                            # const TessBaseAPI * handle
+                                            LPTessBaseAPI,
+                                            c_char_p,  # const char * filename
                                             ),
         'TessBaseAPIInit1': (c_int,
-                             c_void_p,  # TessBaseAPI*
-                             c_char_p,  # datapath
-                             c_char_p,  # language
-                             c_int,  # TessOcrEngineMode,oem
-                             POINTER(c_char_p),  # configs
-                             c_int),  # configs_size
+                             LPTessBaseAPI,  # TessBaseAPI * handle
+                             c_char_p,  # const char * datapath
+                             c_char_p,  # const char * language
+                             c_int,  # TessOcrEngineMode oem
+                             POINTER(c_char_p),  # char * * configs
+                             c_int,  # int configs_size
+                             ),
         'TessBaseAPIInit2': (c_int,
-                             c_void_p,  # TessBaseAPI*
-                             c_char_p,  # datapath
-                             c_char_p,  # language
-                             c_int,  # TessOcrEngineMode,oem
+                             LPTessBaseAPI,  # TessBaseAPI * handle
+                             c_char_p,  # const char * datapath
+                             c_char_p,  # const char * language
+                             c_int,  # TessOcrEngineMode oem
                              ),
         'TessBaseAPIInit3': (c_int,
-                             c_void_p,  # TessBaseAPI*
-                             c_char_p,  # datapath
-                             c_char_p,  # language
+                             LPTessBaseAPI,  # TessBaseAPI * handle
+                             c_char_p,  # const char * datapath
+                             c_char_p,  # const char * language
                              ),
         'TessBaseAPIInit4': (c_int,
-                             c_void_p,  # TessBaseAPI*
-                             c_char_p,  # datapath
-                             c_char_p,  # language
-                             c_int,  # TessOcrEngineMode,mode
-                             POINTER(c_char_p),  # configs
-                             c_int,  # configs_size
-                             POINTER(c_char_p),  # vars_vec
-                             POINTER(c_char_p),  # vars_values
-                             c_size_t,  # vars_vec_size
-                             c_bool  # set_only_non_debug_params
+                             LPTessBaseAPI,  # TessBaseAPI * handle
+                             c_char_p,  # const char * datapath
+                             c_char_p,  # const char * language
+                             c_int,  # TessOcrEngineMode mode
+                             POINTER(c_char_p),  # char * * configs
+                             c_int,  # int configs_size
+                             POINTER(c_char_p),  # char * * vars_vec
+                             POINTER(c_char_p),  # char * * vars_values
+                             c_size_t,  # size_t vars_vec_size
+                             c_bool,  # BOOL set_only_non_debug_params
                              ),
         'TessBaseAPIGetInitLanguagesAsString': (c_char_p,
-                                                c_void_p  # TessBaseAPI*
+                                                # const TessBaseAPI * handle
+                                                LPTessBaseAPI,
                                                 ),
         'TessBaseAPIGetLoadedLanguagesAsVector': (POINTER(c_char_p),
-                                                  c_void_p  # TessBaseAPI*
+                                                  # const TessBaseAPI * handle
+                                                  LPTessBaseAPI,
                                                   ),
         'TessBaseAPIGetAvailableLanguagesAsVector': (POINTER(c_char_p),
-                                                     c_void_p  # TessBaseAPI*
+                                                     # const TessBaseAPI * handle
+                                                     LPTessBaseAPI,
                                                      ),
         'TessBaseAPIInitLangMod': (c_int,
-                                   c_void_p,  # TessBaseAPI* handle
+                                   LPTessBaseAPI,  # TessBaseAPI* handle
                                    c_char_p,  # const char * datapath
                                    c_char_p,  # const char * language
                                    ),
         'TessBaseAPIInitForAnalysePage': (None,
-                                          c_void_p,  # TessBaseAPI*
+                                          # TessBaseAPI * handle
+                                          LPTessBaseAPI,
                                           ),
         'TessBaseAPIReadConfigFile': (None,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_char_p,  # filename
+                                      LPTessBaseAPI,  # TessBaseAPI * handle
+                                      c_char_p,  # const char * filename
                                       ),
         'TessBaseAPIReadDebugConfigFile': (None,
-                                           c_void_p,  # TessBaseAPI*
-                                           c_char_p,  # filename
+                                           # TessBaseAPI * handle
+                                           LPTessBaseAPI,
+                                           c_char_p,  # const char * filename
                                            ),
         'TessBaseAPISetPageSegMode': (None,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_int,  # See PageSegMode
+                                      LPTessBaseAPI,  # TessBaseAPI * handle
+                                      c_int,  # TessPageSegMode mode
                                       ),
-        'TessBaseAPIGetPageSegMode': (c_int,
-                                      c_void_p,  # TessBaseAPI*
+        'TessBaseAPIGetPageSegMode': (c_int,  # TessPageSegMode
+                                      # const TessBaseAPI * handle
+                                      LPTessBaseAPI,
                                       ),
         'TessBaseAPIRect': (c_char_p,
-                            c_void_p,  # TessBaseAPI*
-                            POINTER(c_ubyte),  # imagedata
-                            c_int,  # bytes_per_pixel
-                            c_int,  # bytes_per_line
-                            c_int,  # left
-                            c_int,  # top
-                            c_int,  # width
-                            c_int,  # height
+                            LPTessBaseAPI,  # TessBaseAPI * handle
+                            # const unsigned char * imagedata
+                            POINTER(c_ubyte),
+                            c_int,  # int bytes_per_pixel
+                            c_int,  # int bytes_per_line
+                            c_int,  # int left
+                            c_int,  # int top
+                            c_int,  # int width
+                            c_int,  # int height
                             ),
         'TessBaseAPIClearAdaptiveClassifier': (None,
-                                               c_void_p,  # TessBaseAPI*
+                                               # TessBaseAPI * handle
+                                               LPTessBaseAPI,
                                                ),
         'TessBaseAPISetImage': (None,
-                                c_void_p,  # TessBaseAPI*
-                                POINTER(c_ubyte),  # imagedata
-                                c_int,  # width
-                                c_int,  # height
-                                c_int,  # bytes_per_pixel
-                                c_int,  # bytes_per_line
+                                LPTessBaseAPI,  # TessBaseAPI * handle
+                                # const unsigned char * imagedata
+                                POINTER(c_ubyte),
+                                c_int,  # int width
+                                c_int,  # int height
+                                c_int,  # int bytes_per_pixel
+                                c_int,  # int bytes_per_line
                                 ),
         'TessBaseAPISetImage2': (None,
-                                 c_void_p,  # TessBaseAPI*
+                                 LPTessBaseAPI,  # TessBaseAPI * handle
                                  LPPix,  # struct Pix * pix
                                  ),
         'TessBaseAPISetSourceResolution': (None,
-                                           c_void_p,  # TessBaseAPI*
-                                           c_int,     # PPI
+                                           # TessBaseAPI * handle
+                                           LPTessBaseAPI,
+                                           c_int,  # int ppi
                                            ),
         'TessBaseAPISetRectangle': (None,
-                                    c_void_p,  # TessBaseAPI*
-                                    c_int,     # left
-                                    c_int,     # top
-                                    c_int,     # width
-                                    c_int,     # height
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
+                                    c_int,  # int left
+                                    c_int,  # int top
+                                    c_int,  # int width
+                                    c_int,  # int height
                                     ),
         'TessBaseAPIGetThresholdedImage': (LPPix,  # struct Pix *
-                                           c_void_p,  # TessBaseAPI*
+                                           # TessBaseAPI * handle
+                                           LPTessBaseAPI,
                                            ),
         'TessBaseAPIGetRegions': (LPBoxa,  # struct Boxa *
-                                  c_void_p,  # TessBaseAPI*
-                                  LPLPPixa  # struct Pixa **pixa
+                                  LPTessBaseAPI,  # TessBaseAPI * handle
+                                  LPLPPixa,  # struct Pixa * * pixa
                                   ),
         'TessBaseAPIGetTextlines': (LPBoxa,  # struct Boxa *
-                                    c_void_p,  # TessBaseAPI*
-                                    # struct Pixa **pixa
-                                    LPLPPixa,
-                                    POINTER(POINTER(c_int)),  # blockids
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
+                                    LPLPPixa,  # struct Pixa * * pixa
+                                    # int * * blockids
+                                    POINTER(POINTER(c_int)),
                                     ),
         'TessBaseAPIGetTextlines1': (LPBoxa,  # struct Boxa *
-                                     c_void_p,  # TessBaseAPI*
-                                     c_bool,  # raw_image
-                                     c_int,  # raw_image
-                                     # struct Pixa **pixa
-                                     LPLPPixa,
-                                     POINTER(POINTER(c_int)),  # blockids
-                                     POINTER(POINTER(c_int))  # paraids
+                                     LPTessBaseAPI,  # TessBaseAPI * handle
+                                     c_bool,  # BOOL raw_image
+                                     c_int,  # int raw_padding
+                                     LPLPPixa,  # struct Pixa * * pixa
+                                     # int * * blockids
+                                     POINTER(POINTER(c_int)),
+                                     # int * * paraids
+                                     POINTER(POINTER(c_int)),
                                      ),
         'TessBaseAPIGetStrips': (LPBoxa,  # struct Boxa *
-                                 c_void_p,  # TessBaseAPI*
+                                 LPTessBaseAPI,  # TessBaseAPI * handle
                                  LPLPPixa,  # struct Pixa * * pixa
-                                 POINTER(POINTER(c_int))  # blockids
+                                 POINTER(POINTER(c_int)),  # int * * blockids
                                  ),
         'TessBaseAPIGetWords': (LPBoxa,  # struct Boxa *
-                                c_void_p,  # TessBaseAPI*
+                                LPTessBaseAPI,  # TessBaseAPI * handle
                                 LPLPPixa,  # struct Pixa * * pixa
                                 ),
         'TessBaseAPIGetConnectedComponents': (LPBoxa,  # struct Boxa *
-                                              c_void_p,  # TessBaseAPI*
-                                              # struct Pixa **cc
+                                              # TessBaseAPI * handle
+                                              LPTessBaseAPI,
                                               LPLPPixa,  # struct Pixa * * cc
                                               ),
         'TessBaseAPIGetComponentImages': (LPBoxa,  # struct Boxa *
-                                          c_void_p,  # TessBaseAPI*
-                                          c_int,  # TessPageIteratorLevel level
-                                          c_bool,  # text_only
-                                          # struct Pixa **pixa
-                                          LPLPPixa,
-                                          POINTER(POINTER(c_int))  # blockids
+                                          # TessBaseAPI * handle
+                                          LPTessBaseAPI,
+                                          # TessPageIteratorLevel level
+                                          c_int,
+                                          c_bool,  # BOOL text_only
+                                          LPLPPixa,  # struct Pixa * * pixa
+                                          # int * * blockids
+                                          POINTER(POINTER(c_int)),
                                           ),
         'TessBaseAPIGetComponentImages1': (LPBoxa,  # struct Boxa *
-                                           c_void_p,  # TessBaseAPI*
-                                           c_int,  # PageIteratorLevel level
-                                           c_bool,  # text_only
-                                           c_bool,  # raw_image
-                                           c_int,  # raw_image
-                                           # struct Pixa **pixa
-                                           LPLPPixa,
-                                           POINTER(POINTER(c_int)),  # blockids
-                                           POINTER(POINTER(c_int))  # paraids
+                                           # TessBaseAPI * handle
+                                           LPTessBaseAPI,
+                                           # TessPageIteratorLevel level
+                                           c_int,
+                                           c_bool,  # BOOL text_only
+                                           c_bool,  # BOOL raw_image
+                                           c_int,  # int raw_padding
+                                           LPLPPixa,  # struct Pixa * * pixa
+                                           # int * * blockids
+                                           POINTER(POINTER(c_int)),
+                                           # int * * paraids
+                                           POINTER(POINTER(c_int)),
                                            ),
         'TessBaseAPIGetThresholdedImageScaleFactor': (c_int,
-                                                      c_void_p,  # TessBaseAPI*
+                                                      # const TessBaseAPI * handle
+                                                      LPTessBaseAPI,
                                                       ),
-        'TessBaseAPIAnalyseLayout': (c_void_p,  # TessPageIterator*
-                                     c_void_p,  # TessBaseAPI*
+        'TessBaseAPIAnalyseLayout': (LPTessPageIterator,  # TessPageIterator *
+                                     LPTessBaseAPI,  # TessBaseAPI * handle
                                      ),
         'TessBaseAPIRecognize': (c_int,
-                                 c_void_p,  # TessBaseAPI*
-                                 c_void_p,  # ETEXT_DESC*
+                                 LPTessBaseAPI,  # TessBaseAPI * handle
+                                 LPETEXT_DESC,  # ETEXT_DESC * monitor
                                  ),
         'TessBaseAPIProcessPages': (c_bool,
-                                    c_void_p,  # TessBaseAPI*
-                                    c_char_p,  # filename
-                                    c_char_p,  # retry_config
-                                    c_int,  # timeout_millisec
-                                    c_void_p,  # TessResultRenderer *
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
+                                    c_char_p,  # const char * filename
+                                    c_char_p,  # const char * retry_config
+                                    c_int,  # int timeout_millisec
+                                    # TessResultRenderer * renderer
+                                    LPTessResultRenderer,
                                     ),
         'TessBaseAPIProcessPage': (c_bool,
-                                   c_void_p,  # TessBaseAPI*
-                                   LPPix,  # struct Pix *pix
-                                   c_int,  # page_index
-                                   c_char_p,  # filename
-                                   c_char_p,  # retry_config
-                                   c_int,  # timeout_millisec
-                                   c_void_p,  # TessResultRenderer *
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   LPPix,  # struct Pix * pix
+                                   c_int,  # int page_index
+                                   c_char_p,  # const char * filename
+                                   c_char_p,  # const char * retry_config
+                                   c_int,  # int timeout_millisec
+                                   # TessResultRenderer * renderer
+                                   LPTessResultRenderer,
                                    ),
-        'TessBaseAPIGetIterator': (c_void_p,  # TessResultIterator
-                                   c_void_p,  # TessBaseAPI*
+        'TessBaseAPIGetIterator': (LPTessResultRenderer,  # TessResultIterator *
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
                                    ),
-        'TessBaseAPIGetMutableIterator': (c_void_p,  # TessMutableIterator
-                                          c_void_p,  # TessBaseAPI*
+        'TessBaseAPIGetMutableIterator': (LPTessMutableIterator,  # TessMutableIterator *
+                                          # TessBaseAPI * handle
+                                          LPTessBaseAPI,
                                           ),
         'TessBaseAPIGetUTF8Text': (c_char_p,
-                                   c_void_p,  # TessBaseAPI * handle
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
                                    ),
         'TessBaseAPIGetHOCRText': (c_char_p,
-                                   c_void_p,  # TessBaseAPI*
-                                   c_int,  # page_number
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   c_int,  # int page_number
                                    ),
         'TessBaseAPIGetAltoText': (c_char_p,
-                                   c_void_p,  # TessBaseAPI*
-                                   c_int,  # page_number
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   c_int,  # int page_number
                                    ),
         'TessBaseAPIGetTsvText': (c_char_p,
-                                  c_void_p,  # TessBaseAPI*
-                                  c_int,  # page_number
+                                  LPTessBaseAPI,  # TessBaseAPI * handle
+                                  c_int,  # int page_number
                                   ),
         'TessBaseAPIGetBoxText': (c_char_p,
-                                  c_void_p,  # TessBaseAPI*
-                                  c_int,  # page_number
+                                  LPTessBaseAPI,  # TessBaseAPI * handle
+                                  c_int,  # int page_number
                                   ),
         'TessBaseAPIGetLSTMBoxText': (c_char_p,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_int,  # page_number
+                                      LPTessBaseAPI,  # TessBaseAPI * handle
+                                      c_int,  # int page_number
                                       ),
         'TessBaseAPIGetWordStrBoxText': (c_char_p,
-                                         c_void_p,  # TessBaseAPI*
-                                         c_int,  # page_number
+                                         # TessBaseAPI * handle
+                                         LPTessBaseAPI,
+                                         c_int,  # int page_number
                                          ),
         'TessBaseAPIGetUNLVText': (c_char_p,
-                                   c_void_p,  # TessBaseAPI*
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
                                    ),
         'TessBaseAPIMeanTextConf': (c_int,
-                                    c_void_p,  # TessBaseAPI*
+                                    LPTessBaseAPI,  # TessBaseAPI * handle
                                     ),
         'TessBaseAPIAllWordConfidences': (POINTER(c_int),
-                                          c_void_p,  # TessBaseAPI*
+                                          # TessBaseAPI * handle
+                                          LPTessBaseAPI,
                                           ),
         'TessBaseAPIAdaptToWordStr': (c_bool,
-                                      c_void_p,  # TessBaseAPI*
-                                      c_int,  # TessPageSegMode(mode)
-                                      c_char_p,  # wordstr
+                                      LPTessBaseAPI,  # TessBaseAPI * handle
+                                      c_int,  # TessPageSegMode mode
+                                      c_char_p,  # const char * wordstr
                                       ),
         'TessBaseAPIClear': (None,
-                             c_void_p,  # TessBaseAPI*
+                             LPTessBaseAPI,  # TessBaseAPI * handle
                              ),
         'TessBaseAPIEnd': (None,
-                           c_void_p,  # TessBaseAPI*
+                           LPTessBaseAPI,  # TessBaseAPI * handle
                            ),
         'TessBaseAPIIsValidWord': (c_int,
-                                   c_void_p,  # TessBaseAPI*
-                                   c_char_p,  # word
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   c_char_p,  # const char * word
                                    ),
         'TessBaseAPIGetTextDirection': (c_bool,
-                                        c_void_p,  # TessBaseAPI*
-                                        POINTER(c_int),  # out_offset
-                                        POINTER(c_float),  # out_slope
+                                        LPTessBaseAPI,  # TessBaseAPI * handle
+                                        POINTER(c_int),  # int * out_offset
+                                        POINTER(c_float),  # float * out_slope
                                         ),
         'TessBaseAPIGetUnichar': (c_char_p,
-                                  c_void_p,  # TessBaseAPI*
-                                  c_int  # unichar_id
+                                  LPTessBaseAPI,  # TessBaseAPI * handle
+                                  c_int,  # int unichar_id
                                   ),
         'TessBaseAPIClearPersistentCache': (None,
-                                            c_void_p,  # TessBaseAPI*
+                                            # TessBaseAPI * handle
+                                            LPTessBaseAPI,
                                             ),
         'TessBaseAPIDetectOrientationScript': (c_bool,
-                                               c_void_p,  # TessBaseAPI*
-                                               POINTER(c_int),  # orient_deg
-                                               POINTER(c_float),  # orient_conf
-                                               # script_name
+                                               # TessBaseAPI * handle
+                                               LPTessBaseAPI,
+                                               # int * orient_deg
+                                               POINTER(c_int),
+                                               # float * orient_conf
+                                               POINTER(c_float),
+                                               # const char * * script_name
                                                POINTER(c_char_p),
-                                               POINTER(c_float),  # script_conf
+                                               # float * script_conf
+                                               POINTER(c_float),
                                                ),
-        # 'TessBaseAPIDetectOS': (c_bool,
-        #                         c_void_p,  # TessBaseAPI*
-        #                         POINTER(OSResults),
-        #                         ),
         'TessBaseAPISetMinOrientationMargin': (None,
-                                               c_void_p,  # TessBaseAPI*
-                                               c_double,  # margin
+                                               # TessBaseAPI * handle
+                                               LPTessBaseAPI,
+                                               c_double,  # double margin
                                                ),
         'TessBaseAPINumDawgs': (c_int,
-                                c_void_p,  # TessBaseAPI*
+                                LPTessBaseAPI,  # const TessBaseAPI * handle
                                 ),
         'TessBaseAPIOem': (c_int,  # TessOcrEngineMode
-                           c_void_p,  # TessBaseAPI*
+                           LPTessBaseAPI,  # const TessBaseAPI * handle
                            ),
         'TessBaseGetBlockTextOrientations': (None,
-                                             c_void_p,  # TessBaseAPI*
-                                             # block_orientation
+                                             # TessBaseAPI * handle
+                                             LPTessBaseAPI,
+                                             # int * * block_orientation
                                              POINTER(POINTER(c_int)),
-                                             # vertical_writing
+                                             # bool * * vertical_writing
                                              POINTER(POINTER(c_bool)),
                                              ),
         # Page iterator
         'TessPageIteratorDelete': (None,
-                                   c_void_p,  # TessPageIterator*
+                                   # TessPageIterator * handle
+                                   LPTessPageIterator,
                                    ),
-        'TessPageIteratorCopy': (c_void_p,  # TessPageIterator*
-                                 c_void_p,  # TessPageIterator*
+        'TessPageIteratorCopy': (LPTessPageIterator,  # TessPageIterator *
+                                 # const TessPageIterator * handle
+                                 LPTessPageIterator,
                                  ),
         'TessPageIteratorBegin': (None,
-                                  c_void_p,  # TessPageIterator*
+                                  # TessPageIterator * handle
+                                  LPTessPageIterator,
                                   ),
         'TessPageIteratorNext': (c_bool,
-                                 c_void_p,  # TessPageIterator*
-                                 c_int,  # TessPageIteratorLevel
+                                 # TessPageIterator * handle
+                                 LPTessPageIterator,
+                                 c_int,  # TessPageIteratorLevel level
                                  ),
         'TessPageIteratorIsAtBeginningOf': (c_bool,
-                                            c_void_p,  # TessPageIterator*
-                                            c_int,  # TessPageIteratorLevel
+                                            # const TessPageIterator * handle
+                                            LPTessPageIterator,
+                                            # TessPageIteratorLevel level
+                                            c_int,
                                             ),
         'TessPageIteratorIsAtFinalElement': (c_bool,
-                                             c_void_p,  # TessPageIterator*
-                                             # TessPageIteratorLevel (level)
+                                             # const TessPageIterator * handle
+                                             LPTessPageIterator,
+                                             # TessPageIteratorLevel level
                                              c_int,
-                                             # TessPageIteratorLevel (element)
+                                             # TessPageIteratorLevel element
                                              c_int,
                                              ),
         'TessPageIteratorBoundingBox': (c_bool,
-                                        c_void_p,  # TessPageIterator*
-                                        c_int,  # TessPageIteratorLevel (level)
-                                        POINTER(c_int),  # left
-                                        POINTER(c_int),  # top
-                                        POINTER(c_int),  # right
-                                        POINTER(c_int),  # bottom
+                                        # const TessPageIterator * handle
+                                        LPTessPageIterator,
+                                        c_int,  # TessPageIteratorLevel level
+                                        POINTER(c_int),  # int * left
+                                        POINTER(c_int),  # int * top
+                                        POINTER(c_int),  # int * right
+                                        POINTER(c_int),  # int * bottom
                                         ),
-        'TessPageIteratorBlockType': (c_int,  # PolyBlockType
-                                      c_void_p,  # TessPageIterator*
+        'TessPageIteratorBlockType': (c_int,  # TessPolyBlockType
+                                      # const TessPageIterator * handle
+                                      LPTessPageIterator,
                                       ),
-        'TessPageIteratorGetBinaryImage': (LPPix,
-                                           c_void_p,  # TessPageIterator*
-                                           c_int,  # PageIteratorLevel level
+        'TessPageIteratorGetBinaryImage': (LPPix,  # struct Pix *
+                                           # const TessPageIterator * handle
+                                           LPTessPageIterator,
+                                           # TessPageIteratorLevel level
+                                           c_int,
                                            ),
-        'TessPageIteratorGetImage': (LPPix,
-                                     c_void_p,  # TessPageIterator*
-                                     c_int,  # PageIteratorLevel level
-                                     c_int,  # padding,
-                                     LPPix,  # original_image,
-                                     POINTER(c_int),
-                                     POINTER(c_int)
+        'TessPageIteratorGetImage': (LPPix,  # struct Pix *
+                                     # const TessPageIterator * handle
+                                     LPTessPageIterator,
+                                     c_int,  # TessPageIteratorLevel level
+                                     c_int,  # int padding
+                                     LPPix,  # struct Pix * original_image
+                                     POINTER(c_int),  # int * left
+                                     POINTER(c_int),  # int * top
                                      ),
         'TessPageIteratorBaseline': (c_bool,
-                                     c_void_p,  # TessPageIterator*
-                                     c_int,  # TessPageIteratorLevel (level)
-                                     POINTER(c_int),  # x1
-                                     POINTER(c_int),  # y1
-                                     POINTER(c_int),  # x2
-                                     POINTER(c_int),  # y2
+                                     # const TessPageIterator * handle
+                                     LPTessPageIterator,
+                                     c_int,  # TessPageIteratorLevel level
+                                     POINTER(c_int),  # int * x1
+                                     POINTER(c_int),  # int * y1
+                                     POINTER(c_int),  # int * x2
+                                     POINTER(c_int),  # int * y2
                                      ),
         'TessPageIteratorOrientation': (None,
-                                        c_void_p,  # TessPageIterator*
-                                        POINTER(c_int),  # TessOrientation*
-                                        # TessWritingDirection*
+                                        # TessPageIterator * handle
+                                        LPTessPageIterator,
+                                        # TessOrientation * orientation
                                         POINTER(c_int),
-                                        POINTER(c_int),  # TessTextlineOrder*
-                                        POINTER(c_float),  # deskew_angle
+                                        # TessWritingDirection * writing_direction
+                                        POINTER(c_int),
+                                        # TessTextlineOrder * textline_order
+                                        POINTER(c_int),
+                                        # float * deskew_angle
+                                        POINTER(c_float),
                                         ),
         'TessPageIteratorParagraphInfo': (None,
-                                          c_void_p,  # TessPageIterator*
-                                          # TessParagraphJustification*
+                                          # TessPageIterator * handle
+                                          LPTessPageIterator,
+                                          # TessParagraphJustification * justification
                                           POINTER(c_int),
-                                          POINTER(c_bool),  # is_list_item
-                                          POINTER(c_bool),  # is_crown
-                                          POINTER(c_int),  # first_line_indent
+                                          # BOOL * is_list_item
+                                          POINTER(c_bool),
+                                          POINTER(c_bool),  # BOOL * is_crown
+                                          # int * first_line_indent
+                                          POINTER(c_int),
                                           ),
         # Result iterator
         'TessResultIteratorDelete': (None,
-                                     # TessResultIterator*
-                                     c_void_p,
+                                     # TessResultIterator * handle
+                                     LPTessResultRenderer,
                                      ),
-        'TessResultIteratorCopy': (c_void_p,  # TessResultIterator *,
-                                   # TessResultIterator*
-                                   c_void_p,
+        'TessResultIteratorCopy': (LPTessResultRenderer,  # TessResultIterator *
+                                   # const TessResultIterator * handle
+                                   LPTessResultRenderer,
                                    ),
-        'TessResultIteratorGetPageIterator': (
-            c_void_p,  # TessPageIterator*
-            c_void_p,  # TessResultIterator*
-        ),
-        'TessResultIteratorGetPageIteratorConst': (
-            # const TessPageIterator *
-            c_void_p,
-            # TessResultIterator*
-            c_void_p,
-        ),
-        'TessResultIteratorGetChoiceIterator': (
-            c_void_p,  # TessChoiceIterator *
-            # TessResultIterator*
-            c_void_p,
-        ),
+        'TessResultIteratorGetPageIterator': (LPTessPageIterator,  # TessPageIterator *
+                                              # TessResultIterator * handle
+                                              LPTessResultRenderer,
+                                              ),
+        'TessResultIteratorGetPageIteratorConst': (LPTessPageIterator,  # const TessPageIterator *
+                                                   # const TessResultIterator * handle
+                                                   LPTessResultRenderer,
+                                                   ),
+        'TessResultIteratorGetChoiceIterator': (c_void_p,  # TessChoiceIterator *
+                                                # const TessResultIterator * handle
+                                                LPTessResultRenderer,
+                                                ),
         'TessResultIteratorNext': (c_bool,
-                                   c_void_p,  # TessResultIterator*
-                                   # TessPageIteratorLevel (level)
-                                   c_int,
+                                   # TessResultIterator * handle
+                                   LPTessResultRenderer,
+                                   c_int,  # TessPageIteratorLevel level
                                    ),
         'TessResultIteratorGetUTF8Text': (c_char_p,
-                                          c_void_p,  # TessResultIterator*
-                                          # TessPageIteratorLevel (level)
+                                          # const TessResultIterator * handle
+                                          LPTessResultRenderer,
+                                          # TessPageIteratorLevel level
                                           c_int,
                                           ),
         'TessResultIteratorConfidence': (c_float,
-                                         c_void_p,  # TessResultIterator*
-                                         # TessPageIteratorLevel (level)
-                                         c_int,
+                                         # const TessResultIterator * handle
+                                         LPTessResultRenderer,
+                                         c_int,  # TessPageIteratorLevel level
                                          ),
         'TessResultIteratorWordRecognitionLanguage': (c_char_p,
-                                                      # TessResultIterator*
-                                                      c_void_p,
+                                                      # const TessResultIterator * handle
+                                                      LPTessResultRenderer,
                                                       ),
-        'TessResultIteratorWordFontAttributes': (
-            c_char_p,
-            c_void_p,  # TessResultIterator*
-            POINTER(c_bool),  # is_bold
-            POINTER(c_bool),  # is_italic
-            POINTER(c_bool),  # is_underlined
-            POINTER(c_bool),  # is_monospace
-            POINTER(c_bool),  # is_serif
-            POINTER(c_bool),  # is_smallcaps
-            POINTER(c_int),  # pointsize
-            POINTER(c_int),  # font_id
-        ),
+        'TessResultIteratorWordFontAttributes': (c_char_p,
+                                                 # const TessResultIterator * handle
+                                                 LPTessResultRenderer,
+                                                 # BOOL * is_bold
+                                                 POINTER(c_bool),
+                                                 # BOOL * is_italic
+                                                 POINTER(c_bool),
+                                                 # BOOL * is_underlined
+                                                 POINTER(c_bool),
+                                                 # BOOL * is_monospace
+                                                 POINTER(c_bool),
+                                                 # BOOL * is_serif
+                                                 POINTER(c_bool),
+                                                 # BOOL * is_smallcaps
+                                                 POINTER(c_bool),
+                                                 # int * pointsize
+                                                 POINTER(c_int),
+                                                 # int * font_id
+                                                 POINTER(c_int),
+                                                 ),
         'TessResultIteratorWordIsFromDictionary': (c_bool,
-                                                   # TessResultIterator*
-                                                   c_void_p,
+                                                   # const TessResultIterator * handle
+                                                   LPTessResultRenderer,
                                                    ),
         'TessResultIteratorWordIsNumeric': (c_bool,
-                                            c_void_p,  # TessResultIterator*
+                                            # const TessResultIterator * handle
+                                            LPTessResultRenderer,
                                             ),
         'TessResultIteratorSymbolIsSuperscript': (c_bool,
-                                                  # TessResultIterator*
-                                                  c_void_p,
+                                                  # const TessResultIterator * handle
+                                                  LPTessResultRenderer,
                                                   ),
         'TessResultIteratorSymbolIsSubscript': (c_bool,
-                                                # TessResultIterator*
-                                                c_void_p,
+                                                # const TessResultIterator * handle
+                                                LPTessResultRenderer,
                                                 ),
         'TessResultIteratorSymbolIsDropcap': (c_bool,
-                                              c_void_p,  # TessResultIterator*
+                                              # const TessResultIterator * handle
+                                              LPTessResultRenderer,
                                               ),
         'TessChoiceIteratorDelete': (None,
-                                     c_void_p,  # TessChoiceIterator*
+                                     # TessChoiceIterator * handle
+                                     c_void_p,
                                      ),
         'TessChoiceIteratorNext': (c_bool,
-                                   c_void_p,  # TessChoiceIterator*
+                                   # TessChoiceIterator * handle
+                                   c_void_p,
                                    ),
         'TessChoiceIteratorGetUTF8Text': (c_char_p,
-                                          c_void_p,  # TessChoiceIterator*
+                                          # const TessChoiceIterator * handle
+                                          c_void_p,
                                           ),
         'TessChoiceIteratorConfidence': (c_float,
-                                         c_void_p,  # TessChoiceIterator*
+                                         # const TessChoiceIterator * handle
+                                         c_void_p,
                                          ),
         # Progress monitor
-        'TessMonitorCreate': (
-            LPETEXT_DESC,  # ETEXT_DESC*
-        ),
+        'TessMonitorCreate': (LPETEXT_DESC, ),  # ETEXT_DESC *
         'TessMonitorDelete': (None,
-                              LPETEXT_DESC,  # ETEXT_DESC*
+                              LPETEXT_DESC,  # ETEXT_DESC * monitor
                               ),
         'TessMonitorSetCancelFunc': (None,
-                                     LPETEXT_DESC,  # ETEXT_DESC*
+                                     LPETEXT_DESC,  # ETEXT_DESC * monitor
                                      # TessCancelFunc cancelFunc
                                      TessCancelFunc,
                                      ),
         'TessMonitorSetCancelThis': (None,
-                                     LPETEXT_DESC,  # ETEXT_DESC*
-                                     c_void_p,  # cancelThis
+                                     LPETEXT_DESC,  # ETEXT_DESC * monitor
+                                     c_void_p,  # void * cancelThis
                                      ),
         'TessMonitorGetCancelThis': (c_void_p,
-                                     LPETEXT_DESC,  # ETEXT_DESC*
+                                     LPETEXT_DESC,  # ETEXT_DESC * monitor
                                      ),
         'TessMonitorSetProgressFunc': (None,
-                                       LPETEXT_DESC,  # ETEXT_DESC*
+                                       LPETEXT_DESC,  # ETEXT_DESC * monitor
                                        # TessProgressFunc progressFunc
                                        TessProgressFunc,
                                        ),
         'TessMonitorGetProgress': (c_int,
-                                   LPETEXT_DESC,  # ETEXT_DESC*
+                                   LPETEXT_DESC,  # ETEXT_DESC * monitor
                                    ),
         'TessMonitorSetDeadlineMSecs': (None,
-                                        LPETEXT_DESC,  # ETEXT_DESC*
-                                        c_int,  # deadline
-                                        ),
+                                        LPETEXT_DESC,  # ETEXT_DESC * monitor
+                                        c_int,  # int deadline
+                                        )
     }
 
     def __init__(self, path):
@@ -842,41 +982,41 @@ class TesseractAPI:
         return self.TessWordStrBoxRendererCreate(outputbase)
 
     def capi_delete_result_renderer(self,
-                                    renderer: c_void_p):
+                                    renderer: LPTessResultRenderer):
         self.TessDeleteResultRenderer(renderer)
 
     def capi_result_renderer_insert(self,
-                                    renderer: c_void_p, next_):
+                                    renderer: LPTessResultRenderer, next_):
         self.TessResultRendererInsert(renderer, next_)
 
     def capi_result_renderer_next(
-            self, renderer: c_void_p) -> c_void_p:
+            self, renderer: LPTessResultRenderer) -> LPTessResultRenderer:
         return self.TessResultRendererNext(renderer)
 
     def capi_result_renderer_begin_document(self,
-                                            renderer: c_void_p,
+                                            renderer: LPTessResultRenderer,
                                             title: bytes) -> bool:
         return self.TessResultRendererBeginDocument(renderer, title)
 
     def capi_result_renderer_add_image(self,
-                                       renderer: c_void_p,
-                                       api: c_void_p) -> bool:
+                                       renderer: LPTessResultRenderer,
+                                       api: LPTessBaseAPI) -> bool:
         return self.TessResultRendererAddImage(renderer, api)
 
     def capi_result_renderer_end_document(
-            self, renderer: c_void_p) -> bool:
+            self, renderer: LPTessResultRenderer) -> bool:
         return self.TessResultRendererEndDocument(renderer)
 
     def capi_result_renderer_extention(self,
-                                       renderer: c_void_p) -> bytes:
+                                       renderer: LPTessResultRenderer) -> bytes:
         return self.TessResultRendererExtention(renderer)
 
     def capi_result_renderer_title(self,
-                                   renderer: c_void_p) -> bytes:
+                                   renderer: LPTessResultRenderer) -> bytes:
         return self.TessResultRendererTitle(renderer)
 
     def capi_result_renderer_image_num(self,
-                                       renderer: c_void_p) -> int:
+                                       renderer: LPTessResultRenderer) -> int:
         '''
         This is always defined. It means either the number of the
         current image, the last image ended, or in the completed document
@@ -885,7 +1025,7 @@ class TesseractAPI:
 
         Parameters
         ----------
-        renderer : c_void_p
+        renderer : LPTessResultRenderer
             DESCRIPTION.
 
         Returns
@@ -1217,31 +1357,31 @@ class TesseractAPI:
 
     # Page iterator
 
-    def capi_page_iterator_delete(self, handle: c_void_p):
+    def capi_page_iterator_delete(self, handle: LPTessPageIterator):
         self.TessPageIteratorDelete(handle)
 
     def capi_page_iterator_copy(
-            self, handle: c_void_p) -> c_void_p:
+            self, handle: LPTessPageIterator) -> LPTessPageIterator:
         return self.TessPageIteratorCopy(handle)
 
-    def capi_page_iterator_begin(self, handle: c_void_p):
+    def capi_page_iterator_begin(self, handle: LPTessPageIterator):
         self.TessPageIteratorBegin(handle)
 
-    def capi_page_iterator_next(self, handle: c_void_p,
+    def capi_page_iterator_next(self, handle: LPTessPageIterator,
                                 level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorNext(handle, level)
 
-    def capi_page_iterator_isat_beginning_of(self, handle: c_void_p,
+    def capi_page_iterator_isat_beginning_of(self, handle: LPTessPageIterator,
                                              level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorIsAtBeginningOf(handle, level)
 
     def capi_page_iterator_isat_final_element(
-        self, handle: c_void_p,
+        self, handle: LPTessPageIterator,
             level: PageIteratorLevel,
             element: PageIteratorLevel) -> bool:
         return self.TessPageIteratorIsAtFinalElement(handle, level, element)
 
-    def capi_page_iterator_bounding_box(self, handle: c_void_p,
+    def capi_page_iterator_bounding_box(self, handle: LPTessPageIterator,
                                         level: PageIteratorLevel,
                                         left: int,
                                         top: int,
@@ -1251,15 +1391,15 @@ class TesseractAPI:
                                                 left, top,
                                                 right, bottom)
 
-    def capi_page_iterator_block_type(self, handle: c_void_p) -> int:
+    def capi_page_iterator_block_type(self, handle: LPTessPageIterator) -> int:
         return self.TessPageIteratorBlockType(handle)
 
-    def capi_page_iterator_get_binary_image(self, handle: c_void_p,
+    def capi_page_iterator_get_binary_image(self, handle: LPTessPageIterator,
                                             level: PageIteratorLevel) -> LPPix:
         return self.TessPageIteratorGetBinaryImage(handle, level)
 
     def capi_page_iterator_get_image(self,
-                                     handle: c_void_p,
+                                     handle: LPTessPageIterator,
                                      level: PageIteratorLevel,
                                      padding: int, original_image,
                                      left: int, top: int) -> LPPix:
@@ -1268,14 +1408,14 @@ class TesseractAPI:
                                              left, top)
 
     def capi_page_iterator_baseline(self,
-                                    handle: c_void_p,
+                                    handle: LPTessPageIterator,
                                     level: PageIteratorLevel,
                                     x1: int, y1: int,
                                     x2: int, y2: int) -> bool:
         return self.TessPageIteratorBaseline(handle, level, x1, y1, x2, y2)
 
     def capi_page_iterator_orientation(self,
-                                       handle: c_void_p,
+                                       handle: LPTessPageIterator,
                                        orientation: Orientation,
                                        writing_direction: WritingDirection,
                                        textline_order: TextlineOrder,
@@ -1285,7 +1425,7 @@ class TesseractAPI:
                                          deskew_angle)
 
     def capi_page_iterator_paragraph_info(
-            self, handle: c_void_p,
+            self, handle: LPTessPageIterator,
             justification: ParagraphJustification,
             is_list_item: bool, is_crown: bool,
             first_line_indent: int):
@@ -1294,48 +1434,48 @@ class TesseractAPI:
 
     # Result iterator
 
-    def capi_result_iterator_delete(self, handle: c_void_p):
+    def capi_result_iterator_delete(self, handle: LPTessResultIterator):
         self.TessResultIteratorDelete(handle)
 
     def capi_result_iterator_copy(
             self,
-            handle: c_void_p) -> c_void_p:
+            handle: LPTessResultIterator) -> LPTessResultIterator:
         return self.TessResultIteratorCopy(handle)
 
     def capi_result_iterator_get_page_iterator(
             self,
-            handle: c_void_p) -> c_void_p:
+            handle: LPTessResultIterator) -> LPTessPageIterator:
         return self.TessResultIteratorGetPageIterator(handle)
 
     def capi_result_iterator_get_page_iterator_const(
             self,
-            handle: c_void_p) -> c_void_p:
+            handle: LPTessResultIterator) -> LPTessPageIterator:
         return self.TessResultIteratorGetPageIteratorConst(handle)
 
     def capi_result_iterator_get_choice_iterator(
             self,
-            handle: c_void_p) -> c_void_p:
+            handle: LPTessResultIterator) -> LPTessChoiceIterator:
         return self.TessResultIteratorGetChoiceIterator(handle)
 
-    def capi_result_iterator_next(self, handle: c_void_p,
+    def capi_result_iterator_next(self, handle: LPTessResultIterator,
                                   level: PageIteratorLevel) -> bool:
         return self.TessResultIteratorNext(handle, level)
 
-    def capi_result_iterator_get_utf8text(self, handle: c_void_p,
+    def capi_result_iterator_get_utf8text(self, handle: LPTessResultIterator,
                                           level: PageIteratorLevel) -> bytes:
         return self.TessResultIteratorGetUTF8Text(handle, level)
 
-    def capi_result_iterator_confidence(self, handle: c_void_p,
+    def capi_result_iterator_confidence(self, handle: LPTessResultIterator,
                                         level: PageIteratorLevel) -> float:
         return self.TessResultIteratorConfidence(handle, level)
 
     def capi_result_iterator_word_recognition_language(
             self,
-            handle: c_void_p) -> bytes:
+            handle: LPTessResultIterator) -> bytes:
         return self.TessResultIteratorWordRecognitionLanguage(handle)
 
     def capi_result_iterator_word_font_attributes(self,
-                                                  handle: c_void_p,
+                                                  handle: LPTessResultIterator,
                                                   is_bold: bool,
                                                   is_italic: bool,
                                                   is_underlined: bool,
@@ -1354,42 +1494,42 @@ class TesseractAPI:
 
     def capi_result_iterator_word_is_from_dictionary(
             self,
-            handle: c_void_p) -> bool:
+            handle: LPTessResultIterator) -> bool:
         return self.TessResultIteratorWordIsFromDictionary(handle)
 
     def capi_result_iterator_word_is_numeric(
             self,
-            handle: c_void_p) -> bool:
+            handle: LPTessResultIterator) -> bool:
         return self.TessResultIteratorWordIsNumeric(handle)
 
     def capi_result_iterator_symbol_is_superscript(
             self,
-            handle: c_void_p) -> bool:
+            handle: LPTessResultIterator) -> bool:
         return self.TessResultIteratorSymbolIsSuperscript(handle)
 
     def capi_result_iterator_symbol_is_subscript(
             self,
-            handle: c_void_p) -> bool:
+            handle: LPTessResultIterator) -> bool:
         return self.TessResultIteratorSymbolIsSubscript(handle)
 
     def capi_result_iterator_symbol_is_dropcap(
             self,
-            handle: c_void_p) -> bool:
+            handle: LPTessResultIterator) -> bool:
         return self.TessResultIteratorSymbolIsDropcap(handle)
 
-    def capi_choice_iterator_delete(self, handle: c_void_p):
+    def capi_choice_iterator_delete(self, handle: LPTessChoiceIterator):
         self.TessChoiceIteratorDelete(handle)
 
-    def capi_choice_iterator_next(self, handle: c_void_p) -> bool:
+    def capi_choice_iterator_next(self, handle: LPTessChoiceIterator) -> bool:
         return self.TessChoiceIteratorNext(handle)
 
     def capi_choice_iterator_get_utf8text(
             self,
-            handle: c_void_p) -> bytes:
+            handle: LPTessChoiceIterator) -> bytes:
         return self.TessChoiceIteratorGetUTF8Text(handle)
 
     def capi_choice_iterator_confidence(self,
-                                        handle: c_void_p) -> float:
+                                        handle: LPTessChoiceIterator) -> float:
         return self.TessChoiceIteratorConfidence(handle)
 
     # Progress monitor
@@ -1424,4 +1564,4 @@ class TesseractAPI:
         self.TessMonitorSetDeadlineMSecs(monitor, deadline)
 
 
-TESSERACT_API = TesseractAPI(TESS_DLL)
+TESSERACT_API = TessCAPI(TESS_DLL)
