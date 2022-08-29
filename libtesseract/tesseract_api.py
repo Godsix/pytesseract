@@ -83,10 +83,8 @@ class HandleAPI:
         self.HANDLES[self.handle] = True
 
     def close(self):
-        print(self.handle, self.HANDLES)
         if self.handle:
             if self.handle in self.HANDLES:
-                print('delete', self.handle)
                 self.delete(self.handle)
                 del self.HANDLES[self.handle]
             self.handle = None
@@ -321,7 +319,6 @@ class BaseAPI(ContextAPI):
         return self.capi_base_api_create()
 
     def delete(self, handle):
-        print('capi_base_api_delete', handle)
         self.capi_base_api_delete(handle)
 
     def get_open_cldevice(self, device) -> int:
@@ -613,8 +610,6 @@ class BaseAPI(ContextAPI):
         if not ret:
             raise TesseractError("detect_orientation failed",
                                  "TessBaseAPIDetectOrientationScript() failed")
-        print(script_name, script_name.contents,
-              script_name.contents.value, script_conf.value)
         return {"orientation": orientation_deg.value,
                 "orientation_enum": round(orientation_deg.value / 90),
                 "confidence": orientation_confidence.value}
@@ -669,7 +664,6 @@ class BaseIterator(HandleAPI, CommonAPI):
 class PageIterator(BaseIterator):
 
     def delete(self, handle):
-        print('PageIterator', 'delete')
         self.capi_page_iterator_delete(handle)
 
     def copy(self, handle):
@@ -760,7 +754,6 @@ class PageIterator(BaseIterator):
 class ResultIterator(BaseIterator):
 
     def delete(self, handle):
-        print('ResultIterator', 'delete')
         self.capi_result_iterator_delete(handle)
 
     def copy(self, handle):
