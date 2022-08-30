@@ -7,30 +7,17 @@ Created on Thu Aug 25 13:41:23 2022
 import os.path as osp
 import weakref
 from ctypes import c_void_p
+from typing import Callable, Any
 from .common import TESSDATA_PREFIX
+from .datatype import BaseObject
 from .leptonica_capi import LPBoxa, LPPixa, LPPix
 from .tesseract_capi import (OcrEngineMode, PageSegMode, PolyBlockType,
-                             PageIteratorLevel)
+                             PageIteratorLevel,
+                             TessProgressFunc, TessCancelFunc)
 from .tesseract_papi import (BaseAPI, ProgressMonitorAPI, RendererAPI,
                              PageIteratorAPI, ResultIteratorAPI,
                              ChoiceIteratorAPI,
                              OrientationScript, Bounding, Font)
-
-
-class BaseObject:
-    API = None
-
-    def __init__(self, handle):
-        self.handle = handle
-
-    def delete(self, handle):
-        self.API.delete(handle)
-
-    def __del__(self):
-        if hasattr(self, 'handle') and self.handle:
-            handle = self.handle
-            self.handle = None
-            self.delete(handle)
 
 
 class BaseTessObject(BaseObject):
@@ -45,7 +32,7 @@ class BaseTessObject(BaseObject):
 class BaseIterObject(BaseObject):
 
     def __init__(self, handle, parent=None):
-        self.handle = handle
+        super().__init__(handle)
         self.parent = parent if parent is None else weakref.ref(parent)
 
     def __del__(self):
@@ -60,9 +47,8 @@ class CopyIterator(BaseIterObject):
         return self.API.copy(self.handle)
 
     def __copy__(self):
-        cls_ = self.__class__
         handle = self.copy(self.handle)
-        return cls_(handle)
+        return self.__class__(handle)
 
 
 class ResultRenderer(BaseObject):
@@ -84,7 +70,7 @@ class ResultRenderer(BaseObject):
         self.filetype = filetype
 
     @classmethod
-    def create(cls, outputbase: str, filetype: str, *args):
+    def create(cls, outputbase: str, filetype: str, *args) -> 'ResultRenderer':
         func_name = f'{filetype.lower()}_renderer_create'
         if hasattr(cls.API, func_name):
             func = getattr(cls.API, func_name)
@@ -96,14 +82,10 @@ class ResultRenderer(BaseObject):
         result = func(outputbase, *args)
         return cls(result)
 
-    def insert(self, next_):
-        if isinstance(next_, self.__class__):
-            next_value = next_.handle
-        else:
-            next_value = next_
-        self.API.insert(self.handle, next_value)
+    def insert(self, next_: 'ResultRenderer'):
+        self.API.insert(self.handle, next_)
 
-    def next(self):
+    def next(self) -> 'ResultRenderer':
         result = self.API.next(self.handle)
         return self.__class__(result)
 
@@ -181,21 +163,21 @@ class ChoiceIterator(BaseIterObject):
 class ResultIterator(CopyIterator):
     API = ResultIteratorAPI
 
-    def get_page_iterator(self):
+    def get_page_iterator(self) -> PageIterator:
         handle = self.API.get_page_iterator(self.handle)
-        if not bool(handle):
+        if not handle:
             return None
         return PageIterator(handle, self)
 
-    def get_page_iterator_const(self):
+    def get_page_iterator_const(self) -> PageIterator:
         handle = self.API.get_page_iterator_const(self.handle)
-        if not bool(handle):
+        if not handle:
             return None
         return PageIterator(handle, self)
 
-    def get_choice_iterator(self):
+    def get_choice_iterator(self) -> ChoiceIterator:
         handle = self.API.get_choice_iterator(self.handle)
-        if not bool(handle):
+        if not handle:
             return None
         return ChoiceIterator(handle, self)
 
@@ -234,8 +216,43 @@ class MutableIterator(ResultIterator):
     pass
 
 
+def wrapper_cancel_func(func):
+
+    @TessCancelFunc
+    def wrapper(cancel_this: c_void_p, words: int) -> bool:
+        return func(cancel_this, words)
+    return wrapper
+
+
+def wrapper_progress_func(func):
+
+    @TessProgressFunc
+    def wrapper(this: c_void_p,
+                left: int, right: int,
+                top: int, bottom: int) -> bool:
+        monitor = ProgressMonitor(this)
+        return func(monitor, left, right, top, bottom)
+    return wrapper
+
+
 class ProgressMonitor(BaseTessObject):
     API = ProgressMonitorAPI
+    INSTANCES = {}
+
+    def __new__(cls, handle=None):
+        if handle is not None and handle in cls.INSTANCES:
+            instance_ref = cls.INSTANCES[handle]
+            instance = instance_ref()
+            if instance is None:
+                return super().__new__(cls)
+            return instance
+        return super().__new__(cls)
+
+    def __init__(self, handle=None):
+        if handle is None:
+            handle = self.create()
+            self.__class__.INSTANCES[handle] = weakref.ref(self)
+        self.handle = handle
 
     @property
     def progress(self) -> int:
@@ -249,11 +266,24 @@ class ProgressMonitor(BaseTessObject):
     def cancel_this(self, value: c_void_p):
         self.API.set_cancel_this(self.handle, value)
 
-    def set_cancel_func(self, cancel_func):
-        self.API.set_cancel_func(self.handle, cancel_func)
+    def set_cancel_func(self, cancel_func: Callable[[c_void_p, int], bool]):
+        if isinstance(cancel_func, TessProgressFunc):
+            self.callable_cancel_func = None
+            self.cancel_func = cancel_func
+        else:
+            self.callable_cancel_func = cancel_func
+            self.cancel_func = wrapper_cancel_func(cancel_func)
+        self.API.set_cancel_func(self.handle, self.cancel_func)
 
-    def set_progress_func(self, progress_func):
-        self.API.set_progress_func(self.handle, progress_func)
+    def set_progress_func(self, progress_func: Callable[[Any, int, int,
+                                                         int, int], bool]):
+        if isinstance(progress_func, TessProgressFunc):
+            self.callable_progress_func = None
+            self.progress_func = progress_func
+        else:
+            self.callable_progress_func = progress_func
+            self.progress_func = wrapper_progress_func(progress_func)
+        self.API.set_progress_func(self.handle, self.progress_func)
 
     def set_deadline_msecs(self, deadline: int):
         self.API.set_deadline_msecs(self.handle, deadline)
@@ -499,7 +529,9 @@ class TessBase(BaseTessObject):
         return self.API.get_component_images(self.handle, level, text_only)
 
     def get_component_images1(self, level: PageIteratorLevel, text_only: bool,
-                              raw_image: bool, raw_padding: int) -> tuple[LPBoxa, LPPixa, int, int]:
+                              raw_image: bool,
+                              raw_padding: int) -> tuple[LPBoxa, LPPixa,
+                                                         int, int]:
         return self.API.get_component_images1(self.handle, level, text_only,
                                               raw_image, raw_padding)
 
@@ -508,29 +540,28 @@ class TessBase(BaseTessObject):
 
     def analyse_layout(self) -> PageIterator:
         iterator = self.API.analyse_layout(self.handle)
-        if not bool(iterator):
+        if not iterator:
             return None
         return PageIterator(iterator)
 
     def recognize(self, monitor: ProgressMonitor = None) -> int:
-        monitor = monitor if monitor else None
         return self.API.recognize(self.handle, monitor)
 
     def process_pages(self, filename: str, retry_config: str,
                       timeout_millisec: int, renderer: ResultRenderer) -> bool:
         return self.API.process_pages(self.handle, filename, retry_config,
-                                      timeout_millisec, renderer.handle)
+                                      timeout_millisec, renderer)
 
     def process_page(self, pix: LPPix, page_index: int, filename: bytes,
                      retry_config: bytes, timeout_millisec: int,
                      renderer: ResultRenderer) -> bool:
         return self.API.process_page(self.handle, pix, page_index, filename,
                                      retry_config, timeout_millisec,
-                                     renderer.handle)
+                                     renderer)
 
     def get_iterator(self) -> ResultIterator:
         iterator = self.API.get_iterator(self.handle)
-        if not bool(iterator):
+        if not iterator:
             return None
         return ResultIterator(iterator)
 

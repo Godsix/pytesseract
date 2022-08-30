@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////
+// SPDX-License-Identifier: Apache-2.0
 // File:        capi.h
 // Description: C-API TessBaseAPI
 //
@@ -12,8 +12,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
-///////////////////////////////////////////////////////////////////////
 
 #ifndef API_CAPI_H_
 #define API_CAPI_H_
@@ -233,6 +231,12 @@ TESS_API int TessBaseAPIInit4(TessBaseAPI *handle, const char *datapath,
                               char **vars_values, size_t vars_vec_size,
                               BOOL set_only_non_debug_params);
 
+TESS_API int TessBaseAPIInit5(TessBaseAPI *handle, const char *data, int data_size,
+                              const char *language, TessOcrEngineMode mode,
+                              char **configs, int configs_size, char **vars_vec,
+                              char **vars_values, size_t vars_vec_size,
+                              BOOL set_only_non_debug_params);
+
 TESS_API const char *TessBaseAPIGetInitLanguagesAsString(
     const TessBaseAPI *handle);
 TESS_API char **TessBaseAPIGetLoadedLanguagesAsVector(
@@ -240,8 +244,6 @@ TESS_API char **TessBaseAPIGetLoadedLanguagesAsVector(
 TESS_API char **TessBaseAPIGetAvailableLanguagesAsVector(
     const TessBaseAPI *handle);
 
-TESS_API int TessBaseAPIInitLangMod(TessBaseAPI *handle, const char *datapath,
-                                    const char *language);
 TESS_API void TessBaseAPIInitForAnalysePage(TessBaseAPI *handle);
 
 TESS_API void TessBaseAPIReadConfigFile(TessBaseAPI *handle,

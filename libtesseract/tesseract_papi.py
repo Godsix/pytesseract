@@ -5,11 +5,11 @@ Created on Thu Jul 15 08:45:54 2021
 @author: 皓
 """
 import sys
-import locale
 from typing import Callable
 from collections import namedtuple
 from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int,
                     c_bool, c_void_p, c_char_p)
+from .datatype import CommonAPI, BaseObject
 from .error import TesseractError
 from .leptonica_capi import LPBoxa, LPPix, LPPixa
 from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
@@ -33,8 +33,9 @@ OrientationScript = namedtuple('OrientationScript',
 
 Bounding = namedtuple('Bounding', ['left', 'top', 'right', 'bottom'])
 Baseline = namedtuple('Baseline', ['x1', 'y1', 'x2', 'y2'])
-Font = namedtuple('Font', ['name', 'is_italic', 'is_underlined', 'is_monospace',
-                           'is_serif', 'is_smallcaps', 'pointsize', 'font_id'])
+Font = namedtuple('Font', ['name', 'is_italic', 'is_underlined',
+                           'is_monospace', 'is_serif', 'is_smallcaps',
+                           'pointsize', 'font_id'])
 
 
 def get_point_value(var, quote: int = 1):
@@ -51,44 +52,12 @@ def get_point_value(var, quote: int = 1):
         return v.value
 
 
-class CommonAPI:
-    ENCODING = 'ascii'
-
-    @classmethod
-    def setlocale(cls, encoding=None):
-        try:
-            'encoding'.encode(encoding).decode(encoding)
-        except Exception:
-            encoding = locale.getdefaultlocale()[1]
-        cls.ENCODING = encoding
-        return
-
-    @classmethod
-    def decode(cls, value):
-        if isinstance(value, bytes):
-            return value.decode(cls.ENCODING)
-        return value
-
-    @classmethod
-    def encode(cls, value):
-        if isinstance(value, str):
-            return value.encode(cls.ENCODING)
-        return value
-
-    @classmethod
-    def decode_utf8(cls, value):
-        if isinstance(value, bytes):
-            return value.decode('utf-8')
-        return value
-
-    @classmethod
-    def encode_utf8(cls, value):
-        if isinstance(value, str):
-            return value.encode('utf-8')
-        return value
-
-
-CommonAPI.setlocale()
+def get_point(value):
+    if not value:
+        return None
+    if isinstance(value, BaseObject):
+        return value.handle
+    return value
 
 
 def list_to_array(obj: list[str]) -> (POINTER(c_char_p), int):
@@ -141,7 +110,8 @@ class RendererAPI(CommonAPI):
         return TESSERACT_API.capi_tsv_renderer_create(cls.encode(outputbase))
 
     @classmethod
-    def pdf_renderer_create(cls, outputbase: str, datadir: str, textonly: bool):
+    def pdf_renderer_create(cls, outputbase: str, datadir: str,
+                            textonly: bool):
         return TESSERACT_API.capi_pdf_renderer_create(cls.encode(outputbase),
                                                       cls.encode(datadir),
                                                       textonly)
@@ -171,7 +141,7 @@ class RendererAPI(CommonAPI):
 
     @classmethod
     def insert(cls, renderer, next_):
-        TESSERACT_API.capi_result_renderer_insert(renderer, next_)
+        TESSERACT_API.capi_result_renderer_insert(renderer, get_point(next_))
 
     @classmethod
     def next(cls, renderer):
@@ -180,8 +150,7 @@ class RendererAPI(CommonAPI):
     @classmethod
     def begin_document(cls, renderer, title: str) -> bool:
         return TESSERACT_API.capi_result_renderer_begin_document(
-            renderer,
-            cls.encode(title))
+            renderer, cls.encode(title))
 
     @classmethod
     def add_image(cls, renderer, api) -> bool:
@@ -529,7 +498,8 @@ class BaseAPI(CommonAPI):
     @classmethod
     def get_component_images1(cls, handle, level: PageIteratorLevel,
                               text_only: bool, raw_image: bool,
-                              raw_padding: int) -> tuple[LPBoxa, LPPixa, int, int]:
+                              raw_padding: int) -> tuple[LPBoxa, LPPixa,
+                                                         int, int]:
         pppixa = pointer(LPPixa())
         ppblockids = pointer(c_int_p())
         ppparaids = pointer(c_int_p())
@@ -555,7 +525,8 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def recognize(cls, handle, monitor=None) -> int:
-        return TESSERACT_API.capi_base_api_recognize(handle, monitor)
+        return TESSERACT_API.capi_base_api_recognize(handle,
+                                                     get_point(monitor))
 
     @classmethod
     def process_pages(cls, handle,
@@ -568,7 +539,7 @@ class BaseAPI(CommonAPI):
             cls.encode(filename),
             cls.encode(retry_config),
             timeout_millisec,
-            cls.get_point(renderer))
+            get_point(renderer))
 
     @classmethod
     def process_page(cls, handle,
@@ -584,7 +555,7 @@ class BaseAPI(CommonAPI):
                                                         cls.encode(
                                                             retry_config),
                                                         timeout_millisec,
-                                                        cls.get_point(renderer))
+                                                        get_point(renderer))
 
     @classmethod
     def get_iterator(cls, handle) -> LPTessResultIterator:

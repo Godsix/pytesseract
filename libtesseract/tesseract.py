@@ -6,17 +6,14 @@ Created on Fri Jul 16 09:28:35 2021
 """
 import os.path as osp
 import re
-from functools import lru_cache
 from PIL import Image
-from ctypes import POINTER
 from .common import TESSDATA_PREFIX
 from .error import TesseractError
-from .leptonica_capi import Pix
+from .leptonica_capi import LPPix
 from .leptonica import Leptonica
-from .tesseract_capi import (Orientation, OcrEngineMode, PageSegMode,
-                             PageIteratorLevel)
+from .tesseract_capi import PageSegMode, PageIteratorLevel
 from .tesseract_papi import GeneralAPI
-from .tesseract_api import TessBase, ProgressMonitor, ResultRenderer
+from .tesseract_api import TessBase, ProgressMonitor
 
 
 DPI_DEFAULT = 70
@@ -30,94 +27,23 @@ def digits_only(string):
     return 0
 
 
-class Tesseract:
+class Tesseract(TessBase):
     LVL_LINE = PageIteratorLevel.TEXTLINE
     LVL_WORD = PageIteratorLevel.WORD
-    GENERAL_API = GeneralAPI
-
-    def __init__(self,
-                 datapath: str = TESSDATA_PREFIX,
-                 language: str = 'eng',
-                 mode: OcrEngineMode = None,
-                 *configs, **kwargs):
-        self.api = TessBase(datapath, language, mode, *configs, **kwargs)
-
-    def __getattr__(self, attr):
-        if hasattr(self.api, attr):
-            return getattr(self.api, attr)
-        raise AttributeError(
-            "'{}' object has no attribute '{}'".format(self.__class__.__name__,
-                                                       attr))
-
-    @lru_cache
-    def api_dir(self):
-        if hasattr(self, 'api'):
-            ret = [x for x in dir(self.api) if not x.startswith('__')]
-            ret.sort()
-        else:
-            ret = []
-        return ret
-
-    def __dir__(self):
-        return super().__dir__() + self.api_dir()
 
     @property
-    def opencl_device(self):
-        return self.api.opencl_device
-
-    @property
-    def input_name(self) -> str:
-        return self.api.input_name
-
-    @input_name.setter
-    def input_name(self, value: str):
-        self.api.input_name = value
-
-    @property
-    def input_image(self):
-        return self.api.input_image
-
-    @input_image.setter
-    def input_image(self, value):
-        self.api.input_image = value
-
-    @property
-    def source_y_resolution(self) -> int:
-        return self.api.source_y_resolution
-
-    @property
-    def datapath(self) -> str:
-        return self.api.datapath
-
-    @property
-    def init_languages(self) -> str:
-        return self.api.init_languages
-
-    @property
-    def loaded_languages(self) -> list[str]:
-        return self.api.loaded_languages
-
-    @property
-    def available_languages(self) -> list[str]:
-        return self.api.available_languages
-
-    @property
-    def page_seg_mode(self) -> PageSegMode:
-        return self.api.page_seg_mode
-
-    @page_seg_mode.setter
-    def page_seg_mode(self, mode: PageSegMode):
-        self.api.page_seg_mode = mode
+    def version(self) -> str:
+        return GeneralAPI.version()
 
     def set_is_numeric(self, mode):
         whitelist = "0123456789." if mode else ''
-        return self.api.set_variable("tessedit_char_whitelist", whitelist)
+        return self.set_variable("tessedit_char_whitelist", whitelist)
 
     def set_debug_file(self, filename):
-        return self.api.set_variable("debug_file", filename)
+        return self.set_variable("debug_file", filename)
 
     def get_version(self) -> tuple:
-        version = self.GENERAL_API.version()
+        version = self.version
         version = version.split(" ", 1)[0]
 
         # cut off "dev" string if exists for proper int conversion
@@ -131,9 +57,6 @@ class Tesseract:
         release = digits_only(version[2]) if len(version) >= 3 else 0
         return (major, minor, release)
 
-    def list_langs(self) -> list[str]:
-        return self.available_languages
-
     def set_image_data(self, img, use_leptonica=True):
         use_pix = False
         if osp.isfile(img):
@@ -144,7 +67,7 @@ class Tesseract:
                 image = Image.open(img)
         elif isinstance(img, Image.Image):
             image = img
-        elif isinstance(img, POINTER(Pix)):
+        elif isinstance(img, LPPix):
             image = img
             use_pix = True
         else:
@@ -181,15 +104,16 @@ class Tesseract:
         return res
 
     @classmethod
-    def image_to_string(cls, image, lang=None, builder=None):
+    def image_to_string(cls, image, lang=None, builder=None,
+                        progress_func=None):
         clang = lang if lang else "eng"
         tesseract = cls(TESSDATA_PREFIX, clang)
-        for lang_item in clang.split("+"):
-            if lang_item not in tesseract.list_langs():
-                raise TesseractError(
-                    "no lang",
-                    f"language {lang_item} is not available"
-                )
+        available_languages = tesseract.get_available_languages()
+        invalid_langs = set(clang.split("+")) - set(available_languages)
+        if invalid_langs:
+            invalids = ', '.join(invalid_langs)
+            raise TesseractError("no lang",
+                                 f"language {invalids} is not available")
 
         tesseract.page_seg_mode = builder.tesseract_layout
         tesseract.set_debug_file(osp.devnull)
@@ -197,8 +121,11 @@ class Tesseract:
         tesseract.set_image_data(image)
         if "digits" in builder.tesseract_configs:
             tesseract.set_is_numeric(True)
-
-        tesseract.recognize()
+        monitor = None
+        if progress_func is not None:
+            monitor = ProgressMonitor()
+            monitor.set_progress_func(progress_func)
+        tesseract.recognize(monitor)
         result_iterator = tesseract.get_iterator()
         if result_iterator is None:
             raise TesseractError("no script", "no script detected")

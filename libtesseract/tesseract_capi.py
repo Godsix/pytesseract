@@ -10,8 +10,7 @@ from enum import IntEnum
 from functools import wraps
 from typing import Callable
 from ctypes import (POINTER, CDLL, CFUNCTYPE, c_float, c_void_p, c_int,
-                    c_ubyte, c_char_p, c_bool, c_size_t, c_double,
-                    cast, addressof)
+                    c_ubyte, c_char_p, c_bool, c_size_t, c_double, cast)
 from .common import TESS_DLL
 from .datatype import c_int_p, c_bool_p
 from .leptonica_capi import Pix, LPPix, LPBoxa, LPLPPixa
@@ -130,6 +129,9 @@ class TextlineOrder(IntEnum):
 #     def __hash__(self):
 #         return hash(addressof(self))
 
+#     def __eq__(self, other):
+#         return addressof(self) == addressof(other)
+
 
 # class LPTessResultRenderer(LP):
 #     pass
@@ -175,26 +177,6 @@ LPFILE = c_void_p
 
 TessCancelFunc = CFUNCTYPE(c_bool, c_void_p, c_int)
 TessProgressFunc = CFUNCTYPE(c_bool, LPETEXT_DESC, c_int, c_int, c_int, c_int)
-
-
-# class OSBestResult(Structure):
-#     _fields_ = [
-#         ("best_orientation_id", c_int),
-#         ("best_script_id", c_int),
-#         ("best_sconfidence", c_float),
-#         ("best_oconfidence", c_float),
-#     ]
-
-
-# class OSResults(Structure):
-#     _fields_ = [
-#         ("orientations", c_float * 4),
-#         ("scripts_na", c_float * 4 * (116 + 1 + 2 + 1)),
-#         ("unicharset", c_void_p),
-#         ("best_result", OSBestResult),
-#         # # extra padding in case the structure is extended later
-#         # ("padding", c_char * 512),
-#     ]
 
 
 class TessCAPI:
@@ -393,6 +375,19 @@ class TessCAPI:
                              c_size_t,  # size_t vars_vec_size
                              c_bool,  # BOOL set_only_non_debug_params
                              ),
+        'TessBaseAPIInit5': (c_int,
+                             LPTessBaseAPI,  # TessBaseAPI * handle
+                             c_char_p,  # const char * data
+                             c_int,  # int data_size
+                             c_char_p,  # const char * language
+                             c_int,  # TessOcrEngineMode mode
+                             POINTER(c_char_p),  # char * * configs
+                             c_int,  # int configs_size
+                             POINTER(c_char_p),  # char * * vars_vec
+                             POINTER(c_char_p),  # char * * vars_values
+                             c_size_t,  # size_t vars_vec_size
+                             c_bool,  # BOOL set_only_non_debug_params
+                             ),
         'TessBaseAPIGetInitLanguagesAsString': (c_char_p,
                                                 # const TessBaseAPI * handle
                                                 LPTessBaseAPI,
@@ -405,11 +400,6 @@ class TessCAPI:
                                                      # const TessBaseAPI * handle
                                                      LPTessBaseAPI,
                                                      ),
-        'TessBaseAPIInitLangMod': (c_int,
-                                   LPTessBaseAPI,  # TessBaseAPI* handle
-                                   c_char_p,  # const char * datapath
-                                   c_char_p,  # const char * language
-                                   ),
         'TessBaseAPIInitForAnalysePage': (None,
                                           # TessBaseAPI * handle
                                           LPTessBaseAPI,
@@ -986,7 +976,8 @@ class TessCAPI:
         self.TessDeleteResultRenderer(renderer)
 
     def capi_result_renderer_insert(self,
-                                    renderer: LPTessResultRenderer, next_):
+                                    renderer: LPTessResultRenderer,
+                                    next_: LPTessResultRenderer):
         self.TessResultRendererInsert(renderer, next_)
 
     def capi_result_renderer_next(
@@ -1126,6 +1117,20 @@ class TessCAPI:
                                      configs_size, vars_vec, vars_values,
                                      vars_vec_size, set_only_non_debug_params)
 
+    def capi_base_api_init5(self, handle, data: bytes, data_size: int,
+                            language: bytes,
+                            mode: OcrEngineMode,
+                            configs: bytes,
+                            configs_size: int,
+                            vars_vec: bytes,
+                            vars_values: bytes,
+                            vars_vec_size: int,
+                            set_only_non_debug_params: bool) -> int:
+        return self.TessBaseAPIInit5(handle, data, data_size, language, mode,
+                                     configs, configs_size,
+                                     vars_vec, vars_values, vars_vec_size,
+                                     set_only_non_debug_params)
+
     def capi_base_api_get_init_languages(self, handle) -> bytes:
         return self.TessBaseAPIGetInitLanguagesAsString(handle)
 
@@ -1137,9 +1142,10 @@ class TessCAPI:
         ret = self.TessBaseAPIGetAvailableLanguagesAsVector(handle)
         return list(bytes_list(ret))
 
+    @deprecated('TessBaseAPIInitLangMod')
     def capi_base_api_init_lang_mod(self, handle, datapath: bytes,
                                     language: bytes) -> int:
-        return self.TessBaseAPIInitLangMod(handle, datapath, language)
+        return 0
 
     def capi_base_api_init_for_analyse_page(self, handle):
         self.TessBaseAPIInitForAnalysePage(handle)
@@ -1541,7 +1547,8 @@ class TessCAPI:
         self.TessMonitorDelete(monitor)
 
     def capi_monitor_set_cancel_func(self, monitor: LPETEXT_DESC,
-                                     cancelFunc: Callable[[c_void_p, int], bool]):
+                                     cancelFunc: Callable[[c_void_p, int],
+                                                          bool]):
         self.TessMonitorSetCancelFunc(monitor, cancelFunc)
 
     def capi_monitor_set_cancel_this(self, monitor: LPETEXT_DESC, cancelThis):
@@ -1553,7 +1560,8 @@ class TessCAPI:
     def capi_monitor_set_progress_func(self, monitor: LPETEXT_DESC,
                                        progressFunc: Callable[[LPETEXT_DESC,
                                                                int, int,
-                                                               int, int], bool]):
+                                                               int, int],
+                                                              bool]):
         self.TessMonitorSetProgressFunc(monitor, progressFunc)
 
     def capi_monitor_get_progress(self, monitor: LPETEXT_DESC) -> int:
