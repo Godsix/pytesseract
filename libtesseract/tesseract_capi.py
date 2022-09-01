@@ -4,17 +4,14 @@ Created on Tue Jul 13 12:43:58 2021
 
 @author: 皓
 """
-import os.path as osp
-import logging
 from enum import IntEnum
 from functools import wraps
 from typing import Callable
-from ctypes import (POINTER, CDLL, CFUNCTYPE, c_float, c_void_p, c_int,
+from ctypes import (POINTER, CFUNCTYPE, c_float, c_void_p, c_int,
                     c_ubyte, c_char_p, c_bool, c_size_t, c_double, cast)
 from .common import TESS_DLL
-from .datatype import c_int_p, c_bool_p
+from .datatype import c_int_p, c_bool_p, CAPI
 from .leptonica_capi import Pix, LPPix, LPBoxa, LPLPPixa
-# from .utils import arch_hex_bit
 
 
 def bytes_list(data):
@@ -119,52 +116,6 @@ class TextlineOrder(IntEnum):
     ORDER_TOP_TO_BOTTOM = 2
 
 
-# class LP(c_void_p):
-#     def __repr__(self):
-#         address = addressof(self)
-#         class_name = self.__class__.__name__
-#         bit = arch_hex_bit()
-#         return f'<{class_name} address at 0x{address:0{bit}X}>'
-
-#     def __hash__(self):
-#         return hash(addressof(self))
-
-#     def __eq__(self, other):
-#         return addressof(self) == addressof(other)
-
-
-# class LPTessResultRenderer(LP):
-#     pass
-
-
-# class LPTessBaseAPI(LP):
-#     pass
-
-
-# class LPTessPageIterator(LP):
-#     pass
-
-
-# class LPTessResultIterator(LP):
-#     pass
-
-
-# class LPTessMutableIterator(LP):
-#     pass
-
-
-# class LPTessChoiceIterator(LP):
-#     pass
-
-
-# class LPETEXT_DESC(LP):
-#     pass
-
-
-# class LPFILE(LP):
-#     pass
-
-
 LPTessResultRenderer = c_void_p
 LPTessBaseAPI = c_void_p
 LPTessPageIterator = c_void_p
@@ -179,7 +130,8 @@ TessCancelFunc = CFUNCTYPE(c_bool, c_void_p, c_int)
 TessProgressFunc = CFUNCTYPE(c_bool, LPETEXT_DESC, c_int, c_int, c_int, c_int)
 
 
-class TessCAPI:
+class TessCAPI(CAPI):
+    NAME = 'Tesseract'
     API = {
         # General free functions
         'TessVersion': (c_char_p, ),
@@ -876,42 +828,6 @@ class TessCAPI:
                                         )
     }
 
-    def __init__(self, path):
-        self.logger = logging.getLogger()
-        self.path = path
-
-    @property
-    def path(self):
-        return self._path
-
-    @path.setter
-    def path(self, value):
-        self._path = osp.realpath(value)
-        # import API dll
-        self.dll = CDLL(self._path)
-        self.init_dll()
-
-    def init_dll(self):
-        for name, types in self.API.items():
-            self.func_ptr_init(name, *types)
-
-    def func_ptr_init(self, name, restype, *argtypes):
-        if not hasattr(self.dll, name):
-            self.logger.error('The tesseract capi do not contain %s', name)
-            return
-        func = getattr(self.dll, name)
-        func.restype = restype
-        func.argtypes = argtypes
-
-    def __getattr__(self, attr):
-        if hasattr(self.dll, attr):
-            return getattr(self.dll, attr)
-        raise AttributeError(
-            "'{}' object has no attribute '{}'".format(self.__class__.__name__,
-                                                       attr))
-
-    def is_available(self):
-        return self.dll is not None
     # General free functions
 
     def capi_version(self) -> bytes:

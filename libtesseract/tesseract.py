@@ -6,7 +6,10 @@ Created on Fri Jul 16 09:28:35 2021
 """
 import os.path as osp
 import re
-from PIL import Image
+try:
+    from PIL import Image
+except ModuleNotFoundError:
+    Image = None
 from .common import TESSDATA_PREFIX
 from .error import TesseractError
 from .leptonica_capi import LPPix
@@ -60,12 +63,12 @@ class Tesseract(TessBase):
     def set_image_data(self, img, use_leptonica=True):
         use_pix = False
         if osp.isfile(img):
-            if use_leptonica:
+            if use_leptonica or Image is None:
                 image = Leptonica.pix_read(img)
                 use_pix = True
             else:
                 image = Image.open(img)
-        elif isinstance(img, Image.Image):
+        elif Image is not None and isinstance(img, Image.Image):
             image = img
         elif isinstance(img, LPPix):
             image = img

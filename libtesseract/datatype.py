@@ -4,12 +4,67 @@ Created on Mon Aug 29 14:26:57 2022
 
 @author: 皓
 """
+import os.path as osp
 import locale
-from ctypes import POINTER, c_int, c_bool
+import logging
+from ctypes import (CDLL, POINTER, c_int, c_bool, c_ubyte, c_float, c_double,
+                    c_uint)
+
 from .utils import arch_hex_bit
 
 c_int_p = POINTER(c_int)
 c_bool_p = POINTER(c_bool)
+c_ubyte_p = POINTER(c_ubyte)
+c_uint_p = POINTER(c_uint)
+c_float_p = POINTER(c_float)
+c_double_p = POINTER(c_double)
+
+
+class CAPI:
+    NAME = ''
+    API = {}
+
+    def __init__(self, path):
+        self.logger = logging.getLogger()
+        self.path = path
+
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, value):
+        self._path = osp.realpath(value)
+        # import API dll
+        try:
+            self.dll = CDLL(self._path)
+            self.init_dll()
+        except Exception:
+            self.dll = None
+
+    def init_dll(self):
+        for name, types in self.API.items():
+            self.init_func_ptr(name, *types)
+
+    def init_func_ptr(self, name, restype, *argtypes):
+        if not hasattr(self.dll, name):
+            self.logger.error('The %s capi do not contain %s',
+                              self.NAME,
+                              name)
+            return
+        func = getattr(self.dll, name)
+        func.restype = restype
+        func.argtypes = argtypes
+
+    def is_available(self):
+        return self.dll is not None
+
+    def __getattr__(self, attr):
+        if hasattr(self.dll, attr):
+            return getattr(self.dll, attr)
+        raise AttributeError(
+            "'{}' object has no attribute '{}'".format(self.__class__.__name__,
+                                                       attr))
 
 
 class CommonAPI:
