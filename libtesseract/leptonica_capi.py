@@ -12741,7 +12741,7 @@ class LeptonicaAPI(CAPI):
         return self.pixClone(pixs)
 
     def capi_pix_destroy(self, ppix: LPLPPix):
-        return self.pixDestroy(ppix)
+        self.pixDestroy(ppix)
 
     def capi_pix_copy(self, pixd: LPPix, pixs: LPPix) -> LPPix:
         return self.pixCopy(pixd, pixs)
@@ -12749,7 +12749,7 @@ class LeptonicaAPI(CAPI):
     def capi_pix_read(self, path: bytes) -> LPPix:
         return self.pixRead(path)
 
-    def capi_get_leptonica_version(self) -> str:
+    def capi_get_leptonica_version(self) -> bytes:
         return self.getLeptonicaVersion()
 
 

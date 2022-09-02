@@ -60,7 +60,7 @@ class Tesseract(TessBase):
         release = digits_only(version[2]) if len(version) >= 3 else 0
         return (major, minor, release)
 
-    def set_image_data(self, img, use_leptonica=True):
+    def set_image_data(self, img, use_leptonica=False):
         use_pix = False
         if osp.isfile(img):
             if use_leptonica or Image is None:
@@ -91,6 +91,22 @@ class Tesseract(TessBase):
             self.set_source_resolution(dpi)
         else:
             self.set_image2(image)
+
+    def get_rect(self, img, left: int, top: int, width: int, height: int):
+        if osp.isfile(img):
+            image = Image.open(img)
+        elif isinstance(img, Image.Image):
+            image = img
+        else:
+            type_name = type(img).__name__
+            raise TypeError(f'The image type is not support: {type_name}')
+        image = image.convert("RGB")
+        image.load()
+        imgdata = image.tobytes("raw", "RGB")
+        width = image.width
+        height = image.height
+        ret = self.rect(imgdata, 1, width * 1, left, top, width, height)
+        return ret
 
     @classmethod
     def detect_orientation(cls, image, lang=None):

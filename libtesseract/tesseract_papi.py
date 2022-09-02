@@ -7,9 +7,9 @@ Created on Thu Jul 15 08:45:54 2021
 import sys
 from typing import Callable
 from collections import namedtuple
-from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int,
-                    c_bool, c_void_p, c_char_p)
-from .datatype import CommonAPI, BaseObject
+from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int, c_char,
+                    c_bool, c_void_p, c_char_p, cast)
+from .datatype import c_int_p, c_bool_p, CommonAPI, BaseObject
 from .error import TesseractError
 from .leptonica_capi import LPBoxa, LPPix, LPPixa
 from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
@@ -23,9 +23,6 @@ from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
                              LPETEXT_DESC)
 from .libc import fdopen
 
-
-c_int_p = POINTER(c_int)
-c_bool_p = POINTER(c_bool)
 
 OrientationScript = namedtuple('OrientationScript',
                                ['degree', 'confidence',
@@ -72,7 +69,8 @@ class GeneralAPI(CommonAPI):
 
     @classmethod
     def version(cls) -> str:
-        return cls.decode(TESSERACT_API.capi_version())
+        ret = TESSERACT_API.capi_version()
+        return cls.decode(ret)
 
     @classmethod
     def delete_text(cls, text: c_char_p):
@@ -83,8 +81,26 @@ class GeneralAPI(CommonAPI):
         TESSERACT_API.capi_delete_text_array(arr)
 
     @classmethod
-    def delete_int_array(cls, arr: POINTER(c_int)):
+    def delete_int_array(cls, arr: c_int_p):
         TESSERACT_API.capi_delete_int_array(arr)
+
+    @classmethod
+    def get_text_value(cls, lp_c_char: POINTER(c_char)) -> bytes:
+        data = cast(lp_c_char, c_char_p)
+        result = data.value
+        cls.delete_text(data)
+        return result
+
+    @classmethod
+    def get_int_list(cls, lp_lp_c_int: POINTER(c_int_p), n) -> list[int]:
+        if not lp_lp_c_int:
+            return []
+        lp_c_int = lp_lp_c_int.contents
+        if not lp_c_int:
+            return []
+        result = list(lp_c_int[:n])
+        GeneralAPI.delete_int_array(lp_c_int)
+        return result
 
 
 class RendererAPI(CommonAPI):
@@ -150,7 +166,7 @@ class RendererAPI(CommonAPI):
     @classmethod
     def begin_document(cls, renderer, title: str) -> bool:
         return TESSERACT_API.capi_result_renderer_begin_document(
-            renderer, cls.encode(title))
+            renderer, cls.encode_utf8(title))
 
     @classmethod
     def add_image(cls, renderer, api) -> bool:
@@ -229,9 +245,10 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def set_debug_variable(cls, handle, name: str, value: str) -> bool:
-        return TESSERACT_API.capi_base_api_set_debug_variable(handle,
-                                                              cls.encode(name),
-                                                              cls.encode(value))
+        return TESSERACT_API.capi_base_api_set_debug_variable(
+            handle,
+            cls.encode(name),
+            cls.encode(value))
 
     @classmethod
     def get_int_variable(cls, handle, name: str) -> int:
@@ -367,8 +384,9 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def read_debug_config_file(cls, handle, filename: str):
-        TESSERACT_API.capi_base_api_read_debug_config_file(handle,
-                                                           cls.encode(filename))
+        TESSERACT_API.capi_base_api_read_debug_config_file(
+            handle,
+            cls.encode(filename))
 
     @classmethod
     def set_page_seg_mode(cls, handle, mode: PageSegMode):
@@ -387,10 +405,12 @@ class BaseAPI(CommonAPI):
              top: int,
              width: int,
              height: int) -> str:
-        ret = TESSERACT_API.capi_base_api_rect(handle, imagedata,
-                                               bytes_per_pixel, bytes_per_line,
-                                               left, top,
-                                               width, height)
+        data = TESSERACT_API.capi_base_api_rect(handle, imagedata,
+                                                bytes_per_pixel,
+                                                bytes_per_line,
+                                                left, top,
+                                                width, height)
+        ret = GeneralAPI.get_text_value(data)
         return cls.decode_utf8(ret)
 
     @classmethod
@@ -433,19 +453,22 @@ class BaseAPI(CommonAPI):
         return pboxa, ppixa
 
     @classmethod
-    def get_textlines(cls, handle) -> tuple[LPBoxa, LPPixa, int]:
+    def get_textlines(cls, handle) -> tuple[LPBoxa, LPPixa, list[int]]:
         pppixa = pointer(LPPixa())
         ppblockids = pointer(c_int_p())
         pboxa = TESSERACT_API.capi_base_api_get_textlines(handle,
                                                           pppixa,
                                                           ppblockids)
         ppixa = get_point_value(pppixa)
-        return pboxa, ppixa, get_point_value(ppblockids, 2)
+        n = pboxa.contents.n if pboxa else 0
+        blockids = GeneralAPI.get_int_list(ppblockids, n)
+        return pboxa, ppixa, blockids
 
     @classmethod
     def get_textlines1(cls, handle,
                        raw_image: bool,
-                       raw_padding: int) -> tuple[LPBoxa, LPPixa, int, int]:
+                       raw_padding: int) -> tuple[LPBoxa, LPPixa,
+                                                  list[int], list[int]]:
         pppixa = pointer(LPPixa())
         ppblockids = pointer(c_int_p())
         ppparaids = pointer(c_int_p())
@@ -455,17 +478,21 @@ class BaseAPI(CommonAPI):
                                                            ppblockids,
                                                            ppparaids)
         ppixa = get_point_value(pppixa)
-        return (pboxa, ppixa,
-                get_point_value(ppblockids, 2), get_point_value(ppparaids, 2))
+        n = pboxa.contents.n if pboxa else 0
+        blockids = GeneralAPI.get_int_list(ppblockids, n)
+        paraids = GeneralAPI.get_int_list(ppparaids, n)
+        return pboxa, ppixa, blockids, paraids
 
     @classmethod
-    def get_strips(cls, handle) -> tuple[LPBoxa, LPPixa, int]:
+    def get_strips(cls, handle) -> tuple[LPBoxa, LPPixa, list[int]]:
         pppixa = pointer(LPPixa())
         ppblockids = pointer(c_int_p())
         pboxa = TESSERACT_API.capi_base_api_get_strips(handle,
                                                        pppixa, ppblockids)
         ppixa = get_point_value(pppixa)
-        return pboxa, ppixa, get_point_value(ppblockids, 2)
+        n = pboxa.contents.n if pboxa else 0
+        blockids = GeneralAPI.get_int_list(ppblockids, n)
+        return pboxa, ppixa, blockids
 
     @classmethod
     def get_words(cls, handle) -> tuple[LPBoxa, LPPixa]:
@@ -493,7 +520,9 @@ class BaseAPI(CommonAPI):
                                                                  pppixa,
                                                                  ppblockids)
         ppixa = get_point_value(pppixa)
-        return pboxa, ppixa, get_point_value(ppblockids, 2)
+        n = pboxa.contents.n if pboxa else 0
+        blockids = GeneralAPI.get_int_list(ppblockids, n)
+        return pboxa, ppixa, blockids
 
     @classmethod
     def get_component_images1(cls, handle, level: PageIteratorLevel,
@@ -512,8 +541,10 @@ class BaseAPI(CommonAPI):
                                                                   ppblockids,
                                                                   ppparaids)
         ppixa = get_point_value(pppixa)
-        return (pboxa, ppixa,
-                get_point_value(ppblockids, 2), get_point_value(ppparaids, 2))
+        n = pboxa.contents.n if pboxa else 0
+        blockids = GeneralAPI.get_int_list(ppblockids, n)
+        paraids = GeneralAPI.get_int_list(ppparaids, n)
+        return pboxa, ppixa, blockids, paraids
 
     @classmethod
     def get_thresholded_image_scale_factor(cls, handle) -> int:
@@ -567,50 +598,58 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def get_utf8_text(cls, handle) -> str:
-        ret = TESSERACT_API.capi_base_api_get_utf8_text(handle)
+        data = TESSERACT_API.capi_base_api_get_utf8_text(handle)
+        ret = GeneralAPI.get_text_value(data)
         return cls.decode_utf8(ret)
 
     @classmethod
     def get_hocr_text(cls, handle, page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_hocr_text(handle,
-                                                        page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_hocr_text(handle,
+                                                         page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_alto_text(cls, handle, page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_alto_text(handle,
-                                                        page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_alto_text(handle,
+                                                         page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_tsv_text(cls, handle, page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_tsv_text(handle,
-                                                       page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_tsv_text(handle,
+                                                        page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_box_text(cls, handle, page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_box_text(handle,
-                                                       page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_box_text(handle,
+                                                        page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_lstm_box_text(cls, handle, page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_lstm_box_text(handle,
-                                                            page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_lstm_box_text(handle,
+                                                             page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_word_str_box_text(cls, handle,
                               page_number: int) -> str:
-        ret = TESSERACT_API.capi_base_api_get_word_str_box_text(handle,
-                                                                page_number)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_word_str_box_text(handle,
+                                                                 page_number)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def get_unlv_text(cls, handle) -> str:
-        ret = TESSERACT_API.capi_base_api_get_unlv_text(handle)
-        return cls.decode(ret)
+        data = TESSERACT_API.capi_base_api_get_unlv_text(handle)
+        ret = GeneralAPI.get_text_value(data)
+        return cls.decode_utf8(ret)
 
     @classmethod
     def mean_text_conf(cls, handle) -> int:
@@ -621,10 +660,10 @@ class BaseAPI(CommonAPI):
         return TESSERACT_API.capi_base_api_all_word_confidences(handle)
 
     @classmethod
-    def adapt_toword_str(cls, handle, mode: PageSegMode,
-                         wordstr: str) -> bool:
-        return TESSERACT_API.capi_base_api_adapt_toword_str(handle, mode,
-                                                            cls.encode(wordstr))
+    def adapt_to_word_str(cls, handle, mode: PageSegMode,
+                          wordstr: str) -> bool:
+        return TESSERACT_API.capi_base_api_adapt_to_word_str(
+            handle, mode, cls.encode_utf8(wordstr))
 
     @classmethod
     def clear(cls, handle):
@@ -875,7 +914,8 @@ class ResultIteratorAPI(CommonAPI):
 
     @classmethod
     def get_utf8_text(cls, handle, level: PageIteratorLevel) -> str:
-        ret = TESSERACT_API.capi_result_iterator_get_utf8text(handle, level)
+        data = TESSERACT_API.capi_result_iterator_get_utf8_text(handle, level)
+        ret = GeneralAPI.get_text_value(data)
         return cls.decode_utf8(ret)
 
     @classmethod

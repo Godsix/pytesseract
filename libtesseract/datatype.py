@@ -130,8 +130,12 @@ class BaseObject:
             self.handle = None
             self.delete(handle)
 
-    def __repr__(self):
+    @property
+    def arch_id(self):
         address = id(self)
-        class_name = self.__class__.__name__
         bit = arch_hex_bit()
-        return f'<{class_name} object at 0x{address:0{bit}X}>'
+        return f'0x{address:0{bit}X}'
+
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        return f'<{class_name} object at {self.arch_id}>'
