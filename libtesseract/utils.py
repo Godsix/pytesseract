@@ -65,18 +65,18 @@ def name_convert_to_camel(name: str) -> str:
     return re.sub(r'_([a-z])', lambda x: x.group(1).upper(), name)
 
 
-def sub_function(match):
+def sub_snake(match):
     ret = [x for x in match.groups() if x]
     return '{}_{}'.format(ret[0], ret[1])
+
+
+SNAKE = re.compile('([A-Z])([A-Z](?=[a-z]))|([a-z])([A-Z](?=[A-Z]))|([a-z])([A-Z](?=[a-z]))')
 
 
 def name_convert_to_snake(name: str) -> str:
     """驼峰转下划线"""
     if '_' not in name:
-        name = re.sub(
-            r'([A-Z])([A-Z][a-z])|([a-z])([A-Z][A-Z])|([a-z])([A-Z][a-z])',
-            sub_function,
-            name)
+        name = SNAKE.sub(sub_snake, name)
     else:
         raise ValueError(f'{name}字符中包含下划线，无法转换')
     return name.lower()

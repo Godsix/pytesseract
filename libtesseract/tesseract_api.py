@@ -20,7 +20,19 @@ from .tesseract_papi import (BaseAPI, ProgressMonitorAPI, RendererAPI,
                              OrientationScript, Bounding, Font)
 
 
-class BaseTessObject(BaseObject):
+class BaseGCObject(BaseObject):
+
+    def delete(self, handle):
+        self.API.delete(handle)
+
+    def __del__(self):
+        if hasattr(self, 'handle') and self.handle:
+            handle = self.handle
+            self.handle = None
+            self.delete(handle)
+
+
+class BaseTessObject(BaseGCObject):
 
     def __init__(self):
         super().__init__(self.create())
@@ -29,7 +41,7 @@ class BaseTessObject(BaseObject):
         return self.API.create()
 
 
-class BaseIterObject(BaseObject):
+class BaseIterObject(BaseGCObject):
 
     def __init__(self, handle, parent=None):
         super().__init__(handle)
@@ -51,7 +63,7 @@ class CopyIterator(BaseIterObject):
         return self.__class__(handle)
 
 
-class ResultRenderer(BaseObject):
+class ResultRenderer(BaseGCObject):
     API = RendererAPI
     CREATE_FUNC = {
         'text': API.text_renderer_create,
@@ -76,6 +88,35 @@ class ResultRenderer(BaseObject):
 
     @classmethod
     def create(cls, outputbase: str, filetype: str, *args) -> 'ResultRenderer':
+        '''
+        Renderer Create interface
+
+        Parameters
+        ----------
+        outputbase : str
+            DESCRIPTION.
+        filetype : str
+            Create renderer type,such as text, hocr....
+            hocr:
+                font_info : bool
+                    DESCRIPTION.
+            pdf:
+                datadir : str
+                    DESCRIPTION.
+                textonly : bool
+                    DESCRIPTION.
+
+        Raises
+        ------
+        AttributeError
+            DESCRIPTION.
+
+        Returns
+        -------
+        ResultRenderer
+            Create a ResultRenderer Object.
+
+        '''
         func_name = f'{filetype.lower()}_renderer_create'
         if hasattr(cls.API, func_name):
             func = getattr(cls.API, func_name)
@@ -137,6 +178,7 @@ class ResultRenderer(BaseObject):
         '''
         Returns the index of the last image given to AddImage
         (i.e. images are incremented whether the image succeeded or not)
+
         This is always defined. It means either the number of the
         current image, the last image ended, or in the completed document
         depending on when in the document lifecycle you are looking at it.

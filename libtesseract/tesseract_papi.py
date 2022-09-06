@@ -7,9 +7,10 @@ Created on Thu Jul 15 08:45:54 2021
 import sys
 from typing import Callable
 from collections import namedtuple
-from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int, c_char,
-                    c_bool, c_void_p, c_char_p, cast)
-from .datatype import c_int_p, c_bool_p, CommonAPI, BaseObject
+from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int, c_bool,
+                    c_void_p, c_char_p, cast)
+from .datatype import (c_int_p, c_bool_p, LP_c_char,  CommonAPI, get_point,
+                       get_point_value, list_to_array, dict_to_array)
 from .error import TesseractError
 from .leptonica_capi import LPBoxa, LPPix, LPPixa
 from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
@@ -35,36 +36,6 @@ Font = namedtuple('Font', ['name', 'is_italic', 'is_underlined',
                            'pointsize', 'font_id'])
 
 
-def get_point_value(var, quote: int = 1):
-    v = var
-    for i in range(quote):
-        v = v.contents
-        if bool(v) is False:
-            return None
-    else:
-        if isinstance(v, c_void_p):
-            return v
-        if not hasattr(v, 'value'):
-            return v
-        return v.value
-
-
-def get_point(value):
-    if not value:
-        return None
-    if isinstance(value, BaseObject):
-        return value.handle
-    return value
-
-
-def list_to_array(obj: list[str]) -> (POINTER(c_char_p), int):
-    encode_obj = [CommonAPI.encode(x) for x in obj]
-    size = len(encode_obj)
-    array = c_char_p * size
-    c_object = array(*encode_obj)
-    return c_object, size
-
-
 class GeneralAPI(CommonAPI):
 
     @classmethod
@@ -85,8 +56,9 @@ class GeneralAPI(CommonAPI):
         TESSERACT_API.capi_delete_int_array(arr)
 
     @classmethod
-    def get_text_value(cls, lp_c_char: POINTER(c_char)) -> bytes:
-        data = cast(lp_c_char, c_char_p)
+    def get_text_value(cls, pdata: LP_c_char) -> bytes:
+        assert isinstance(pdata, LP_c_char), "Arg pdata type isn't LP_c_char"
+        data = cast(pdata, c_char_p)
         result = data.value
         cls.delete_text(data)
         return result
@@ -302,13 +274,13 @@ class BaseAPI(CommonAPI):
     @classmethod
     def print_variables_tofile(cls, handle,
                                filename: str) -> bool:
-        return TESSERACT_API.capi_base_api_print_variables_tofile(
+        return TESSERACT_API.capi_base_api_print_variables_to_file(
             handle, cls.encode(filename))
 
     @classmethod
     def init1(cls, handle, datapath: str, language: str, oem: OcrEngineMode,
               configs: list[str]) -> int:
-        config_object, configs_size = cls.list_to_array(configs)
+        config_object, configs_size = list_to_array(configs)
         return TESSERACT_API.capi_base_api_init1(handle,
                                                  cls.encode(datapath),
                                                  cls.encode(language), oem,
@@ -331,10 +303,8 @@ class BaseAPI(CommonAPI):
     def init4(cls, handle, datapath: str, language: str, mode: OcrEngineMode,
               configs: list[str], variables: dict[str, str],
               set_only_non_debug_params: bool) -> int:
-        config_object, configs_size = cls.list_to_array(configs)
-        names, values = tuple(zip(*variables.items()))
-        vars_vec, vars_vec_size = cls.list_to_array(names)
-        vars_values, vars_values_size = cls.list_to_array(values)
+        config_object, configs_size = list_to_array(configs)
+        vars_vec, vars_values, vars_vec_size = dict_to_array(variables)
         return TESSERACT_API.capi_base_api_init4(handle,
                                                  cls.encode(datapath),
                                                  cls.encode(language),
@@ -348,10 +318,8 @@ class BaseAPI(CommonAPI):
     def init5(cls, handle, data: bytes, language: str, mode: OcrEngineMode,
               configs: list[str], variables: dict[str, str],
               set_only_non_debug_params: bool) -> int:
-        config_object, configs_size = cls.list_to_array(configs)
-        names, values = tuple(zip(*variables.items()))
-        vars_vec, vars_vec_size = cls.list_to_array(names)
-        vars_values, vars_values_size = cls.list_to_array(values)
+        config_object, configs_size = list_to_array(configs)
+        vars_vec, vars_values, vars_vec_size = dict_to_array(variables)
         return TESSERACT_API.capi_base_api_init5(handle, data, len(data),
                                                  language, mode, config_object,
                                                  configs_size, vars_vec,
@@ -427,7 +395,7 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def set_image2(cls, handle, pix: LPPix):
-        TESSERACT_API.capi_base_api_set_image2(handle, pix)
+        TESSERACT_API.capi_base_api_set_image2(handle, get_point(pix))
 
     @classmethod
     def set_source_resolution(cls, handle, ppi: int):
@@ -548,7 +516,8 @@ class BaseAPI(CommonAPI):
 
     @classmethod
     def get_thresholded_image_scale_factor(cls, handle) -> int:
-        return TESSERACT_API.capi_base_api_get_thresholded_image_scale_factor(handle)
+        return TESSERACT_API.capi_base_api_get_thresholded_image_scale_factor(
+            handle)
 
     @classmethod
     def analyse_layout(cls, handle) -> LPTessPageIterator:
@@ -738,9 +707,10 @@ class BaseAPI(CommonAPI):
     def get_block_text_orientations(cls, handle) -> tuple[int, bool]:
         ppblock_orientation = pointer(c_int_p())
         ppvertical_writing = pointer(c_bool_p())
-        TESSERACT_API.capi_base_get_block_text_orientations(handle,
-                                                            ppblock_orientation,
-                                                            ppvertical_writing)
+        TESSERACT_API.capi_base_get_block_text_orientations(
+            handle,
+            ppblock_orientation,
+            ppvertical_writing)
         return (get_point_value(ppblock_orientation, 2),
                 get_point_value(ppvertical_writing, 2))
 
@@ -804,16 +774,16 @@ class PageIteratorAPI(CommonAPI):
     @classmethod
     def is_at_beginning_of(cls, handle: LPTessPageIterator,
                            level: PageIteratorLevel) -> bool:
-        return TESSERACT_API.capi_page_iterator_isat_beginning_of(handle,
-                                                                  level)
+        return TESSERACT_API.capi_page_iterator_is_at_beginning_of(handle,
+                                                                   level)
 
     @classmethod
     def is_at_final_element(cls, handle: LPTessPageIterator,
                             level: PageIteratorLevel,
                             element: PageIteratorLevel) -> bool:
-        return TESSERACT_API.capi_page_iterator_isat_final_element(handle,
-                                                                   level,
-                                                                   element)
+        return TESSERACT_API.capi_page_iterator_is_at_final_element(handle,
+                                                                    level,
+                                                                    element)
 
     @classmethod
     def bounding_box(cls, handle: LPTessPageIterator,
@@ -902,7 +872,8 @@ class ResultIteratorAPI(CommonAPI):
 
     @classmethod
     def get_page_iterator_const(cls, handle):
-        return TESSERACT_API.capi_result_iterator_get_page_iterator_const(handle)
+        return TESSERACT_API.capi_result_iterator_get_page_iterator_const(
+            handle)
 
     @classmethod
     def get_choice_iterator(cls, handle):
@@ -940,7 +911,8 @@ class ResultIteratorAPI(CommonAPI):
 
     @classmethod
     def word_is_from_dictionary(cls, handle) -> bool:
-        return TESSERACT_API.capi_result_iterator_word_is_from_dictionary(handle)
+        return TESSERACT_API.capi_result_iterator_word_is_from_dictionary(
+            handle)
 
     @classmethod
     def word_is_numeric(cls, handle) -> bool:

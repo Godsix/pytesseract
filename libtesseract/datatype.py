@@ -8,7 +8,8 @@ import os.path as osp
 import locale
 import logging
 from ctypes import (CDLL, POINTER, c_int, c_bool, c_ubyte, c_float, c_double,
-                    c_uint)
+                    c_char, c_uint, c_size_t, c_ulonglong, c_void_p,
+                    c_char_p)
 
 from .utils import arch_hex_bit
 
@@ -18,6 +19,9 @@ c_ubyte_p = POINTER(c_ubyte)
 c_uint_p = POINTER(c_uint)
 c_float_p = POINTER(c_float)
 c_double_p = POINTER(c_double)
+c_size_t_p = POINTER(c_size_t)
+c_ulonglong_p = POINTER(c_ulonglong)
+LP_c_char = POINTER(c_char)
 
 
 class CAPI:
@@ -121,15 +125,6 @@ class BaseObject:
     def __init__(self, handle):
         self.handle = handle
 
-    def delete(self, handle):
-        self.API.delete(handle)
-
-    def __del__(self):
-        if hasattr(self, 'handle') and self.handle:
-            handle = self.handle
-            self.handle = None
-            self.delete(handle)
-
     @property
     def arch_id(self):
         address = id(self)
@@ -139,3 +134,42 @@ class BaseObject:
     def __repr__(self):
         class_name = self.__class__.__name__
         return f'<{class_name} object at {self.arch_id}>'
+
+
+def get_point(value):
+    if not value:
+        return None
+    if isinstance(value, BaseObject):
+        return value.handle
+    return value
+
+
+def get_point_value(var, quote: int = 1):
+    v = var
+    for i in range(quote):
+        v = v.contents
+        if bool(v) is False:
+            return None
+    else:
+        if isinstance(v, c_void_p):
+            return v
+        if not hasattr(v, 'value'):
+            return v
+        return v.value
+
+
+def list_to_array(obj: list[str]) -> tuple[POINTER(c_char_p), int]:
+    encode_obj = [CommonAPI.encode(x) for x in obj]
+    size = len(encode_obj)
+    array = c_char_p * size
+    c_object = array(*encode_obj)
+    return c_object, size
+
+
+def dict_to_array(obj: dict[str, str]) -> tuple[POINTER(c_char_p),
+                                                POINTER(c_char_p),
+                                                int]:
+    names, values = tuple(zip(*obj.items()))
+    ppnames, names_size = list_to_array(names)
+    ppvalues, values_size = list_to_array(values)
+    return ppnames, ppvalues, names_size

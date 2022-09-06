@@ -6,12 +6,12 @@ Created on Tue Jul 13 12:43:58 2021
 """
 from enum import IntEnum
 from functools import wraps
-from typing import Callable
-from ctypes import (POINTER, CFUNCTYPE, c_float, c_void_p, c_int, c_char,
-                    c_ubyte, c_char_p, c_bool, c_size_t, c_double, cast)
+from ctypes import (POINTER, CFUNCTYPE, c_float, c_void_p, c_int, c_char_p,
+                    c_bool, c_size_t, c_double, cast)
 from .common import TESS_DLL
-from .datatype import c_int_p, c_bool_p, c_double_p, c_ubyte_p, c_float_p, CAPI
-from .leptonica_capi import Pix, LPPix, LPBoxa, LPLPPixa
+from .datatype import (c_int_p, c_bool_p, c_double_p, c_ubyte_p, c_float_p,
+                       LP_c_char, CAPI)
+from .leptonica_capi import LPPix, LPBoxa, LPLPPixa
 
 
 def bytes_list(data):
@@ -373,7 +373,7 @@ class TessCAPI(CAPI):
                                       # const TessBaseAPI * handle
                                       LPTessBaseAPI,
                                       ),
-        'TessBaseAPIRect': (POINTER(c_char),
+        'TessBaseAPIRect': (LP_c_char,
                             LPTessBaseAPI,  # TessBaseAPI * handle
                             c_ubyte_p,  # const unsigned char * imagedata
                             c_int,  # int bytes_per_pixel
@@ -423,7 +423,7 @@ class TessCAPI(CAPI):
                                     LPTessBaseAPI,  # TessBaseAPI * handle
                                     LPLPPixa,  # struct Pixa ** pixa
                                     # int ** blockids
-                                    POINTER(POINTER(c_int)),
+                                    POINTER(c_int_p),
                                     ),
         'TessBaseAPIGetTextlines1': (LPBoxa,  # struct Boxa *
                                      LPTessBaseAPI,  # TessBaseAPI * handle
@@ -431,14 +431,14 @@ class TessCAPI(CAPI):
                                      c_int,  # int raw_padding
                                      LPLPPixa,  # struct Pixa ** pixa
                                      # int ** blockids
-                                     POINTER(POINTER(c_int)),
+                                     POINTER(c_int_p),
                                      # int ** paraids
-                                     POINTER(POINTER(c_int)),
+                                     POINTER(c_int_p),
                                      ),
         'TessBaseAPIGetStrips': (LPBoxa,  # struct Boxa *
                                  LPTessBaseAPI,  # TessBaseAPI * handle
                                  LPLPPixa,  # struct Pixa ** pixa
-                                 POINTER(POINTER(c_int)),  # int ** blockids
+                                 POINTER(c_int_p),  # int ** blockids
                                  ),
         'TessBaseAPIGetWords': (LPBoxa,  # struct Boxa *
                                 LPTessBaseAPI,  # TessBaseAPI * handle
@@ -457,7 +457,7 @@ class TessCAPI(CAPI):
                                           c_bool,  # BOOL text_only
                                           LPLPPixa,  # struct Pixa ** pixa
                                           # int ** blockids
-                                          POINTER(POINTER(c_int)),
+                                          POINTER(c_int_p),
                                           ),
         'TessBaseAPIGetComponentImages1': (LPBoxa,  # struct Boxa *
                                            # TessBaseAPI * handle
@@ -469,9 +469,9 @@ class TessCAPI(CAPI):
                                            c_int,  # int raw_padding
                                            LPLPPixa,  # struct Pixa ** pixa
                                            # int ** blockids
-                                           POINTER(POINTER(c_int)),
+                                           POINTER(c_int_p),
                                            # int ** paraids
-                                           POINTER(POINTER(c_int)),
+                                           POINTER(c_int_p),
                                            ),
         'TessBaseAPIGetThresholdedImageScaleFactor': (c_int,
                                                       # const TessBaseAPI * handle
@@ -509,35 +509,35 @@ class TessCAPI(CAPI):
                                           # TessBaseAPI * handle
                                           LPTessBaseAPI,
                                           ),
-        'TessBaseAPIGetUTF8Text': (POINTER(c_char),
+        'TessBaseAPIGetUTF8Text': (LP_c_char,
                                    LPTessBaseAPI,  # TessBaseAPI * handle
                                    ),
-        'TessBaseAPIGetHOCRText': (c_char_p,
-                                   LPTessBaseAPI,  # TessBaseAPI * handle
-                                   c_int,  # int page_number
-                                   ),
-        'TessBaseAPIGetAltoText': (c_char_p,
+        'TessBaseAPIGetHOCRText': (LP_c_char,
                                    LPTessBaseAPI,  # TessBaseAPI * handle
                                    c_int,  # int page_number
                                    ),
-        'TessBaseAPIGetTsvText': (c_char_p,
+        'TessBaseAPIGetAltoText': (LP_c_char,
+                                   LPTessBaseAPI,  # TessBaseAPI * handle
+                                   c_int,  # int page_number
+                                   ),
+        'TessBaseAPIGetTsvText': (LP_c_char,
                                   LPTessBaseAPI,  # TessBaseAPI * handle
                                   c_int,  # int page_number
                                   ),
-        'TessBaseAPIGetBoxText': (c_char_p,
+        'TessBaseAPIGetBoxText': (LP_c_char,
                                   LPTessBaseAPI,  # TessBaseAPI * handle
                                   c_int,  # int page_number
                                   ),
-        'TessBaseAPIGetLSTMBoxText': (c_char_p,
+        'TessBaseAPIGetLSTMBoxText': (LP_c_char,
                                       LPTessBaseAPI,  # TessBaseAPI * handle
                                       c_int,  # int page_number
                                       ),
-        'TessBaseAPIGetWordStrBoxText': (c_char_p,
+        'TessBaseAPIGetWordStrBoxText': (LP_c_char,
                                          # TessBaseAPI * handle
                                          LPTessBaseAPI,
                                          c_int,  # int page_number
                                          ),
-        'TessBaseAPIGetUNLVText': (c_char_p,
+        'TessBaseAPIGetUNLVText': (LP_c_char,
                                    LPTessBaseAPI,  # TessBaseAPI * handle
                                    ),
         'TessBaseAPIMeanTextConf': (c_int,
@@ -601,9 +601,9 @@ class TessCAPI(CAPI):
                                              # TessBaseAPI * handle
                                              LPTessBaseAPI,
                                              # int ** block_orientation
-                                             POINTER(POINTER(c_int)),
+                                             POINTER(c_int_p),
                                              # bool ** vertical_writing
-                                             POINTER(POINTER(c_bool)),
+                                             POINTER(c_bool_p),
                                              ),
         # Page iterator
         'TessPageIteratorDelete': (None,
@@ -678,18 +678,18 @@ class TessCAPI(CAPI):
                                         # TessPageIterator * handle
                                         LPTessPageIterator,
                                         # TessOrientation * orientation
-                                        POINTER(c_int),
+                                        c_int_p,
                                         # TessWritingDirection * writing_direction
-                                        POINTER(c_int),
+                                        c_int_p,
                                         # TessTextlineOrder * textline_order
-                                        POINTER(c_int),
+                                        c_int_p,
                                         c_float_p,  # float * deskew_angle
                                         ),
         'TessPageIteratorParagraphInfo': (None,
                                           # TessPageIterator * handle
                                           LPTessPageIterator,
                                           # TessParagraphJustification * justification
-                                          POINTER(c_int),
+                                          c_int_p,
                                           c_bool_p,  # BOOL * is_list_item
                                           c_bool_p,  # BOOL * is_crown
                                           c_int_p,  # int * first_line_indent
@@ -720,7 +720,7 @@ class TessCAPI(CAPI):
                                    LPTessResultIterator,
                                    c_int,  # TessPageIteratorLevel level
                                    ),
-        'TessResultIteratorGetUTF8Text': (POINTER(c_char),
+        'TessResultIteratorGetUTF8Text': (LP_c_char,
                                           # const TessResultIterator * handle
                                           LPTessResultIterator,
                                           # TessPageIteratorLevel level
@@ -820,9 +820,6 @@ class TessCAPI(CAPI):
     # General free functions
 
     def capi_version(self) -> bytes:
-        '''
-        Returns the version identifier as a static string. Do not delete.
-        '''
         return self.TessVersion()
 
     def capi_delete_text(self, text: c_char_p):
@@ -836,44 +833,34 @@ class TessCAPI(CAPI):
 
     # Renderer API
     def capi_text_renderer_create(self, outputbase: bytes):
-        '''UTF8 Text Renderer interface implementation'''
         return self.TessTextRendererCreate(outputbase)
 
     def capi_hocr_renderer_create(self, outputbase: bytes):
-        '''HOcr Text Renderer interface implementation'''
         return self.TessHOcrRendererCreate(outputbase)
 
     def capi_hocr_renderer_create2(self, outputbase: bytes, font_info: bool):
-        '''HOcr Text Renderer interface implementation'''
         return self.TessHOcrRendererCreate2(outputbase, font_info)
 
     def capi_alto_renderer_create(self, outputbase: bytes):
-        '''ALTO XML Renderer interface implementation'''
         return self.TessAltoRendererCreate(outputbase)
 
     def capi_tsv_renderer_create(self, outputbase: bytes):
-        '''TSV Text Renderer interface implementation'''
         return self.TessTsvRendererCreate(outputbase)
 
     def capi_pdf_renderer_create(self, outputbase: bytes, datadir: bytes,
                                  textonly: bool):
-        '''PDF Renderer interface implementation'''
         return self.TessPDFRendererCreate(outputbase, datadir, textonly)
 
     def capi_unlv_renderer_create(self, outputbase: bytes):
-        '''UNLV Text Renderer interface implementation'''
         return self.TessUnlvRendererCreate(outputbase)
 
     def capi_box_text_renderer_create(self, outputbase: bytes):
-        '''BoxText Renderer interface implementation'''
         return self.TessBoxTextRendererCreate(outputbase)
 
     def capi_lstm_box_renderer_create(self, outputbase: bytes):
-        '''LSTMBox Renderer interface implementation'''
         return self.TessLSTMBoxRendererCreate(outputbase)
 
     def capi_word_str_box_renderer_create(self, outputbase: bytes):
-        '''WordStrBox Renderer interface implementation'''
         return self.TessWordStrBoxRendererCreate(outputbase)
 
     def capi_delete_result_renderer(self,
@@ -914,23 +901,6 @@ class TessCAPI(CAPI):
 
     def capi_result_renderer_image_num(self,
                                        renderer: LPTessResultRenderer) -> int:
-        '''
-        This is always defined. It means either the number of the
-        current image, the last image ended, or in the completed document
-        depending on when in the document lifecycle you are looking at it.
-        Will return -1 if a document was never started.
-
-        Parameters
-        ----------
-        renderer : LPTessResultRenderer
-            DESCRIPTION.
-
-        Returns
-        -------
-        int
-            Returns the index of the last image given to AddImage.
-            (i.e. images are incremented whether the image succeeded or not)
-        '''
         return self.TessResultRendererImageNum(renderer)
 
     # Base API
@@ -991,8 +961,8 @@ class TessCAPI(CAPI):
     def capi_base_api_print_variables(self, handle, fp):
         self.TessBaseAPIPrintVariables(handle, fp)
 
-    def capi_base_api_print_variables_tofile(self, handle,
-                                             filename: bytes) -> bool:
+    def capi_base_api_print_variables_to_file(self, handle,
+                                              filename: bytes) -> bool:
         return self.TessBaseAPIPrintVariablesToFile(handle, filename)
 
     def capi_base_api_init1(self, handle, datapath: bytes, language: bytes,
@@ -1074,7 +1044,7 @@ class TessCAPI(CAPI):
                            left: int,
                            top: int,
                            width: int,
-                           height: int) -> bytes:
+                           height: int) -> LP_c_char:
         data = cast(imagedata, c_ubyte_p)
         return self.TessBaseAPIRect(handle, data,
                                     bytes_per_pixel, bytes_per_line,
@@ -1094,7 +1064,7 @@ class TessCAPI(CAPI):
                                  width, height,
                                  bytes_per_pixel, bytes_per_line)
 
-    def capi_base_api_set_image2(self, handle, pix: POINTER(Pix)):
+    def capi_base_api_set_image2(self, handle, pix: LPPix):
         self.TessBaseAPISetImage2(handle, pix)
 
     def capi_base_api_set_source_resolution(self, handle, ppi: int):
@@ -1181,36 +1151,40 @@ class TessCAPI(CAPI):
     def capi_base_api_get_mutable_iterator(self, handle):
         return self.TessBaseAPIGetMutableIterator(handle)
 
-    def capi_base_api_get_utf8_text(self, handle) -> bytes:
+    def capi_base_api_get_utf8_text(self, handle) -> LP_c_char:
         return self.TessBaseAPIGetUTF8Text(handle)
 
-    def capi_base_api_get_hocr_text(self, handle, page_number: int) -> bytes:
+    def capi_base_api_get_hocr_text(self, handle,
+                                    page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetHOCRText(handle,
                                            page_number)
 
-    def capi_base_api_get_alto_text(self, handle, page_number: int) -> bytes:
+    def capi_base_api_get_alto_text(self, handle,
+                                    page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetAltoText(handle,
                                            page_number)
 
-    def capi_base_api_get_tsv_text(self, handle, page_number: int) -> bytes:
+    def capi_base_api_get_tsv_text(self, handle,
+                                   page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetTsvText(handle,
                                           page_number)
 
-    def capi_base_api_get_box_text(self, handle, page_number: int) -> bytes:
+    def capi_base_api_get_box_text(self, handle,
+                                   page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetBoxText(handle,
                                           page_number)
 
     def capi_base_api_get_lstm_box_text(self, handle,
-                                        page_number: int) -> bytes:
+                                        page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetLSTMBoxText(handle,
                                               page_number)
 
     def capi_base_api_get_word_str_box_text(self, handle,
-                                            page_number: int) -> bytes:
+                                            page_number: int) -> LP_c_char:
         return self.TessBaseAPIGetWordStrBoxText(handle,
                                                  page_number)
 
-    def capi_base_api_get_unlv_text(self, handle) -> bytes:
+    def capi_base_api_get_unlv_text(self, handle) -> LP_c_char:
         return self.TessBaseAPIGetUNLVText(handle)
 
     def capi_base_api_mean_text_conf(self, handle) -> int:
@@ -1284,11 +1258,12 @@ class TessCAPI(CAPI):
                                 level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorNext(handle, level)
 
-    def capi_page_iterator_isat_beginning_of(self, handle: LPTessPageIterator,
-                                             level: PageIteratorLevel) -> bool:
+    def capi_page_iterator_is_at_beginning_of(
+            self, handle: LPTessPageIterator,
+            level: PageIteratorLevel) -> bool:
         return self.TessPageIteratorIsAtBeginningOf(handle, level)
 
-    def capi_page_iterator_isat_final_element(
+    def capi_page_iterator_is_at_final_element(
         self, handle: LPTessPageIterator,
             level: PageIteratorLevel,
             element: PageIteratorLevel) -> bool:
@@ -1374,8 +1349,9 @@ class TessCAPI(CAPI):
                                   level: PageIteratorLevel) -> bool:
         return self.TessResultIteratorNext(handle, level)
 
-    def capi_result_iterator_get_utf8_text(self, handle: LPTessResultIterator,
-                                           level: PageIteratorLevel) -> bytes:
+    def capi_result_iterator_get_utf8_text(
+            self, handle: LPTessResultIterator,
+            level: PageIteratorLevel) -> LP_c_char:
         return self.TessResultIteratorGetUTF8Text(handle, level)
 
     def capi_result_iterator_confidence(self, handle: LPTessResultIterator,
@@ -1436,9 +1412,8 @@ class TessCAPI(CAPI):
     def capi_choice_iterator_next(self, handle: LPTessChoiceIterator) -> bool:
         return self.TessChoiceIteratorNext(handle)
 
-    def capi_choice_iterator_get_utf8text(
-            self,
-            handle: LPTessChoiceIterator) -> bytes:
+    def capi_choice_iterator_get_utf8_text(
+            self, handle: LPTessChoiceIterator) -> bytes:
         return self.TessChoiceIteratorGetUTF8Text(handle)
 
     def capi_choice_iterator_confidence(self,
@@ -1454,21 +1429,18 @@ class TessCAPI(CAPI):
         self.TessMonitorDelete(monitor)
 
     def capi_monitor_set_cancel_func(self, monitor: LPETEXT_DESC,
-                                     cancelFunc: Callable[[c_void_p, int],
-                                                          bool]):
+                                     cancelFunc: TessCancelFunc):
         self.TessMonitorSetCancelFunc(monitor, cancelFunc)
 
-    def capi_monitor_set_cancel_this(self, monitor: LPETEXT_DESC, cancelThis):
+    def capi_monitor_set_cancel_this(self, monitor: LPETEXT_DESC,
+                                     cancelThis: c_void_p):
         self.TessMonitorSetCancelThis(monitor, cancelThis)
 
     def capi_monitor_get_cancel_this(self, monitor: LPETEXT_DESC) -> c_void_p:
         return self.TessMonitorGetCancelThis(monitor)
 
     def capi_monitor_set_progress_func(self, monitor: LPETEXT_DESC,
-                                       progressFunc: Callable[[LPETEXT_DESC,
-                                                               int, int,
-                                                               int, int],
-                                                              bool]):
+                                       progressFunc: TessProgressFunc):
         self.TessMonitorSetProgressFunc(monitor, progressFunc)
 
     def capi_monitor_get_progress(self, monitor: LPETEXT_DESC) -> int:

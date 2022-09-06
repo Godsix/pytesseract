@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 from .common import TESSDATA_PREFIX
 from .error import TesseractError
 from .leptonica_capi import LPPix
-from .leptonica import Leptonica
+from .leptonica import Leptonica, PyPix
 from .tesseract_capi import PageSegMode, PageIteratorLevel
 from .tesseract_papi import GeneralAPI
 from .tesseract_api import TessBase, ProgressMonitor
@@ -36,6 +36,9 @@ class Tesseract(TessBase):
 
     @property
     def version(self) -> str:
+        '''
+        Returns the version identifier as a static string. Do not delete.
+        '''
         return GeneralAPI.version()
 
     def set_is_numeric(self, mode):
@@ -70,7 +73,7 @@ class Tesseract(TessBase):
                 image = Image.open(img)
         elif Image is not None and isinstance(img, Image.Image):
             image = img
-        elif isinstance(img, LPPix):
+        elif isinstance(img, (LPPix, PyPix)):
             image = img
             use_pix = True
         else:

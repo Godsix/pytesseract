@@ -5,9 +5,10 @@ Created on Tue Jul 13 12:43:58 2021
 @author: 皓
 """
 from ctypes import (POINTER, Structure, c_void_p, c_float, c_int, c_uint,
-                    c_ubyte, c_size_t, c_char_p, c_double, c_ulonglong,
+                    c_ubyte, c_size_t, c_char_p, c_double, c_ulonglong, c_char,
                     c_ushort)
-from .datatype import c_ubyte_p, c_float_p, c_double_p, c_uint_p
+from .datatype import (c_ubyte_p, c_float_p, c_double_p, c_uint_p, c_int_p,
+                       c_size_t_p, c_ulonglong_p, LP_c_char)
 from .common import LEPT_DLL
 from .datatype import CAPI
 
@@ -25,6 +26,7 @@ class PixColormap(Structure):
 
 
 LPPixColormap = POINTER(PixColormap)
+LPLPPixColormap = POINTER(LPPixColormap)
 
 
 class Pix(Structure):
@@ -331,7 +333,7 @@ class L_Bytea(Structure):
         ("data", c_ubyte_p)]  # data array
 
 
-class LeptonicaAPI(CAPI):
+class LeptCAPI(CAPI):
     NAME = 'Leptonica'
     API = {
         'pixCleanBackgroundToWhite': (LPPix,  # PIX *
@@ -376,7 +378,7 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 bgval
                                        c_int,  # l_int32 smoothx
                                        c_int,  # l_int32 smoothy
-                                       POINTER(LPPix),  # PIX * * ppixd
+                                       LPLPPix,  # PIX ** ppixd
                                        ),
         'pixBackgroundNormRGBArrays': (c_int,
                                        LPPix,  # PIX * pixs
@@ -389,9 +391,9 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 bgval
                                        c_int,  # l_int32 smoothx
                                        c_int,  # l_int32 smoothy
-                                       POINTER(LPPix),  # PIX * * ppixr
-                                       POINTER(LPPix),  # PIX * * ppixg
-                                       POINTER(LPPix),  # PIX * * ppixb
+                                       LPLPPix,  # PIX ** ppixr
+                                       LPLPPix,  # PIX ** ppixg
+                                       LPLPPix,  # PIX ** ppixb
                                        ),
         'pixBackgroundNormGrayArrayMorph': (c_int,
                                             LPPix,  # PIX * pixs
@@ -399,7 +401,7 @@ class LeptonicaAPI(CAPI):
                                             c_int,  # l_int32 reduction
                                             c_int,  # l_int32 size
                                             c_int,  # l_int32 bgval
-                                            POINTER(LPPix),  # PIX * * ppixd
+                                            LPLPPix,  # PIX ** ppixd
                                             ),
         'pixBackgroundNormRGBArraysMorph': (c_int,
                                             LPPix,  # PIX * pixs
@@ -407,9 +409,9 @@ class LeptonicaAPI(CAPI):
                                             c_int,  # l_int32 reduction
                                             c_int,  # l_int32 size
                                             c_int,  # l_int32 bgval
-                                            POINTER(LPPix),  # PIX * * ppixr
-                                            POINTER(LPPix),  # PIX * * ppixg
-                                            POINTER(LPPix),  # PIX * * ppixb
+                                            LPLPPix,  # PIX ** ppixr
+                                            LPLPPix,  # PIX ** ppixg
+                                            LPLPPix,  # PIX ** ppixb
                                             ),
         'pixGetBackgroundGrayMap': (c_int,
                                     LPPix,  # PIX * pixs
@@ -418,7 +420,7 @@ class LeptonicaAPI(CAPI):
                                     c_int,  # l_int32 sy
                                     c_int,  # l_int32 thresh
                                     c_int,  # l_int32 mincount
-                                    POINTER(LPPix),  # PIX * * ppixd
+                                    LPLPPix,  # PIX ** ppixd
                                     ),
         'pixGetBackgroundRGBMap': (c_int,
                                    LPPix,  # PIX * pixs
@@ -428,25 +430,25 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 sy
                                    c_int,  # l_int32 thresh
                                    c_int,  # l_int32 mincount
-                                   POINTER(LPPix),  # PIX * * ppixmr
-                                   POINTER(LPPix),  # PIX * * ppixmg
-                                   POINTER(LPPix),  # PIX * * ppixmb
+                                   LPLPPix,  # PIX ** ppixmr
+                                   LPLPPix,  # PIX ** ppixmg
+                                   LPLPPix,  # PIX ** ppixmb
                                    ),
         'pixGetBackgroundGrayMapMorph': (c_int,
                                          LPPix,  # PIX * pixs
                                          LPPix,  # PIX * pixim
                                          c_int,  # l_int32 reduction
                                          c_int,  # l_int32 size
-                                         POINTER(LPPix),  # PIX * * ppixm
+                                         LPLPPix,  # PIX ** ppixm
                                          ),
         'pixGetBackgroundRGBMapMorph': (c_int,
                                         LPPix,  # PIX * pixs
                                         LPPix,  # PIX * pixim
                                         c_int,  # l_int32 reduction
                                         c_int,  # l_int32 size
-                                        POINTER(LPPix),  # PIX * * ppixmr
-                                        POINTER(LPPix),  # PIX * * ppixmg
-                                        POINTER(LPPix),  # PIX * * ppixmb
+                                        LPLPPix,  # PIX ** ppixmr
+                                        LPLPPix,  # PIX ** ppixmg
+                                        LPLPPix,  # PIX ** ppixmb
                                         ),
         'pixFillMapHoles': (c_int,
                             LPPix,  # PIX * pix
@@ -516,9 +518,9 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 minval
                                    c_int,  # l_int32 maxval
                                    c_int,  # l_int32 targetthresh
-                                   POINTER(LPPix),  # PIX * * ppixth
-                                   POINTER(LPPix),  # PIX * * ppixb
-                                   POINTER(LPPix),  # PIX * * ppixd
+                                   LPLPPix,  # PIX ** ppixth
+                                   LPLPPix,  # PIX ** ppixb
+                                   LPLPPix,  # PIX ** ppixd
                                    ),
         'pixBackgroundNormFlex': (LPPix,  # PIX *
                                   LPPix,  # PIX * pixs
@@ -545,7 +547,7 @@ class LeptonicaAPI(CAPI):
                                 ),
         'pixAffineSampled': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
-                             POINTER(c_float),  # l_float32 * vc
+                             c_float_p,  # l_float32 * vc
                              c_int,  # l_int32 incolor
                              ),
         'pixAffinePta': (LPPix,  # PIX *
@@ -556,7 +558,7 @@ class LeptonicaAPI(CAPI):
                          ),
         'pixAffine': (LPPix,  # PIX *
                       LPPix,  # PIX * pixs
-                      POINTER(c_float),  # l_float32 * vc
+                      c_float_p,  # l_float32 * vc
                       c_int,  # l_int32 incolor
                       ),
         'pixAffinePtaColor': (LPPix,  # PIX *
@@ -567,7 +569,7 @@ class LeptonicaAPI(CAPI):
                               ),
         'pixAffineColor': (LPPix,  # PIX *
                            LPPix,  # PIX * pixs
-                           POINTER(c_float),  # l_float32 * vc
+                           c_float_p,  # l_float32 * vc
                            c_uint,  # l_uint32 colorval
                            ),
         'pixAffinePtaGray': (LPPix,  # PIX *
@@ -578,7 +580,7 @@ class LeptonicaAPI(CAPI):
                              ),
         'pixAffineGray': (LPPix,  # PIX *
                           LPPix,  # PIX * pixs
-                          POINTER(c_float),  # l_float32 * vc
+                          c_float_p,  # l_float32 * vc
                           c_ubyte,  # l_uint8 grayval
                           ),
         'pixAffinePtaWithAlpha': (LPPix,  # PIX *
@@ -592,50 +594,50 @@ class LeptonicaAPI(CAPI):
         'getAffineXformCoeffs': (c_int,
                                  LPPta,  # PTA * ptas
                                  LPPta,  # PTA * ptad
-                                 # l_float32 * * pvc
-                                 POINTER(POINTER(c_float)),
+                                 # l_float32 ** pvc
+                                 POINTER(c_float_p),
                                  ),
         'affineInvertXform': (c_int,
-                              POINTER(c_float),  # l_float32 * vc
-                              POINTER(POINTER(c_float)),  # l_float32 * * pvci
+                              c_float_p,  # l_float32 * vc
+                              POINTER(c_float_p),  # l_float32 ** pvci
                               ),
         'affineXformSampledPt': (c_int,
-                                 POINTER(c_float),  # l_float32 * vc
+                                 c_float_p,  # l_float32 * vc
                                  c_int,  # l_int32 x
                                  c_int,  # l_int32 y
-                                 POINTER(c_int),  # l_int32 * pxp
-                                 POINTER(c_int),  # l_int32 * pyp
+                                 c_int_p,  # l_int32 * pxp
+                                 c_int_p,  # l_int32 * pyp
                                  ),
         'affineXformPt': (c_int,
-                          POINTER(c_float),  # l_float32 * vc
+                          c_float_p,  # l_float32 * vc
                           c_int,  # l_int32 x
                           c_int,  # l_int32 y
-                          POINTER(c_float),  # l_float32 * pxp
-                          POINTER(c_float),  # l_float32 * pyp
+                          c_float_p,  # l_float32 * pxp
+                          c_float_p,  # l_float32 * pyp
                           ),
         'linearInterpolatePixelColor': (c_int,
-                                        POINTER(c_uint),  # l_uint32 * datas
+                                        c_uint_p,  # l_uint32 * datas
                                         c_int,  # l_int32 wpls
                                         c_int,  # l_int32 w
                                         c_int,  # l_int32 h
                                         c_float,  # l_float32 x
                                         c_float,  # l_float32 y
                                         c_uint,  # l_uint32 colorval
-                                        POINTER(c_uint),  # l_uint32 * pval
+                                        c_uint_p,  # l_uint32 * pval
                                         ),
         'linearInterpolatePixelGray': (c_int,
-                                       POINTER(c_uint),  # l_uint32 * datas
+                                       c_uint_p,  # l_uint32 * datas
                                        c_int,  # l_int32 wpls
                                        c_int,  # l_int32 w
                                        c_int,  # l_int32 h
                                        c_float,  # l_float32 x
                                        c_float,  # l_float32 y
                                        c_int,  # l_int32 grayval
-                                       POINTER(c_int),  # l_int32 * pval
+                                       c_int_p,  # l_int32 * pval
                                        ),
         'gaussjordan': (c_int,
-                        POINTER(POINTER(c_float)),  # l_float32 * * a
-                        POINTER(c_float),  # l_float32 * b
+                        POINTER(c_float_p),  # l_float32 ** a
+                        c_float_p,  # l_float32 * b
                         c_int,  # l_int32 n
                         ),
         'pixAffineSequential': (LPPix,  # PIX *
@@ -645,15 +647,15 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 bw
                                 c_int,  # l_int32 bh
                                 ),
-        'createMatrix2dTranslate': (POINTER(c_float),
+        'createMatrix2dTranslate': (c_float_p,
                                     c_float,  # l_float32 transx
                                     c_float,  # l_float32 transy
                                     ),
-        'createMatrix2dScale': (POINTER(c_float),
+        'createMatrix2dScale': (c_float_p,
                                 c_float,  # l_float32 scalex
                                 c_float,  # l_float32 scaley
                                 ),
-        'createMatrix2dRotate': (POINTER(c_float),
+        'createMatrix2dRotate': (c_float_p,
                                  c_float,  # l_float32 xc
                                  c_float,  # l_float32 yc
                                  c_float,  # l_float32 angle
@@ -692,37 +694,37 @@ class LeptonicaAPI(CAPI):
                        ),
         'ptaAffineTransform': (LPPta,  # PTA *
                                LPPta,  # PTA * ptas
-                               POINTER(c_float),  # l_float32 * mat
+                               c_float_p,  # l_float32 * mat
                                ),
         'boxaAffineTransform': (LPBoxa,  # BOXA *
                                 LPBoxa,  # BOXA * boxas
-                                POINTER(c_float),  # l_float32 * mat
+                                c_float_p,  # l_float32 * mat
                                 ),
         'l_productMatVec': (c_int,
-                            POINTER(c_float),  # l_float32 * mat
-                            POINTER(c_float),  # l_float32 * vecs
-                            POINTER(c_float),  # l_float32 * vecd
+                            c_float_p,  # l_float32 * mat
+                            c_float_p,  # l_float32 * vecs
+                            c_float_p,  # l_float32 * vecd
                             c_int,  # l_int32 size
                             ),
         'l_productMat2': (c_int,
-                          POINTER(c_float),  # l_float32 * mat1
-                          POINTER(c_float),  # l_float32 * mat2
-                          POINTER(c_float),  # l_float32 * matd
+                          c_float_p,  # l_float32 * mat1
+                          c_float_p,  # l_float32 * mat2
+                          c_float_p,  # l_float32 * matd
                           c_int,  # l_int32 size
                           ),
         'l_productMat3': (c_int,
-                          POINTER(c_float),  # l_float32 * mat1
-                          POINTER(c_float),  # l_float32 * mat2
-                          POINTER(c_float),  # l_float32 * mat3
-                          POINTER(c_float),  # l_float32 * matd
+                          c_float_p,  # l_float32 * mat1
+                          c_float_p,  # l_float32 * mat2
+                          c_float_p,  # l_float32 * mat3
+                          c_float_p,  # l_float32 * matd
                           c_int,  # l_int32 size
                           ),
         'l_productMat4': (c_int,
-                          POINTER(c_float),  # l_float32 * mat1
-                          POINTER(c_float),  # l_float32 * mat2
-                          POINTER(c_float),  # l_float32 * mat3
-                          POINTER(c_float),  # l_float32 * mat4
-                          POINTER(c_float),  # l_float32 * matd
+                          c_float_p,  # l_float32 * mat1
+                          c_float_p,  # l_float32 * mat2
+                          c_float_p,  # l_float32 * mat3
+                          c_float_p,  # l_float32 * mat4
+                          c_float_p,  # l_float32 * matd
                           c_int,  # l_int32 size
                           ),
         'l_getDataBit': (c_int,
@@ -805,7 +807,7 @@ class LeptonicaAPI(CAPI):
                                      ),
         'pixFindBaselines': (LPNuma,  # NUMA *
                              LPPix,  # PIX * pixs
-                             POINTER(LPPta),  # PTA * * ppta
+                             LPLPPta,  # PTA ** ppta
                              LPPixa,  # PIXA * pixadb
                              ),
         'pixDeskewLocal': (LPPix,  # PIX *
@@ -825,8 +827,8 @@ class LeptonicaAPI(CAPI):
                                      c_float,  # l_float32 sweeprange
                                      c_float,  # l_float32 sweepdelta
                                      c_float,  # l_float32 minbsdelta
-                                     POINTER(LPPta),  # PTA * * pptas
-                                     POINTER(LPPta),  # PTA * * pptad
+                                     LPLPPta,  # PTA ** pptas
+                                     LPLPPta,  # PTA ** pptad
                                      ),
         'pixGetLocalSkewAngles': (LPNuma,  # NUMA *
                                   LPPix,  # PIX * pixs
@@ -836,8 +838,8 @@ class LeptonicaAPI(CAPI):
                                   c_float,  # l_float32 sweeprange
                                   c_float,  # l_float32 sweepdelta
                                   c_float,  # l_float32 minbsdelta
-                                  POINTER(c_float),  # l_float32 * pa
-                                  POINTER(c_float),  # l_float32 * pb
+                                  c_float_p,  # l_float32 * pa
+                                  c_float_p,  # l_float32 * pb
                                   c_int,  # l_int32 debug
                                   ),
         'pixBilateral': (LPPix,  # PIX *
@@ -867,7 +869,7 @@ class LeptonicaAPI(CAPI):
                                   ),
         'pixBilinearSampled': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
-                               POINTER(c_float),  # l_float32 * vc
+                               c_float_p,  # l_float32 * vc
                                c_int,  # l_int32 incolor
                                ),
         'pixBilinearPta': (LPPix,  # PIX *
@@ -878,7 +880,7 @@ class LeptonicaAPI(CAPI):
                            ),
         'pixBilinear': (LPPix,  # PIX *
                         LPPix,  # PIX * pixs
-                        POINTER(c_float),  # l_float32 * vc
+                        c_float_p,  # l_float32 * vc
                         c_int,  # l_int32 incolor
                         ),
         'pixBilinearPtaColor': (LPPix,  # PIX *
@@ -889,7 +891,7 @@ class LeptonicaAPI(CAPI):
                                 ),
         'pixBilinearColor': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
-                             POINTER(c_float),  # l_float32 * vc
+                             c_float_p,  # l_float32 * vc
                              c_uint,  # l_uint32 colorval
                              ),
         'pixBilinearPtaGray': (LPPix,  # PIX *
@@ -900,7 +902,7 @@ class LeptonicaAPI(CAPI):
                                ),
         'pixBilinearGray': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
-                            POINTER(c_float),  # l_float32 * vc
+                            c_float_p,  # l_float32 * vc
                             c_ubyte,  # l_uint8 grayval
                             ),
         'pixBilinearPtaWithAlpha': (LPPix,  # PIX *
@@ -914,22 +916,22 @@ class LeptonicaAPI(CAPI):
         'getBilinearXformCoeffs': (c_int,
                                    LPPta,  # PTA * ptas
                                    LPPta,  # PTA * ptad
-                                   # l_float32 * * pvc
-                                   POINTER(POINTER(c_float)),
+                                   # l_float32 ** pvc
+                                   POINTER(c_float_p),
                                    ),
         'bilinearXformSampledPt': (c_int,
-                                   POINTER(c_float),  # l_float32 * vc
+                                   c_float_p,  # l_float32 * vc
                                    c_int,  # l_int32 x
                                    c_int,  # l_int32 y
-                                   POINTER(c_int),  # l_int32 * pxp
-                                   POINTER(c_int),  # l_int32 * pyp
+                                   c_int_p,  # l_int32 * pxp
+                                   c_int_p,  # l_int32 * pyp
                                    ),
         'bilinearXformPt': (c_int,
-                            POINTER(c_float),  # l_float32 * vc
+                            c_float_p,  # l_float32 * vc
                             c_int,  # l_int32 x
                             c_int,  # l_int32 y
-                            POINTER(c_float),  # l_float32 * pxp
-                            POINTER(c_float),  # l_float32 * pyp
+                            c_float_p,  # l_float32 * pxp
+                            c_float_p,  # l_float32 * pyp
                             ),
         'pixOtsuAdaptiveThreshold': (c_int,
                                      LPPix,  # PIX * pixs
@@ -938,8 +940,8 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 smoothx
                                      c_int,  # l_int32 smoothy
                                      c_float,  # l_float32 scorefract
-                                     POINTER(LPPix),  # PIX * * ppixth
-                                     POINTER(LPPix),  # PIX * * ppixd
+                                     LPLPPix,  # PIX ** ppixth
+                                     LPLPPix,  # PIX ** ppixd
                                      ),
         'pixOtsuThreshOnBackgroundNorm': (LPPix,  # PIX *
                                           LPPix,  # PIX * pixs
@@ -952,7 +954,7 @@ class LeptonicaAPI(CAPI):
                                           c_int,  # l_int32 smoothx
                                           c_int,  # l_int32 smoothy
                                           c_float,  # l_float32 scorefract
-                                          POINTER(c_int),  # l_int32 * pthresh
+                                          c_int_p,  # l_int32 * pthresh
                                           ),
         'pixMaskedThreshOnBackgroundNorm': (LPPix,  # PIX *
                                             LPPix,  # PIX * pixs
@@ -965,7 +967,7 @@ class LeptonicaAPI(CAPI):
                                             c_int,  # l_int32 smoothy
                                             c_float,  # l_float32 scorefract
                                             # l_int32 * pthresh
-                                            POINTER(c_int),
+                                            c_int_p,
                                             ),
         'pixSauvolaBinarizeTiled': (c_int,
                                     LPPix,  # PIX * pixs
@@ -973,24 +975,24 @@ class LeptonicaAPI(CAPI):
                                     c_float,  # l_float32 factor
                                     c_int,  # l_int32 nx
                                     c_int,  # l_int32 ny
-                                    POINTER(LPPix),  # PIX * * ppixth
-                                    POINTER(LPPix),  # PIX * * ppixd
+                                    LPLPPix,  # PIX ** ppixth
+                                    LPLPPix,  # PIX ** ppixd
                                     ),
         'pixSauvolaBinarize': (c_int,
                                LPPix,  # PIX * pixs
                                c_int,  # l_int32 whsize
                                c_float,  # l_float32 factor
                                c_int,  # l_int32 addborder
-                               POINTER(LPPix),  # PIX * * ppixm
-                               POINTER(LPPix),  # PIX * * ppixsd
-                               POINTER(LPPix),  # PIX * * ppixth
-                               POINTER(LPPix),  # PIX * * ppixd
+                               LPLPPix,  # PIX ** ppixm
+                               LPLPPix,  # PIX ** ppixsd
+                               LPLPPix,  # PIX ** ppixth
+                               LPLPPix,  # PIX ** ppixd
                                ),
         'pixSauvolaOnContrastNorm': (LPPix,  # PIX *
                                      LPPix,  # PIX * pixs
                                      c_int,  # l_int32 mindiff
-                                     POINTER(LPPix),  # PIX * * ppixn
-                                     POINTER(LPPix),  # PIX * * ppixth
+                                     LPLPPix,  # PIX ** ppixn
+                                     LPLPPix,  # PIX ** ppixth
                                      ),
         'pixThreshOnDoubleNorm': (LPPix,  # PIX *
                                   LPPix,  # PIX * pixs
@@ -1004,8 +1006,8 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 incr
                                    c_float,  # l_float32 thresh48
                                    c_float,  # l_float32 threshdiff
-                                   POINTER(c_int),  # l_int32 * pglobthresh
-                                   POINTER(LPPix),  # PIX * * ppixd
+                                   c_int_p,  # l_int32 * pglobthresh
+                                   LPLPPix,  # PIX ** ppixd
                                    c_int,  # l_int32 debugflag
                                    ),
         'pixThresholdByHisto': (c_int,
@@ -1013,9 +1015,9 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 factor
                                 c_int,  # l_int32 halfw
                                 c_float,  # l_float32 delta
-                                POINTER(c_int),  # l_int32 * pthresh
-                                POINTER(LPPix),  # PIX * * ppixd
-                                POINTER(LPPix),  # PIX * * ppixhisto
+                                c_int_p,  # l_int32 * pthresh
+                                LPLPPix,  # PIX ** ppixd
+                                LPLPPix,  # PIX ** ppixhisto
                                 ),
         'pixExpandBinaryReplicate': (LPPix,  # PIX *
                                      LPPix,  # PIX * pixs
@@ -1028,7 +1030,7 @@ class LeptonicaAPI(CAPI):
                                   ),
         'pixReduceBinary2': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
-                             POINTER(c_ubyte),  # l_uint8 * intab
+                             c_ubyte_p,  # l_uint8 * intab
                              ),
         'pixReduceRankBinaryCascade': (LPPix,  # PIX *
                                        LPPix,  # PIX * pixs
@@ -1040,9 +1042,9 @@ class LeptonicaAPI(CAPI):
         'pixReduceRankBinary2': (LPPix,  # PIX *
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 level
-                                 POINTER(c_ubyte),  # l_uint8 * intab
+                                 c_ubyte_p,  # l_uint8 * intab
                                  ),
-        'makeSubsampleTab2x': (POINTER(c_ubyte), ),
+        'makeSubsampleTab2x': (c_ubyte_p, ),
         'pixBlend': (LPPix,  # PIX *
                      LPPix,  # PIX * pixs1
                      LPPix,  # PIX * pixs2
@@ -1174,9 +1176,9 @@ class LeptonicaAPI(CAPI):
         'pixaGetFont': (LPPixa,  # PIXA *
                         c_char_p,  # const char * dir
                         c_int,  # l_int32 fontsize
-                        POINTER(c_int),  # l_int32 * pbl0
-                        POINTER(c_int),  # l_int32 * pbl1
-                        POINTER(c_int),  # l_int32 * pbl2
+                        c_int_p,  # l_int32 * pbl0
+                        c_int_p,  # l_int32 * pbl1
+                        c_int_p,  # l_int32 * pbl2
                         ),
         'pixaSaveFont': (c_int,
                          c_char_p,  # const char * indir
@@ -1187,7 +1189,7 @@ class LeptonicaAPI(CAPI):
                              LPFile,  # FILE * fp
                              ),
         'pixReadMemBmp': (LPPix,  # PIX *
-                          POINTER(c_ubyte),  # const l_uint8 * cdata
+                          c_ubyte_p,  # const l_uint8 * cdata
                           c_size_t,  # size_t size
                           ),
         'pixWriteStreamBmp': (c_int,
@@ -1195,8 +1197,8 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pix
                               ),
         'pixWriteMemBmp': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pfdata
-                           POINTER(c_size_t),  # size_t * pfsize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pfdata
+                           c_size_t_p,  # size_t * pfsize
                            LPPix,  # PIX * pixs
                            ),
         'l_bootnum_gen1': (LPPixa, ),  # PIXA *
@@ -1224,14 +1226,14 @@ class LeptonicaAPI(CAPI):
                      LPBox,  # BOX * box
                      ),
         'boxDestroy': (None,
-                       POINTER(LPBox),  # BOX * * pbox
+                       LPLPBox,  # BOX ** pbox
                        ),
         'boxGetGeometry': (c_int,
                            LPBox,  # BOX * box
-                           POINTER(c_int),  # l_int32 * px
-                           POINTER(c_int),  # l_int32 * py
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
+                           c_int_p,  # l_int32 * px
+                           c_int_p,  # l_int32 * py
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
                            ),
         'boxSetGeometry': (c_int,
                            LPBox,  # BOX * box
@@ -1242,10 +1244,10 @@ class LeptonicaAPI(CAPI):
                            ),
         'boxGetSideLocations': (c_int,
                                 LPBox,  # BOX * box
-                                POINTER(c_int),  # l_int32 * pl
-                                POINTER(c_int),  # l_int32 * pr
-                                POINTER(c_int),  # l_int32 * pt
-                                POINTER(c_int),  # l_int32 * pb
+                                c_int_p,  # l_int32 * pl
+                                c_int_p,  # l_int32 * pr
+                                c_int_p,  # l_int32 * pt
+                                c_int_p,  # l_int32 * pb
                                 ),
         'boxSetSideLocations': (c_int,
                                 LPBox,  # BOX * box
@@ -1263,7 +1265,7 @@ class LeptonicaAPI(CAPI):
                               ),
         'boxIsValid': (c_int,
                        LPBox,  # BOX * box
-                       POINTER(c_int),  # l_int32 * pvalid
+                       c_int_p,  # l_int32 * pvalid
                        ),
         'boxaCreate': (LPBoxa,  # BOXA *
                        c_int,  # l_int32 n
@@ -1273,7 +1275,7 @@ class LeptonicaAPI(CAPI):
                      c_int,  # l_int32 copyflag
                      ),
         'boxaDestroy': (None,
-                        POINTER(LPBoxa),  # BOXA * * pboxa
+                        LPLPBoxa,  # BOXA ** pboxa
                         ),
         'boxaAddBox': (c_int,
                        LPBoxa,  # BOXA * boxa
@@ -1309,14 +1311,14 @@ class LeptonicaAPI(CAPI):
         'boxaGetBoxGeometry': (c_int,
                                LPBoxa,  # BOXA * boxa
                                c_int,  # l_int32 index
-                               POINTER(c_int),  # l_int32 * px
-                               POINTER(c_int),  # l_int32 * py
-                               POINTER(c_int),  # l_int32 * pw
-                               POINTER(c_int),  # l_int32 * ph
+                               c_int_p,  # l_int32 * px
+                               c_int_p,  # l_int32 * py
+                               c_int_p,  # l_int32 * pw
+                               c_int_p,  # l_int32 * ph
                                ),
         'boxaIsFull': (c_int,
                        LPBoxa,  # BOXA * boxa
-                       POINTER(c_int),  # l_int32 * pfull
+                       c_int_p,  # l_int32 * pfull
                        ),
         'boxaReplaceBox': (c_int,
                            LPBoxa,  # BOXA * boxa
@@ -1335,7 +1337,7 @@ class LeptonicaAPI(CAPI):
         'boxaRemoveBoxAndSave': (c_int,
                                  LPBoxa,  # BOXA * boxa
                                  c_int,  # l_int32 index
-                                 POINTER(LPBox),  # BOX * * pbox
+                                 LPLPBox,  # BOX ** pbox
                                  ),
         'boxaSaveValid': (LPBoxa,  # BOXA *
                           LPBoxa,  # BOXA * boxas
@@ -1356,7 +1358,7 @@ class LeptonicaAPI(CAPI):
                       c_int,  # l_int32 copyflag
                       ),
         'boxaaDestroy': (None,
-                         POINTER(LPBoxaa),  # BOXAA * * pbaa
+                         LPLPBoxaa,  # BOXAA ** pbaa
                          ),
         'boxaaAddBoxa': (c_int,
                          LPBoxaa,  # BOXAA * baa
@@ -1429,7 +1431,7 @@ class LeptonicaAPI(CAPI):
                             LPFile,  # FILE * fp
                             ),
         'boxaaReadMem': (LPBoxaa,  # BOXAA *
-                         POINTER(c_ubyte),  # const l_uint8 * data
+                         c_ubyte_p,  # const l_uint8 * data
                          c_size_t,  # size_t size
                          ),
         'boxaaWrite': (c_int,
@@ -1441,8 +1443,8 @@ class LeptonicaAPI(CAPI):
                              LPBoxaa,  # BOXAA * baa
                              ),
         'boxaaWriteMem': (c_int,
-                          POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                          POINTER(c_size_t),  # size_t * psize
+                          POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                          c_size_t_p,  # size_t * psize
                           LPBoxaa,  # BOXAA * baa
                           ),
         'boxaRead': (LPBoxa,  # BOXA *
@@ -1452,7 +1454,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'boxaReadMem': (LPBoxa,  # BOXA *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'boxaWriteDebug': (c_int,
@@ -1471,8 +1473,8 @@ class LeptonicaAPI(CAPI):
                             LPBoxa,  # BOXA * boxa
                             ),
         'boxaWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPBoxa,  # BOXA * boxa
                          ),
         'boxPrintStreamInfo': (c_int,
@@ -1482,12 +1484,12 @@ class LeptonicaAPI(CAPI):
         'boxContains': (c_int,
                         LPBox,  # BOX * box1
                         LPBox,  # BOX * box2
-                        POINTER(c_int),  # l_int32 * presult
+                        c_int_p,  # l_int32 * presult
                         ),
         'boxIntersects': (c_int,
                           LPBox,  # BOX * box1
                           LPBox,  # BOX * box2
-                          POINTER(c_int),  # l_int32 * presult
+                          c_int_p,  # l_int32 * presult
                           ),
         'boxaContainedInBox': (LPBoxa,  # BOXA *
                                LPBoxa,  # BOXA * boxas
@@ -1496,12 +1498,12 @@ class LeptonicaAPI(CAPI):
         'boxaContainedInBoxCount': (c_int,
                                     LPBoxa,  # BOXA * boxa
                                     LPBox,  # BOX * box
-                                    POINTER(c_int),  # l_int32 * pcount
+                                    c_int_p,  # l_int32 * pcount
                                     ),
         'boxaContainedInBoxa': (c_int,
                                 LPBoxa,  # BOXA * boxa1
                                 LPBoxa,  # BOXA * boxa2
-                                POINTER(c_int),  # l_int32 * pcontained
+                                c_int_p,  # l_int32 * pcontained
                                 ),
         'boxaIntersectsBox': (LPBoxa,  # BOXA *
                               LPBoxa,  # BOXA * boxas
@@ -1510,7 +1512,7 @@ class LeptonicaAPI(CAPI):
         'boxaIntersectsBoxCount': (c_int,
                                    LPBoxa,  # BOXA * boxa
                                    LPBox,  # BOX * box
-                                   POINTER(c_int),  # l_int32 * pcount
+                                   c_int_p,  # l_int32 * pcount
                                    ),
         'boxaClipToBox': (LPBoxa,  # BOXA *
                           LPBoxa,  # BOXA * boxas
@@ -1523,8 +1525,8 @@ class LeptonicaAPI(CAPI):
         'boxaCombineOverlapsInPair': (c_int,
                                       LPBoxa,  # BOXA * boxas1
                                       LPBoxa,  # BOXA * boxas2
-                                      POINTER(LPBoxa),  # BOXA * * pboxad1
-                                      POINTER(LPBoxa),  # BOXA * * pboxad2
+                                      LPLPBoxa,  # BOXA ** pboxad1
+                                      LPLPBoxa,  # BOXA ** pboxad2
                                       LPPixa,  # PIXA * pixadb
                                       ),
         'boxOverlapRegion': (LPBox,  # BOX *
@@ -1538,12 +1540,12 @@ class LeptonicaAPI(CAPI):
         'boxOverlapFraction': (c_int,
                                LPBox,  # BOX * box1
                                LPBox,  # BOX * box2
-                               POINTER(c_float),  # l_float32 * pfract
+                               c_float_p,  # l_float32 * pfract
                                ),
         'boxOverlapArea': (c_int,
                            LPBox,  # BOX * box1
                            LPBox,  # BOX * box2
-                           POINTER(c_int),  # l_int32 * parea
+                           c_int_p,  # l_int32 * parea
                            ),
         'boxaHandleOverlaps': (LPBoxa,  # BOXA *
                                LPBoxa,  # BOXA * boxas
@@ -1551,31 +1553,31 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 range
                                c_float,  # l_float32 min_overlap
                                c_float,  # l_float32 max_ratio
-                               POINTER(LPNuma),  # NUMA * * pnamap
+                               LPLPNuma,  # NUMA ** pnamap
                                ),
         'boxOverlapDistance': (c_int,
                                LPBox,  # BOX * box1
                                LPBox,  # BOX * box2
-                               POINTER(c_int),  # l_int32 * ph_ovl
-                               POINTER(c_int),  # l_int32 * pv_ovl
+                               c_int_p,  # l_int32 * ph_ovl
+                               c_int_p,  # l_int32 * pv_ovl
                                ),
         'boxSeparationDistance': (c_int,
                                   LPBox,  # BOX * box1
                                   LPBox,  # BOX * box2
-                                  POINTER(c_int),  # l_int32 * ph_sep
-                                  POINTER(c_int),  # l_int32 * pv_sep
+                                  c_int_p,  # l_int32 * ph_sep
+                                  c_int_p,  # l_int32 * pv_sep
                                   ),
         'boxCompareSize': (c_int,
                            LPBox,  # BOX * box1
                            LPBox,  # BOX * box2
                            c_int,  # l_int32 type
-                           POINTER(c_int),  # l_int32 * prel
+                           c_int_p,  # l_int32 * prel
                            ),
         'boxContainsPt': (c_int,
                           LPBox,  # BOX * box
                           c_float,  # l_float32 x
                           c_float,  # l_float32 y
-                          POINTER(c_int),  # l_int32 * pcontains
+                          c_int_p,  # l_int32 * pcontains
                           ),
         'boxaGetNearestToPt': (LPBox,  # BOX *
                                LPBoxa,  # BOXA * boxa
@@ -1591,8 +1593,8 @@ class LeptonicaAPI(CAPI):
                                  LPBoxa,  # BOXA * boxa
                                  c_int,  # l_int32 dist_select
                                  c_int,  # l_int32 range
-                                 LPLPNumaa,  # NUMAA * * pnaaindex
-                                 LPLPNumaa,  # NUMAA * * pnaadist
+                                 LPLPNumaa,  # NUMAA ** pnaaindex
+                                 LPLPNumaa,  # NUMAA ** pnaadist
                                  ),
         'boxaGetNearestByDirection': (c_int,
                                       LPBoxa,  # BOXA * boxa
@@ -1600,24 +1602,24 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 dir
                                       c_int,  # l_int32 dist_select
                                       c_int,  # l_int32 range
-                                      POINTER(c_int),  # l_int32 * pindex
-                                      POINTER(c_int),  # l_int32 * pdist
+                                      c_int_p,  # l_int32 * pindex
+                                      c_int_p,  # l_int32 * pdist
                                       ),
         'boxGetCenter': (c_int,
                          LPBox,  # BOX * box
-                         POINTER(c_float),  # l_float32 * pcx
-                         POINTER(c_float),  # l_float32 * pcy
+                         c_float_p,  # l_float32 * pcx
+                         c_float_p,  # l_float32 * pcy
                          ),
         'boxIntersectByLine': (c_int,
                                LPBox,  # BOX * box
                                c_int,  # l_int32 x
                                c_int,  # l_int32 y
                                c_float,  # l_float32 slope
-                               POINTER(c_int),  # l_int32 * px1
-                               POINTER(c_int),  # l_int32 * py1
-                               POINTER(c_int),  # l_int32 * px2
-                               POINTER(c_int),  # l_int32 * py2
-                               POINTER(c_int),  # l_int32 * pn
+                               c_int_p,  # l_int32 * px1
+                               c_int_p,  # l_int32 * py1
+                               c_int_p,  # l_int32 * px2
+                               c_int_p,  # l_int32 * py2
+                               c_int_p,  # l_int32 * pn
                                ),
         'boxClipToRectangle': (LPBox,  # BOX *
                                LPBox,  # BOX * box
@@ -1628,12 +1630,12 @@ class LeptonicaAPI(CAPI):
                                      LPBox,  # BOX * box
                                      c_int,  # l_int32 w
                                      c_int,  # l_int32 h
-                                     POINTER(c_int),  # l_int32 * pxstart
-                                     POINTER(c_int),  # l_int32 * pystart
-                                     POINTER(c_int),  # l_int32 * pxend
-                                     POINTER(c_int),  # l_int32 * pyend
-                                     POINTER(c_int),  # l_int32 * pbw
-                                     POINTER(c_int),  # l_int32 * pbh
+                                     c_int_p,  # l_int32 * pxstart
+                                     c_int_p,  # l_int32 * pystart
+                                     c_int_p,  # l_int32 * pxend
+                                     c_int_p,  # l_int32 * pyend
+                                     c_int_p,  # l_int32 * pbw
+                                     c_int_p,  # l_int32 * pbh
                                      ),
         'boxRelocateOneSide': (LPBox,  # BOX *
                                LPBox,  # BOX * boxd
@@ -1694,14 +1696,14 @@ class LeptonicaAPI(CAPI):
         'boxEqual': (c_int,
                      LPBox,  # BOX * box1
                      LPBox,  # BOX * box2
-                     POINTER(c_int),  # l_int32 * psame
+                     c_int_p,  # l_int32 * psame
                      ),
         'boxaEqual': (c_int,
                       LPBoxa,  # BOXA * boxa1
                       LPBoxa,  # BOXA * boxa2
                       c_int,  # l_int32 maxdist
-                      POINTER(LPNuma),  # NUMA * * pnaindex
-                      POINTER(c_int),  # l_int32 * psame
+                      LPLPNuma,  # NUMA ** pnaindex
+                      c_int_p,  # l_int32 * psame
                       ),
         'boxSimilar': (c_int,
                        LPBox,  # BOX * box1
@@ -1710,7 +1712,7 @@ class LeptonicaAPI(CAPI):
                        c_int,  # l_int32 rightdiff
                        c_int,  # l_int32 topdiff
                        c_int,  # l_int32 botdiff
-                       POINTER(c_int),  # l_int32 * psimilar
+                       c_int_p,  # l_int32 * psimilar
                        ),
         'boxaSimilar': (c_int,
                         LPBoxa,  # BOXA * boxa1
@@ -1720,8 +1722,8 @@ class LeptonicaAPI(CAPI):
                         c_int,  # l_int32 topdiff
                         c_int,  # l_int32 botdiff
                         c_int,  # l_int32 debug
-                        POINTER(c_int),  # l_int32 * psimilar
-                        POINTER(LPNuma),  # NUMA * * pnasim
+                        c_int_p,  # l_int32 * psimilar
+                        LPLPNuma,  # NUMA ** pnasim
                         ),
         'boxaJoin': (c_int,
                      LPBoxa,  # BOXA * boxad
@@ -1738,8 +1740,8 @@ class LeptonicaAPI(CAPI):
         'boxaSplitEvenOdd': (c_int,
                              LPBoxa,  # BOXA * boxa
                              c_int,  # l_int32 fillflag
-                             POINTER(LPBoxa),  # BOXA * * pboxae
-                             POINTER(LPBoxa),  # BOXA * * pboxao
+                             LPLPBoxa,  # BOXA ** pboxae
+                             LPLPBoxa,  # BOXA ** pboxao
                              ),
         'boxaMergeEvenOdd': (LPBoxa,  # BOXA *
                              LPBoxa,  # BOXA * boxae
@@ -1803,13 +1805,13 @@ class LeptonicaAPI(CAPI):
                      LPBoxa,  # BOXA * boxas
                      c_int,  # l_int32 sorttype
                      c_int,  # l_int32 sortorder
-                     POINTER(LPNuma),  # NUMA * * pnaindex
+                     LPLPNuma,  # NUMA ** pnaindex
                      ),
         'boxaBinSort': (LPBoxa,  # BOXA *
                         LPBoxa,  # BOXA * boxas
                         c_int,  # l_int32 sorttype
                         c_int,  # l_int32 sortorder
-                        POINTER(LPNuma),  # NUMA * * pnaindex
+                        LPLPNuma,  # NUMA ** pnaindex
                         ),
         'boxaSortByIndex': (LPBoxa,  # BOXA *
                             LPBoxa,  # BOXA * boxas
@@ -1817,7 +1819,7 @@ class LeptonicaAPI(CAPI):
                             ),
         'boxaSort2d': (LPBoxaa,  # BOXAA *
                        LPBoxa,  # BOXA * boxas
-                       LPLPNumaa,  # NUMAA * * pnaad
+                       LPLPNumaa,  # NUMAA ** pnaad
                        c_int,  # l_int32 delta1
                        c_int,  # l_int32 delta2
                        c_int,  # l_int32 minh1
@@ -1828,22 +1830,22 @@ class LeptonicaAPI(CAPI):
                               ),
         'boxaExtractAsNuma': (c_int,
                               LPBoxa,  # BOXA * boxa
-                              POINTER(LPNuma),  # NUMA * * pnal
-                              POINTER(LPNuma),  # NUMA * * pnat
-                              POINTER(LPNuma),  # NUMA * * pnar
-                              POINTER(LPNuma),  # NUMA * * pnab
-                              POINTER(LPNuma),  # NUMA * * pnaw
-                              POINTER(LPNuma),  # NUMA * * pnah
+                              LPLPNuma,  # NUMA ** pnal
+                              LPLPNuma,  # NUMA ** pnat
+                              LPLPNuma,  # NUMA ** pnar
+                              LPLPNuma,  # NUMA ** pnab
+                              LPLPNuma,  # NUMA ** pnaw
+                              LPLPNuma,  # NUMA ** pnah
                               c_int,  # l_int32 keepinvalid
                               ),
         'boxaExtractAsPta': (c_int,
                              LPBoxa,  # BOXA * boxa
-                             POINTER(LPPta),  # PTA * * pptal
-                             POINTER(LPPta),  # PTA * * pptat
-                             POINTER(LPPta),  # PTA * * pptar
-                             POINTER(LPPta),  # PTA * * pptab
-                             POINTER(LPPta),  # PTA * * pptaw
-                             POINTER(LPPta),  # PTA * * pptah
+                             LPLPPta,  # PTA ** pptal
+                             LPLPPta,  # PTA ** pptat
+                             LPLPPta,  # PTA ** pptar
+                             LPLPPta,  # PTA ** pptab
+                             LPLPPta,  # PTA ** pptaw
+                             LPLPPta,  # PTA ** pptah
                              c_int,  # l_int32 keepinvalid
                              ),
         'boxaExtractCorners': (LPPta,  # PTA *
@@ -1853,37 +1855,37 @@ class LeptonicaAPI(CAPI):
         'boxaGetRankVals': (c_int,
                             LPBoxa,  # BOXA * boxa
                             c_float,  # l_float32 fract
-                            POINTER(c_int),  # l_int32 * px
-                            POINTER(c_int),  # l_int32 * py
-                            POINTER(c_int),  # l_int32 * pr
-                            POINTER(c_int),  # l_int32 * pb
-                            POINTER(c_int),  # l_int32 * pw
-                            POINTER(c_int),  # l_int32 * ph
+                            c_int_p,  # l_int32 * px
+                            c_int_p,  # l_int32 * py
+                            c_int_p,  # l_int32 * pr
+                            c_int_p,  # l_int32 * pb
+                            c_int_p,  # l_int32 * pw
+                            c_int_p,  # l_int32 * ph
                             ),
         'boxaGetMedianVals': (c_int,
                               LPBoxa,  # BOXA * boxa
-                              POINTER(c_int),  # l_int32 * px
-                              POINTER(c_int),  # l_int32 * py
-                              POINTER(c_int),  # l_int32 * pr
-                              POINTER(c_int),  # l_int32 * pb
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
+                              c_int_p,  # l_int32 * px
+                              c_int_p,  # l_int32 * py
+                              c_int_p,  # l_int32 * pr
+                              c_int_p,  # l_int32 * pb
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
                               ),
         'boxaGetAverageSize': (c_int,
                                LPBoxa,  # BOXA * boxa
-                               POINTER(c_float),  # l_float32 * pw
-                               POINTER(c_float),  # l_float32 * ph
+                               c_float_p,  # l_float32 * pw
+                               c_float_p,  # l_float32 * ph
                                ),
         'boxaaGetExtent': (c_int,
                            LPBoxaa,  # BOXAA * baa
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(LPBox),  # BOX * * pbox
-                           POINTER(LPBoxa),  # BOXA * * pboxa
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           LPLPBox,  # BOX ** pbox
+                           LPLPBoxa,  # BOXA ** pboxa
                            ),
         'boxaaFlattenToBoxa': (LPBoxa,  # BOXA *
                                LPBoxaa,  # BOXAA * baa
-                               POINTER(LPNuma),  # NUMA * * pnaindex
+                               LPLPNuma,  # NUMA ** pnaindex
                                c_int,  # l_int32 copyflag
                                ),
         'boxaaFlattenAligned': (LPBoxa,  # BOXA *
@@ -1904,12 +1906,12 @@ class LeptonicaAPI(CAPI):
                           LPBoxaa,  # BOXAA * baa
                           LPBox,  # BOX * box
                           c_int,  # l_int32 delta
-                          POINTER(c_int),  # l_int32 * pindex
+                          c_int_p,  # l_int32 * pindex
                           ),
         'pixMaskConnComp': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 connectivity
-                            POINTER(LPBoxa),  # BOXA * * pboxa
+                            LPLPBoxa,  # BOXA ** pboxa
                             ),
         'pixMaskBoxa': (LPPix,  # PIX *
                         LPPix,  # PIX * pixd
@@ -1992,10 +1994,10 @@ class LeptonicaAPI(CAPI):
                                LPBoxa,  # BOXA * boxa1
                                LPBoxa,  # BOXA * boxa2
                                c_int,  # l_int32 areathresh
-                               POINTER(c_int),  # l_int32 * pnsame
-                               POINTER(c_float),  # l_float32 * pdiffarea
-                               POINTER(c_float),  # l_float32 * pdiffxor
-                               POINTER(LPPix),  # PIX * * ppixdb
+                               c_int_p,  # l_int32 * pnsame
+                               c_float_p,  # l_float32 * pdiffarea
+                               c_float_p,  # l_float32 * pdiffxor
+                               LPLPPix,  # PIX ** ppixdb
                                ),
         'pixSelectLargeULComp': (LPBox,  # BOX *
                                  LPPix,  # PIX * pixs
@@ -2026,7 +2028,7 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 height
                              c_int,  # l_int32 type
                              c_int,  # l_int32 relation
-                             POINTER(c_int),  # l_int32 * pchanged
+                             c_int_p,  # l_int32 * pchanged
                              ),
         'boxaMakeSizeIndicator': (LPNuma,  # NUMA *
                                   LPBoxa,  # BOXA * boxa
@@ -2039,7 +2041,7 @@ class LeptonicaAPI(CAPI):
                              LPBoxa,  # BOXA * boxas
                              c_int,  # l_int32 area
                              c_int,  # l_int32 relation
-                             POINTER(c_int),  # l_int32 * pchanged
+                             c_int_p,  # l_int32 * pchanged
                              ),
         'boxaMakeAreaIndicator': (LPNuma,  # NUMA *
                                   LPBoxa,  # BOXA * boxa
@@ -2050,7 +2052,7 @@ class LeptonicaAPI(CAPI):
                                 LPBoxa,  # BOXA * boxas
                                 c_float,  # l_float32 ratio
                                 c_int,  # l_int32 relation
-                                POINTER(c_int),  # l_int32 * pchanged
+                                c_int_p,  # l_int32 * pchanged
                                 ),
         'boxaMakeWHRatioIndicator': (LPNuma,  # NUMA *
                                      LPBoxa,  # BOXA * boxa
@@ -2060,7 +2062,7 @@ class LeptonicaAPI(CAPI):
         'boxaSelectWithIndicator': (LPBoxa,  # BOXA *
                                     LPBoxa,  # BOXA * boxas
                                     LPNuma,  # NUMA * na
-                                    POINTER(c_int),  # l_int32 * pchanged
+                                    c_int_p,  # l_int32 * pchanged
                                     ),
         'boxaPermutePseudorandom': (LPBoxa,  # BOXA *
                                     LPBoxa,  # BOXA * boxas
@@ -2091,46 +2093,46 @@ class LeptonicaAPI(CAPI):
                             ),
         'boxaGetExtent': (c_int,
                           LPBoxa,  # BOXA * boxa
-                          POINTER(c_int),  # l_int32 * pw
-                          POINTER(c_int),  # l_int32 * ph
-                          POINTER(LPBox),  # BOX * * pbox
+                          c_int_p,  # l_int32 * pw
+                          c_int_p,  # l_int32 * ph
+                          LPLPBox,  # BOX ** pbox
                           ),
         'boxaGetCoverage': (c_int,
                             LPBoxa,  # BOXA * boxa
                             c_int,  # l_int32 wc
                             c_int,  # l_int32 hc
                             c_int,  # l_int32 exactflag
-                            POINTER(c_float),  # l_float32 * pfract
+                            c_float_p,  # l_float32 * pfract
                             ),
         'boxaaSizeRange': (c_int,
                            LPBoxaa,  # BOXAA * baa
-                           POINTER(c_int),  # l_int32 * pminw
-                           POINTER(c_int),  # l_int32 * pminh
-                           POINTER(c_int),  # l_int32 * pmaxw
-                           POINTER(c_int),  # l_int32 * pmaxh
+                           c_int_p,  # l_int32 * pminw
+                           c_int_p,  # l_int32 * pminh
+                           c_int_p,  # l_int32 * pmaxw
+                           c_int_p,  # l_int32 * pmaxh
                            ),
         'boxaSizeRange': (c_int,
                           LPBoxa,  # BOXA * boxa
-                          POINTER(c_int),  # l_int32 * pminw
-                          POINTER(c_int),  # l_int32 * pminh
-                          POINTER(c_int),  # l_int32 * pmaxw
-                          POINTER(c_int),  # l_int32 * pmaxh
+                          c_int_p,  # l_int32 * pminw
+                          c_int_p,  # l_int32 * pminh
+                          c_int_p,  # l_int32 * pmaxw
+                          c_int_p,  # l_int32 * pmaxh
                           ),
         'boxaLocationRange': (c_int,
                               LPBoxa,  # BOXA * boxa
-                              POINTER(c_int),  # l_int32 * pminx
-                              POINTER(c_int),  # l_int32 * pminy
-                              POINTER(c_int),  # l_int32 * pmaxx
-                              POINTER(c_int),  # l_int32 * pmaxy
+                              c_int_p,  # l_int32 * pminx
+                              c_int_p,  # l_int32 * pminy
+                              c_int_p,  # l_int32 * pmaxx
+                              c_int_p,  # l_int32 * pmaxy
                               ),
         'boxaGetSizes': (c_int,
                          LPBoxa,  # BOXA * boxa
-                         POINTER(LPNuma),  # NUMA * * pnaw
-                         POINTER(LPNuma),  # NUMA * * pnah
+                         LPLPNuma,  # NUMA ** pnaw
+                         LPLPNuma,  # NUMA ** pnah
                          ),
         'boxaGetArea': (c_int,
                         LPBoxa,  # BOXA * boxa
-                        POINTER(c_int),  # l_int32 * parea
+                        c_int_p,  # l_int32 * parea
                         ),
         'boxaDisplayTiled': (LPPix,  # PIX *
                              LPBoxa,  # BOXA * boxas
@@ -2176,9 +2178,9 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 type
                                 c_float,  # l_float32 threshp
                                 c_float,  # l_float32 threshm
-                                POINTER(c_float),  # l_float32 * pfvarp
-                                POINTER(c_float),  # l_float32 * pfvarm
-                                POINTER(c_int),  # l_int32 * psame
+                                c_float_p,  # l_float32 * pfvarp
+                                c_float_p,  # l_float32 * pfvarm
+                                c_int_p,  # l_int32 * psame
                                 ),
         'boxaReconcileAllByMedian': (LPBoxa,  # BOXA *
                                      LPBoxa,  # BOXA * boxas
@@ -2201,26 +2203,26 @@ class LeptonicaAPI(CAPI):
                                       c_float,  # l_float32 dfract
                                       c_float,  # l_float32 sfract
                                       c_float,  # l_float32 factor
-                                      POINTER(LPNuma),  # NUMA * * pnadelw
-                                      POINTER(LPNuma),  # NUMA * * pnadelh
+                                      LPLPNuma,  # NUMA ** pnadelw
+                                      LPLPNuma,  # NUMA ** pnadelh
                                       # l_float32 * pratiowh
-                                      POINTER(c_float),
+                                      c_float_p,
                                       ),
         'boxaPlotSides': (c_int,
                           LPBoxa,  # BOXA * boxa
                           c_char_p,  # const char * plotname
-                          POINTER(LPNuma),  # NUMA * * pnal
-                          POINTER(LPNuma),  # NUMA * * pnat
-                          POINTER(LPNuma),  # NUMA * * pnar
-                          POINTER(LPNuma),  # NUMA * * pnab
-                          POINTER(LPPix),  # PIX * * ppixd
+                          LPLPNuma,  # NUMA ** pnal
+                          LPLPNuma,  # NUMA ** pnat
+                          LPLPNuma,  # NUMA ** pnar
+                          LPLPNuma,  # NUMA ** pnab
+                          LPLPPix,  # PIX ** ppixd
                           ),
         'boxaPlotSizes': (c_int,
                           LPBoxa,  # BOXA * boxa
                           c_char_p,  # const char * plotname
-                          POINTER(LPNuma),  # NUMA * * pnaw
-                          POINTER(LPNuma),  # NUMA * * pnah
-                          POINTER(LPPix),  # PIX * * ppixd
+                          LPLPNuma,  # NUMA ** pnaw
+                          LPLPNuma,  # NUMA ** pnah
+                          LPLPPix,  # PIX ** ppixd
                           ),
         'boxaFillSequence': (LPBoxa,  # BOXA *
                              LPBoxa,  # BOXA * boxas
@@ -2230,21 +2232,21 @@ class LeptonicaAPI(CAPI):
         'boxaSizeVariation': (c_int,
                               LPBoxa,  # BOXA * boxa
                               c_int,  # l_int32 type
-                              POINTER(c_float),  # l_float32 * pdel_evenodd
-                              POINTER(c_float),  # l_float32 * prms_even
-                              POINTER(c_float),  # l_float32 * prms_odd
-                              POINTER(c_float),  # l_float32 * prms_all
+                              c_float_p,  # l_float32 * pdel_evenodd
+                              c_float_p,  # l_float32 * prms_even
+                              c_float_p,  # l_float32 * prms_odd
+                              c_float_p,  # l_float32 * prms_all
                               ),
         'boxaMedianDimensions': (c_int,
                                  LPBoxa,  # BOXA * boxas
-                                 POINTER(c_int),  # l_int32 * pmedw
-                                 POINTER(c_int),  # l_int32 * pmedh
-                                 POINTER(c_int),  # l_int32 * pmedwe
-                                 POINTER(c_int),  # l_int32 * pmedwo
-                                 POINTER(c_int),  # l_int32 * pmedhe
-                                 POINTER(c_int),  # l_int32 * pmedho
-                                 POINTER(LPNuma),  # NUMA * * pnadelw
-                                 POINTER(LPNuma),  # NUMA * * pnadelh
+                                 c_int_p,  # l_int32 * pmedw
+                                 c_int_p,  # l_int32 * pmedh
+                                 c_int_p,  # l_int32 * pmedwe
+                                 c_int_p,  # l_int32 * pmedwo
+                                 c_int_p,  # l_int32 * pmedhe
+                                 c_int_p,  # l_int32 * pmedho
+                                 LPLPNuma,  # NUMA ** pnadelw
+                                 LPLPNuma,  # NUMA ** pnadelh
                                  ),
         'pixGetOuterBordersPtaa': (LPPtaa,  # PTAA *
                                    LPPix,  # PIX * pixs
@@ -2253,8 +2255,8 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pix
                               LPPta,  # PTA * pta
                               LPBox,  # BOX * boxinner
-                              POINTER(c_int),  # l_int32 * pdir
-                              POINTER(c_int),  # l_int32 * plen
+                              c_int_p,  # l_int32 * pdir
+                              c_int_p,  # l_int32 * plen
                               ),
         'pixaThinConnected': (LPPixa,  # PIXA *
                               LPPixa,  # PIXA * pixas
@@ -2273,8 +2275,8 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 size
                                        c_int,  # l_int32 dilation
                                        c_int,  # l_int32 nsels
-                                       POINTER(LPPix),  # PIX * * ppix_corners
-                                       POINTER(LPPta),  # PTA * * ppta_corners
+                                       LPLPPix,  # PIX ** ppix_corners
+                                       LPLPPta,  # PTA ** ppta_corners
                                        LPPixa,  # PIXA * pixadb
                                        ),
         'jbCorrelation': (c_int,
@@ -2303,9 +2305,9 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 minheight
                                    c_int,  # l_int32 maxwidth
                                    c_int,  # l_int32 maxheight
-                                   POINTER(LPBoxa),  # BOXA * * pboxad
-                                   POINTER(LPPixa),  # PIXA * * ppixad
-                                   POINTER(LPNuma),  # NUMA * * pnai
+                                   LPLPBoxa,  # BOXA ** pboxad
+                                   LPLPPixa,  # PIXA ** ppixad
+                                   LPLPNuma,  # NUMA ** pnai
                                    ),
         'pixGetWordBoxesInTextlines': (c_int,
                                        LPPix,  # PIX * pixs
@@ -2313,16 +2315,16 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 minheight
                                        c_int,  # l_int32 maxwidth
                                        c_int,  # l_int32 maxheight
-                                       POINTER(LPBoxa),  # BOXA * * pboxad
-                                       POINTER(LPNuma),  # NUMA * * pnai
+                                       LPLPBoxa,  # BOXA ** pboxad
+                                       LPLPNuma,  # NUMA ** pnai
                                        ),
         'pixFindWordAndCharacterBoxes': (c_int,
                                          LPPix,  # PIX * pixs
                                          LPBox,  # BOX * boxs
                                          c_int,  # l_int32 thresh
-                                         POINTER(LPBoxa),  # BOXA * * pboxaw
-                                         # BOXAA * * pboxaac
-                                         POINTER(LPBoxaa),
+                                         LPLPBoxa,  # BOXA ** pboxaw
+                                         # BOXAA ** pboxaac
+                                         LPLPBoxaa,
                                          c_char_p,  # const char * debugdir
                                          ),
         'boxaExtractSortedPattern': (LPNumaa,  # NUMAA *
@@ -2338,7 +2340,7 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 maxshifty
                                       c_int,  # l_int32 delx
                                       c_int,  # l_int32 dely
-                                      POINTER(c_int),  # l_int32 * psame
+                                      c_int_p,  # l_int32 * psame
                                       c_int,  # l_int32 debugflag
                                       ),
         'pixColorContent': (c_int,
@@ -2347,9 +2349,9 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 gref
                             c_int,  # l_int32 bref
                             c_int,  # l_int32 mingray
-                            POINTER(LPPix),  # PIX * * ppixr
-                            POINTER(LPPix),  # PIX * * ppixg
-                            POINTER(LPPix),  # PIX * * ppixb
+                            LPLPPix,  # PIX ** ppixr
+                            LPLPPix,  # PIX ** ppixg
+                            LPLPPix,  # PIX ** ppixb
                             ),
         'pixColorMagnitude': (LPPix,  # PIX *
                               LPPix,  # PIX * pixs
@@ -2364,8 +2366,8 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 lightthresh
                              c_int,  # l_int32 diffthresh
                              c_int,  # l_int32 factor
-                             POINTER(c_float),  # l_float32 * ppixfract
-                             POINTER(c_float),  # l_float32 * pcolorfract
+                             c_float_p,  # l_float32 * ppixfract
+                             c_float_p,  # l_float32 * pcolorfract
                              ),
         'pixColorShiftWhitePoint': (LPPix,  # PIX *
                                     LPPix,  # PIX * pixs
@@ -2401,9 +2403,9 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 mindiff
                                 c_int,  # l_int32 colordiff
                                 c_float,  # l_float32 edgefract
-                                POINTER(c_float),  # l_float32 * pcolorfract
-                                POINTER(LPPix),  # PIX * * pcolormask1
-                                POINTER(LPPix),  # PIX * * pcolormask2
+                                c_float_p,  # l_float32 * pcolorfract
+                                LPLPPix,  # PIX ** pcolormask1
+                                LPLPPix,  # PIX ** pcolormask2
                                 LPPixa,  # PIXA * pixadb
                                 ),
         'pixNumSignificantGrayColors': (c_int,
@@ -2412,19 +2414,19 @@ class LeptonicaAPI(CAPI):
                                         c_int,  # l_int32 lightthresh
                                         c_float,  # l_float32 minfract
                                         c_int,  # l_int32 factor
-                                        POINTER(c_int),  # l_int32 * pncolors
+                                        c_int_p,  # l_int32 * pncolors
                                         ),
         'pixColorsForQuantization': (c_int,
                                      LPPix,  # PIX * pixs
                                      c_int,  # l_int32 thresh
-                                     POINTER(c_int),  # l_int32 * pncolors
-                                     POINTER(c_int),  # l_int32 * piscolor
+                                     c_int_p,  # l_int32 * pncolors
+                                     c_int_p,  # l_int32 * piscolor
                                      c_int,  # l_int32 debug
                                      ),
         'pixNumColors': (c_int,
                          LPPix,  # PIX * pixs
                          c_int,  # l_int32 factor
-                         POINTER(c_int),  # l_int32 * pncolors
+                         c_int_p,  # l_int32 * pncolors
                          ),
         'pixConvertRGBToCmapLossless': (LPPix,  # PIX *
                                         LPPix,  # PIX * pixs
@@ -2434,10 +2436,10 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 sigbits
                                       c_int,  # l_int32 factor
                                       c_int,  # l_int32 ncolors
-                                      # l_uint32 * * parray
-                                      POINTER(POINTER(c_uint)),
-                                      # PIXCMAP * * pcmap
-                                      POINTER(LPPixColormap),
+                                      # l_uint32 ** parray
+                                      POINTER(c_uint_p),
+                                      # PIXCMAP ** pcmap
+                                      LPLPPixColormap,
                                       ),
         'pixSimpleColorQuantize': (LPPix,  # PIX *
                                    LPPix,  # PIX * pixs
@@ -2451,26 +2453,26 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 factor
                                ),
         'makeRGBIndexTables': (c_int,
-                               POINTER(POINTER(c_uint)),  # l_uint32 * * prtab
-                               POINTER(POINTER(c_uint)),  # l_uint32 * * pgtab
-                               POINTER(POINTER(c_uint)),  # l_uint32 * * pbtab
+                               POINTER(c_uint_p),  # l_uint32 ** prtab
+                               POINTER(c_uint_p),  # l_uint32 ** pgtab
+                               POINTER(c_uint_p),  # l_uint32 ** pbtab
                                c_int,  # l_int32 sigbits
                                ),
         'getRGBFromIndex': (c_int,
                             c_uint,  # l_uint32 index
                             c_int,  # l_int32 sigbits
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'pixHasHighlightRed': (c_int,
                                LPPix,  # PIX * pixs
                                c_int,  # l_int32 factor
                                c_float,  # l_float32 minfract
                                c_float,  # l_float32 fthresh
-                               POINTER(c_int),  # l_int32 * phasred
-                               POINTER(c_float),  # l_float32 * pratio
-                               POINTER(LPPix),  # PIX * * ppixdb
+                               c_int_p,  # l_int32 * phasred
+                               c_float_p,  # l_float32 * pratio
+                               LPLPPix,  # PIX ** ppixdb
                                ),
         'pixColorFill': (LPPix,  # PIX *
                          LPPix,  # PIX * pixs
@@ -2537,7 +2539,7 @@ class LeptonicaAPI(CAPI):
                                         c_uint,  # l_uint32 scolor
                                         c_uint,  # l_uint32 srcmap
                                         c_uint,  # l_uint32 dstmap
-                                        POINTER(c_uint),  # l_uint32 * pdcolor
+                                        c_uint_p,  # l_uint32 * pdcolor
                                         ),
         'pixShiftByComponent': (LPPix,  # PIX *
                                 LPPix,  # PIX * pixd
@@ -2551,14 +2553,14 @@ class LeptonicaAPI(CAPI):
                                   c_int,  # l_int32 bval
                                   c_uint,  # l_uint32 srcval
                                   c_uint,  # l_uint32 dstval
-                                  POINTER(c_uint),  # l_uint32 * ppixel
+                                  c_uint_p,  # l_uint32 * ppixel
                                   ),
         'pixelFractionalShift': (c_int,
                                  c_int,  # l_int32 rval
                                  c_int,  # l_int32 gval
                                  c_int,  # l_int32 bval
                                  c_float,  # l_float32 fract
-                                 POINTER(c_uint),  # l_uint32 * ppixel
+                                 c_uint_p,  # l_uint32 * ppixel
                                  ),
         'pixMapWithInvariantHue': (LPPix,  # PIX *
                                    LPPix,  # PIX * pixd
@@ -2582,12 +2584,12 @@ class LeptonicaAPI(CAPI):
                         LPPixColormap,  # const PIXCMAP * cmaps
                         ),
         'pixcmapDestroy': (None,
-                           POINTER(LPPixColormap),  # PIXCMAP * * pcmap
+                           LPLPPixColormap,  # PIXCMAP ** pcmap
                            ),
         'pixcmapIsValid': (c_int,
                            LPPixColormap,  # const PIXCMAP * cmap
                            LPPix,  # PIX * pix
-                           POINTER(c_int),  # l_int32 * pvalid
+                           c_int_p,  # l_int32 * pvalid
                            ),
         'pixcmapAddColor': (c_int,
                             LPPixColormap,  # PIXCMAP * cmap
@@ -2607,26 +2609,26 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 rval
                                c_int,  # l_int32 gval
                                c_int,  # l_int32 bval
-                               POINTER(c_int),  # l_int32 * pindex
+                               c_int_p,  # l_int32 * pindex
                                ),
         'pixcmapAddNearestColor': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
                                    c_int,  # l_int32 rval
                                    c_int,  # l_int32 gval
                                    c_int,  # l_int32 bval
-                                   POINTER(c_int),  # l_int32 * pindex
+                                   c_int_p,  # l_int32 * pindex
                                    ),
         'pixcmapUsableColor': (c_int,
                                LPPixColormap,  # PIXCMAP * cmap
                                c_int,  # l_int32 rval
                                c_int,  # l_int32 gval
                                c_int,  # l_int32 bval
-                               POINTER(c_int),  # l_int32 * pusable
+                               c_int_p,  # l_int32 * pusable
                                ),
         'pixcmapAddBlackOrWhite': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
                                    c_int,  # l_int32 color
-                                   POINTER(c_int),  # l_int32 * pindex
+                                   c_int_p,  # l_int32 * pindex
                                    ),
         'pixcmapSetBlackAndWhite': (c_int,
                                     LPPixColormap,  # PIXCMAP * cmap
@@ -2644,7 +2646,7 @@ class LeptonicaAPI(CAPI):
                             ),
         'pixcmapGetMinDepth': (c_int,
                                LPPixColormap,  # PIXCMAP * cmap
-                               POINTER(c_int),  # l_int32 * pmindepth
+                               c_int_p,  # l_int32 * pmindepth
                                ),
         'pixcmapClear': (c_int,
                          LPPixColormap,  # PIXCMAP * cmap
@@ -2652,27 +2654,27 @@ class LeptonicaAPI(CAPI):
         'pixcmapGetColor': (c_int,
                             LPPixColormap,  # PIXCMAP * cmap
                             c_int,  # l_int32 index
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'pixcmapGetColor32': (c_int,
                               LPPixColormap,  # PIXCMAP * cmap
                               c_int,  # l_int32 index
-                              POINTER(c_uint),  # l_uint32 * pval32
+                              c_uint_p,  # l_uint32 * pval32
                               ),
         'pixcmapGetRGBA': (c_int,
                            LPPixColormap,  # PIXCMAP * cmap
                            c_int,  # l_int32 index
-                           POINTER(c_int),  # l_int32 * prval
-                           POINTER(c_int),  # l_int32 * pgval
-                           POINTER(c_int),  # l_int32 * pbval
-                           POINTER(c_int),  # l_int32 * paval
+                           c_int_p,  # l_int32 * prval
+                           c_int_p,  # l_int32 * pgval
+                           c_int_p,  # l_int32 * pbval
+                           c_int_p,  # l_int32 * paval
                            ),
         'pixcmapGetRGBA32': (c_int,
                              LPPixColormap,  # PIXCMAP * cmap
                              c_int,  # l_int32 index
-                             POINTER(c_uint),  # l_uint32 * pval32
+                             c_uint_p,  # l_uint32 * pval32
                              ),
         'pixcmapResetColor': (c_int,
                               LPPixColormap,  # PIXCMAP * cmap
@@ -2691,47 +2693,47 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_int),  # l_int32 * pindex
+                            c_int_p,  # l_int32 * pindex
                             ),
         'pixcmapHasColor': (c_int,
                             LPPixColormap,  # PIXCMAP * cmap
-                            POINTER(c_int),  # l_int32 * pcolor
+                            c_int_p,  # l_int32 * pcolor
                             ),
         'pixcmapIsOpaque': (c_int,
                             LPPixColormap,  # PIXCMAP * cmap
-                            POINTER(c_int),  # l_int32 * popaque
+                            c_int_p,  # l_int32 * popaque
                             ),
         'pixcmapNonOpaqueColorsInfo': (c_int,
                                        LPPixColormap,  # PIXCMAP * cmap
-                                       POINTER(c_int),  # l_int32 * pntrans
-                                       POINTER(c_int),  # l_int32 * pmax_trans
+                                       c_int_p,  # l_int32 * pntrans
+                                       c_int_p,  # l_int32 * pmax_trans
                                        # l_int32 * pmin_opaque
-                                       POINTER(c_int),
+                                       c_int_p,
                                        ),
         'pixcmapIsBlackAndWhite': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
-                                   POINTER(c_int),  # l_int32 * pblackwhite
+                                   c_int_p,  # l_int32 * pblackwhite
                                    ),
         'pixcmapCountGrayColors': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
-                                   POINTER(c_int),  # l_int32 * pngray
+                                   c_int_p,  # l_int32 * pngray
                                    ),
         'pixcmapGetRankIntensity': (c_int,
                                     LPPixColormap,  # PIXCMAP * cmap
                                     c_float,  # l_float32 rankval
-                                    POINTER(c_int),  # l_int32 * pindex
+                                    c_int_p,  # l_int32 * pindex
                                     ),
         'pixcmapGetNearestIndex': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
                                    c_int,  # l_int32 rval
                                    c_int,  # l_int32 gval
                                    c_int,  # l_int32 bval
-                                   POINTER(c_int),  # l_int32 * pindex
+                                   c_int_p,  # l_int32 * pindex
                                    ),
         'pixcmapGetNearestGrayIndex': (c_int,
                                        LPPixColormap,  # PIXCMAP * cmap
                                        c_int,  # l_int32 val
-                                       POINTER(c_int),  # l_int32 * pindex
+                                       c_int_p,  # l_int32 * pindex
                                        ),
         'pixcmapGetDistanceToColor': (c_int,
                                       LPPixColormap,  # PIXCMAP * cmap
@@ -2739,15 +2741,15 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 rval
                                       c_int,  # l_int32 gval
                                       c_int,  # l_int32 bval
-                                      POINTER(c_int),  # l_int32 * pdist
+                                      c_int_p,  # l_int32 * pdist
                                       ),
         'pixcmapGetRangeValues': (c_int,
                                   LPPixColormap,  # PIXCMAP * cmap
                                   c_int,  # l_int32 select
-                                  POINTER(c_int),  # l_int32 * pminval
-                                  POINTER(c_int),  # l_int32 * pmaxval
-                                  POINTER(c_int),  # l_int32 * pminindex
-                                  POINTER(c_int),  # l_int32 * pmaxindex
+                                  c_int_p,  # l_int32 * pminval
+                                  c_int_p,  # l_int32 * pmaxval
+                                  c_int_p,  # l_int32 * pminindex
+                                  c_int_p,  # l_int32 * pmaxindex
                                   ),
         'pixcmapGrayToFalseColor': (LPPixColormap,  # PIXCMAP *
                                     c_float,  # l_float32 gamma
@@ -2774,7 +2776,7 @@ class LeptonicaAPI(CAPI):
                               LPFile,  # FILE * fp
                               ),
         'pixcmapReadMem': (LPPixColormap,  # PIXCMAP *
-                           POINTER(c_ubyte),  # const l_uint8 * data
+                           c_ubyte_p,  # const l_uint8 * data
                            c_size_t,  # size_t size
                            ),
         'pixcmapWrite': (c_int,
@@ -2786,36 +2788,36 @@ class LeptonicaAPI(CAPI):
                                LPPixColormap,  # const PIXCMAP * cmap
                                ),
         'pixcmapWriteMem': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                            POINTER(c_size_t),  # size_t * psize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                            c_size_t_p,  # size_t * psize
                             LPPixColormap,  # const PIXCMAP * cmap
                             ),
         'pixcmapToArrays': (c_int,
                             LPPixColormap,  # const PIXCMAP * cmap
-                            POINTER(POINTER(c_int)),  # l_int32 * * prmap
-                            POINTER(POINTER(c_int)),  # l_int32 * * pgmap
-                            POINTER(POINTER(c_int)),  # l_int32 * * pbmap
-                            POINTER(POINTER(c_int)),  # l_int32 * * pamap
+                            POINTER(c_int_p),  # l_int32 ** prmap
+                            POINTER(c_int_p),  # l_int32 ** pgmap
+                            POINTER(c_int_p),  # l_int32 ** pbmap
+                            POINTER(c_int_p),  # l_int32 ** pamap
                             ),
         'pixcmapToRGBTable': (c_int,
                               LPPixColormap,  # PIXCMAP * cmap
-                              POINTER(POINTER(c_uint)),  # l_uint32 * * ptab
-                              POINTER(c_int),  # l_int32 * pncolors
+                              POINTER(c_uint_p),  # l_uint32 ** ptab
+                              c_int_p,  # l_int32 * pncolors
                               ),
         'pixcmapSerializeToMemory': (c_int,
                                      LPPixColormap,  # PIXCMAP * cmap
                                      c_int,  # l_int32 cpc
-                                     POINTER(c_int),  # l_int32 * pncolors
-                                     # l_uint8 * * pdata
-                                     POINTER(POINTER(c_ubyte)),
+                                     c_int_p,  # l_int32 * pncolors
+                                     # l_uint8 ** pdata
+                                     POINTER(c_ubyte_p),
                                      ),
         'pixcmapDeserializeFromMemory': (LPPixColormap,  # PIXCMAP *
-                                         POINTER(c_ubyte),  # l_uint8 * data
+                                         c_ubyte_p,  # l_uint8 * data
                                          c_int,  # l_int32 cpc
                                          c_int,  # l_int32 ncolors
                                          ),
         'pixcmapConvertToHex': (c_char_p,
-                                POINTER(c_ubyte),  # l_uint8 * data
+                                c_ubyte_p,  # l_uint8 * data
                                 c_int,  # l_int32 ncolors
                                 ),
         'pixcmapGammaTRC': (c_int,
@@ -2857,21 +2859,21 @@ class LeptonicaAPI(CAPI):
                                        ),
         'makeRGBToIndexTables': (c_int,
                                  c_int,  # l_int32 cqlevels
-                                 # l_uint32 * * prtab
-                                 POINTER(POINTER(c_uint)),
-                                 # l_uint32 * * pgtab
-                                 POINTER(POINTER(c_uint)),
-                                 # l_uint32 * * pbtab
-                                 POINTER(POINTER(c_uint)),
+                                 # l_uint32 ** prtab
+                                 POINTER(c_uint_p),
+                                 # l_uint32 ** pgtab
+                                 POINTER(c_uint_p),
+                                 # l_uint32 ** pbtab
+                                 POINTER(c_uint_p),
                                  ),
         'getOctcubeIndexFromRGB': (None,
                                    c_int,  # l_int32 rval
                                    c_int,  # l_int32 gval
                                    c_int,  # l_int32 bval
-                                   POINTER(c_uint),  # l_uint32 * rtab
-                                   POINTER(c_uint),  # l_uint32 * gtab
-                                   POINTER(c_uint),  # l_uint32 * btab
-                                   POINTER(c_uint),  # l_uint32 * pindex
+                                   c_uint_p,  # l_uint32 * rtab
+                                   c_uint_p,  # l_uint32 * gtab
+                                   c_uint_p,  # l_uint32 * btab
+                                   c_uint_p,  # l_uint32 * pindex
                                    ),
         'pixOctreeQuantByPopulation': (LPPix,  # PIX *
                                        LPPix,  # PIX * pixs
@@ -2902,7 +2904,7 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 level
                                       LPNuma,  # NUMA * na
                                       c_int,  # l_int32 ncolors
-                                      POINTER(c_int),  # l_int32 * pnerrors
+                                      c_int_p,  # l_int32 * pnerrors
                                       ),
         'pixFewColorsOctcubeQuantMixed': (LPPix,  # PIX *
                                           LPPix,  # PIX * pixs
@@ -2934,9 +2936,9 @@ class LeptonicaAPI(CAPI):
         'pixOctcubeHistogram': (LPNuma,  # NUMA *
                                 LPPix,  # PIX * pixs
                                 c_int,  # l_int32 level
-                                POINTER(c_int),  # l_int32 * pncolors
+                                c_int_p,  # l_int32 * pncolors
                                 ),
-        'pixcmapToOctcubeLUT': (POINTER(c_int),
+        'pixcmapToOctcubeLUT': (c_int_p,
                                 LPPixColormap,  # PIXCMAP * cmap
                                 c_int,  # l_int32 level
                                 c_int,  # l_int32 metric
@@ -2949,7 +2951,7 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 level
                                       c_int,  # l_int32 mincount
                                       c_float,  # l_float32 minfract
-                                      POINTER(c_int),  # l_int32 * pncolors
+                                      c_int_p,  # l_int32 * pncolors
                                       ),
         'pixMedianCutQuant': (LPPix,  # PIX *
                               LPPix,  # PIX * pixs
@@ -2981,7 +2983,7 @@ class LeptonicaAPI(CAPI):
                                             c_int,  # l_int32 lightthresh
                                             c_int,  # l_int32 diffthresh
                                             ),
-        'pixMedianCutHisto': (POINTER(c_int),
+        'pixMedianCutHisto': (c_int_p,
                               LPPix,  # PIX * pixs
                               c_int,  # l_int32 sigbits
                               c_int,  # l_int32 subsample
@@ -3005,12 +3007,12 @@ class LeptonicaAPI(CAPI):
                                     LPPix,  # PIX * pixs
                                     LPPix,  # PIX * pixm
                                     c_int,  # l_int32 level
-                                    POINTER(c_int),  # l_int32 * countarray
+                                    c_int_p,  # l_int32 * countarray
                                     ),
         'pixColorSegmentClean': (c_int,
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 selsize
-                                 POINTER(c_int),  # l_int32 * countarray
+                                 c_int_p,  # l_int32 * countarray
                                  ),
         'pixColorSegmentRemoveColors': (c_int,
                                         LPPix,  # PIX * pixd
@@ -3029,17 +3031,17 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_int),  # l_int32 * phval
-                            POINTER(c_int),  # l_int32 * psval
-                            POINTER(c_int),  # l_int32 * pvval
+                            c_int_p,  # l_int32 * phval
+                            c_int_p,  # l_int32 * psval
+                            c_int_p,  # l_int32 * pvval
                             ),
         'convertHSVToRGB': (c_int,
                             c_int,  # l_int32 hval
                             c_int,  # l_int32 sval
                             c_int,  # l_int32 vval
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'pixcmapConvertRGBToHSV': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
@@ -3083,20 +3085,20 @@ class LeptonicaAPI(CAPI):
         'pixMakeHistoHS': (LPPix,  # PIX *
                            LPPix,  # PIX * pixs
                            c_int,  # l_int32 factor
-                           POINTER(LPNuma),  # NUMA * * pnahue
-                           POINTER(LPNuma),  # NUMA * * pnasat
+                           LPLPNuma,  # NUMA ** pnahue
+                           LPLPNuma,  # NUMA ** pnasat
                            ),
         'pixMakeHistoHV': (LPPix,  # PIX *
                            LPPix,  # PIX * pixs
                            c_int,  # l_int32 factor
-                           POINTER(LPNuma),  # NUMA * * pnahue
-                           POINTER(LPNuma),  # NUMA * * pnaval
+                           LPLPNuma,  # NUMA ** pnahue
+                           LPLPNuma,  # NUMA ** pnaval
                            ),
         'pixMakeHistoSV': (LPPix,  # PIX *
                            LPPix,  # PIX * pixs
                            c_int,  # l_int32 factor
-                           POINTER(LPNuma),  # NUMA * * pnasat
-                           POINTER(LPNuma),  # NUMA * * pnaval
+                           LPLPNuma,  # NUMA ** pnasat
+                           LPLPNuma,  # NUMA ** pnaval
                            ),
         'pixFindHistoPeaksHSV': (c_int,
                                  LPPix,  # PIX * pixs
@@ -3105,9 +3107,9 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 height
                                  c_int,  # l_int32 npeaks
                                  c_float,  # l_float32 erasefactor
-                                 POINTER(LPPta),  # PTA * * ppta
-                                 POINTER(LPNuma),  # NUMA * * pnatot
-                                 POINTER(LPPixa),  # PIXA * * ppixa
+                                 LPLPPta,  # PTA ** ppta
+                                 LPLPNuma,  # NUMA ** pnatot
+                                 LPLPPixa,  # PIXA ** ppixa
                                  ),
         'displayHSVColorRange': (LPPix,  # PIX *
                                  c_int,  # l_int32 hval
@@ -3130,17 +3132,17 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_int),  # l_int32 * pyval
-                            POINTER(c_int),  # l_int32 * puval
-                            POINTER(c_int),  # l_int32 * pvval
+                            c_int_p,  # l_int32 * pyval
+                            c_int_p,  # l_int32 * puval
+                            c_int_p,  # l_int32 * pvval
                             ),
         'convertYUVToRGB': (c_int,
                             c_int,  # l_int32 yval
                             c_int,  # l_int32 uval
                             c_int,  # l_int32 vval
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'pixcmapConvertRGBToYUV': (c_int,
                                    LPPixColormap,  # PIXCMAP * cmap
@@ -3158,18 +3160,18 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_float),  # l_float32 * pfxval
-                            POINTER(c_float),  # l_float32 * pfyval
-                            POINTER(c_float),  # l_float32 * pfzval
+                            c_float_p,  # l_float32 * pfxval
+                            c_float_p,  # l_float32 * pfyval
+                            c_float_p,  # l_float32 * pfzval
                             ),
         'convertXYZToRGB': (c_int,
                             c_float,  # l_float32 fxval
                             c_float,  # l_float32 fyval
                             c_float,  # l_float32 fzval
                             c_int,  # l_int32 blackout
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'fpixaConvertXYZToLAB': (LPFPixa,  # FPIXA *
                                  LPFPixa,  # FPIXA * fpixas
@@ -3181,17 +3183,17 @@ class LeptonicaAPI(CAPI):
                             c_float,  # l_float32 xval
                             c_float,  # l_float32 yval
                             c_float,  # l_float32 zval
-                            POINTER(c_float),  # l_float32 * plval
-                            POINTER(c_float),  # l_float32 * paval
-                            POINTER(c_float),  # l_float32 * pbval
+                            c_float_p,  # l_float32 * plval
+                            c_float_p,  # l_float32 * paval
+                            c_float_p,  # l_float32 * pbval
                             ),
         'convertLABToXYZ': (c_int,
                             c_float,  # l_float32 lval
                             c_float,  # l_float32 aval
                             c_float,  # l_float32 bval
-                            POINTER(c_float),  # l_float32 * pxval
-                            POINTER(c_float),  # l_float32 * pyval
-                            POINTER(c_float),  # l_float32 * pzval
+                            c_float_p,  # l_float32 * pxval
+                            c_float_p,  # l_float32 * pyval
+                            c_float_p,  # l_float32 * pzval
                             ),
         'pixConvertRGBToLAB': (LPFPixa,  # FPIXA *
                                LPPix,  # PIX * pixs
@@ -3203,17 +3205,17 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_float),  # l_float32 * pflval
-                            POINTER(c_float),  # l_float32 * pfaval
-                            POINTER(c_float),  # l_float32 * pfbval
+                            c_float_p,  # l_float32 * pflval
+                            c_float_p,  # l_float32 * pfaval
+                            c_float_p,  # l_float32 * pfbval
                             ),
         'convertLABToRGB': (c_int,
                             c_float,  # l_float32 flval
                             c_float,  # l_float32 faval
                             c_float,  # l_float32 fbval
-                            POINTER(c_int),  # l_int32 * prval
-                            POINTER(c_int),  # l_int32 * pgval
-                            POINTER(c_int),  # l_int32 * pbval
+                            c_int_p,  # l_int32 * prval
+                            c_int_p,  # l_int32 * pgval
+                            c_int_p,  # l_int32 * pbval
                             ),
         'pixMakeGamutRGB': (LPPix,  # PIX *
                             c_int,  # l_int32 scale
@@ -3221,33 +3223,33 @@ class LeptonicaAPI(CAPI):
         'pixEqual': (c_int,
                      LPPix,  # PIX * pix1
                      LPPix,  # PIX * pix2
-                     POINTER(c_int),  # l_int32 * psame
+                     c_int_p,  # l_int32 * psame
                      ),
         'pixEqualWithAlpha': (c_int,
                               LPPix,  # PIX * pix1
                               LPPix,  # PIX * pix2
                               c_int,  # l_int32 use_alpha
-                              POINTER(c_int),  # l_int32 * psame
+                              c_int_p,  # l_int32 * psame
                               ),
         'pixEqualWithCmap': (c_int,
                              LPPix,  # PIX * pix1
                              LPPix,  # PIX * pix2
-                             POINTER(c_int),  # l_int32 * psame
+                             c_int_p,  # l_int32 * psame
                              ),
         'cmapEqual': (c_int,
                       LPPixColormap,  # PIXCMAP * cmap1
                       LPPixColormap,  # PIXCMAP * cmap2
                       c_int,  # l_int32 ncomps
-                      POINTER(c_int),  # l_int32 * psame
+                      c_int_p,  # l_int32 * psame
                       ),
         'pixUsesCmapColor': (c_int,
                              LPPix,  # PIX * pixs
-                             POINTER(c_int),  # l_int32 * pcolor
+                             c_int_p,  # l_int32 * pcolor
                              ),
         'pixCorrelationBinary': (c_int,
                                  LPPix,  # PIX * pix1
                                  LPPix,  # PIX * pix2
-                                 POINTER(c_float),  # l_float32 * pval
+                                 c_float_p,  # l_float32 * pval
                                  ),
         'pixDisplayDiffBinary': (LPPix,  # PIX *
                                  LPPix,  # PIX * pix1
@@ -3257,38 +3259,38 @@ class LeptonicaAPI(CAPI):
                              LPPix,  # PIX * pix1
                              LPPix,  # PIX * pix2
                              c_int,  # l_int32 comptype
-                             POINTER(c_float),  # l_float32 * pfract
-                             POINTER(LPPix),  # PIX * * ppixdiff
+                             c_float_p,  # l_float32 * pfract
+                             LPLPPix,  # PIX ** ppixdiff
                              ),
         'pixCompareGrayOrRGB': (c_int,
                                 LPPix,  # PIX * pix1
                                 LPPix,  # PIX * pix2
                                 c_int,  # l_int32 comptype
                                 c_int,  # l_int32 plottype
-                                POINTER(c_int),  # l_int32 * psame
-                                POINTER(c_float),  # l_float32 * pdiff
-                                POINTER(c_float),  # l_float32 * prmsdiff
-                                POINTER(LPPix),  # PIX * * ppixdiff
+                                c_int_p,  # l_int32 * psame
+                                c_float_p,  # l_float32 * pdiff
+                                c_float_p,  # l_float32 * prmsdiff
+                                LPLPPix,  # PIX ** ppixdiff
                                 ),
         'pixCompareGray': (c_int,
                            LPPix,  # PIX * pix1
                            LPPix,  # PIX * pix2
                            c_int,  # l_int32 comptype
                            c_int,  # l_int32 plottype
-                           POINTER(c_int),  # l_int32 * psame
-                           POINTER(c_float),  # l_float32 * pdiff
-                           POINTER(c_float),  # l_float32 * prmsdiff
-                           POINTER(LPPix),  # PIX * * ppixdiff
+                           c_int_p,  # l_int32 * psame
+                           c_float_p,  # l_float32 * pdiff
+                           c_float_p,  # l_float32 * prmsdiff
+                           LPLPPix,  # PIX ** ppixdiff
                            ),
         'pixCompareRGB': (c_int,
                           LPPix,  # PIX * pix1
                           LPPix,  # PIX * pix2
                           c_int,  # l_int32 comptype
                           c_int,  # l_int32 plottype
-                          POINTER(c_int),  # l_int32 * psame
-                          POINTER(c_float),  # l_float32 * pdiff
-                          POINTER(c_float),  # l_float32 * prmsdiff
-                          POINTER(LPPix),  # PIX * * ppixdiff
+                          c_int_p,  # l_int32 * psame
+                          c_float_p,  # l_float32 * pdiff
+                          c_float_p,  # l_float32 * prmsdiff
+                          LPLPPix,  # PIX ** ppixdiff
                           ),
         'pixCompareTiled': (c_int,
                             LPPix,  # PIX * pix1
@@ -3296,7 +3298,7 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 sx
                             c_int,  # l_int32 sy
                             c_int,  # l_int32 type
-                            POINTER(LPPix),  # PIX * * ppixdiff
+                            LPLPPix,  # PIX ** ppixdiff
                             ),
         'pixCompareRankDifference': (LPNuma,  # NUMA *
                                      LPPix,  # PIX * pix1
@@ -3310,7 +3312,7 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 mindiff
                                  c_float,  # l_float32 maxfract
                                  c_float,  # l_float32 maxave
-                                 POINTER(c_int),  # l_int32 * psimilar
+                                 c_int_p,  # l_int32 * psimilar
                                  c_int,  # l_int32 details
                                  ),
         'pixGetDifferenceStats': (c_int,
@@ -3318,8 +3320,8 @@ class LeptonicaAPI(CAPI):
                                   LPPix,  # PIX * pix2
                                   c_int,  # l_int32 factor
                                   c_int,  # l_int32 mindiff
-                                  POINTER(c_float),  # l_float32 * pfractdiff
-                                  POINTER(c_float),  # l_float32 * pavediff
+                                  c_float_p,  # l_float32 * pfractdiff
+                                  c_float_p,  # l_float32 * pavediff
                                   c_int,  # l_int32 details
                                   ),
         'pixGetDifferenceHistogram': (LPNuma,  # NUMA *
@@ -3333,15 +3335,15 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 sampling
                                  c_int,  # l_int32 dilation
                                  c_int,  # l_int32 mindiff
-                                 POINTER(c_float),  # l_float32 * pfract
-                                 POINTER(LPPix),  # PIX * * ppixdiff1
-                                 POINTER(LPPix),  # PIX * * ppixdiff2
+                                 c_float_p,  # l_float32 * pfract
+                                 LPLPPix,  # PIX ** ppixdiff1
+                                 LPLPPix,  # PIX ** ppixdiff2
                                  ),
         'pixGetPSNR': (c_int,
                        LPPix,  # PIX * pix1
                        LPPix,  # PIX * pix2
                        c_int,  # l_int32 factor
-                       POINTER(c_float),  # l_float32 * ppsnr
+                       c_float_p,  # l_float32 * ppsnr
                        ),
         'pixaComparePhotoRegionsByHisto': (c_int,
                                            LPPixa,  # PIXA * pixa
@@ -3350,10 +3352,10 @@ class LeptonicaAPI(CAPI):
                                            c_int,  # l_int32 factor
                                            c_int,  # l_int32 n
                                            c_float,  # l_float32 simthresh
-                                           POINTER(LPNuma),  # NUMA * * pnai
-                                           # l_float32 * * pscores
-                                           POINTER(POINTER(c_float)),
-                                           POINTER(LPPix),  # PIX * * ppixd
+                                           LPLPNuma,  # NUMA ** pnai
+                                           # l_float32 ** pscores
+                                           POINTER(c_float_p),
+                                           LPLPPix,  # PIX ** ppixd
                                            c_int,  # l_int32 debug
                                            ),
         'pixComparePhotoRegionsByHisto': (c_int,
@@ -3365,7 +3367,7 @@ class LeptonicaAPI(CAPI):
                                           c_int,  # l_int32 factor
                                           c_int,  # l_int32 n
                                           # l_float32 * pscore
-                                          POINTER(c_float),
+                                          c_float_p,
                                           c_int,  # l_int32 debugflag
                                           ),
         'pixGenPhotoHistos': (c_int,
@@ -3374,9 +3376,9 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 factor
                               c_float,  # l_float32 thresh
                               c_int,  # l_int32 n
-                              LPLPNumaa,  # NUMAA * * pnaa
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
+                              LPLPNumaa,  # NUMAA ** pnaa
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
                               c_int,  # l_int32 debugindex
                               ),
         'pixPadToCenterCentroid': (LPPix,  # PIX *
@@ -3386,15 +3388,15 @@ class LeptonicaAPI(CAPI):
         'pixCentroid8': (c_int,
                          LPPix,  # PIX * pixs
                          c_int,  # l_int32 factor
-                         POINTER(c_float),  # l_float32 * pcx
-                         POINTER(c_float),  # l_float32 * pcy
+                         c_float_p,  # l_float32 * pcx
+                         c_float_p,  # l_float32 * pcy
                          ),
         'pixDecideIfPhotoImage': (c_int,
                                   LPPix,  # PIX * pix
                                   c_int,  # l_int32 factor
                                   c_float,  # l_float32 thresh
                                   c_int,  # l_int32 n
-                                  LPLPNumaa,  # NUMAA * * pnaa
+                                  LPLPNumaa,  # NUMAA ** pnaa
                                   LPPixa,  # PIXA * pixadebug
                                   ),
         'compareTilesByHisto': (c_int,
@@ -3405,7 +3407,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 h1
                                 c_int,  # l_int32 w2
                                 c_int,  # l_int32 h2
-                                POINTER(c_float),  # l_float32 * pscore
+                                c_float_p,  # l_float32 * pscore
                                 LPPixa,  # PIXA * pixadebug
                                 ),
         'pixCompareGrayByHisto': (c_int,
@@ -3417,35 +3419,35 @@ class LeptonicaAPI(CAPI):
                                   c_int,  # l_int32 maxgray
                                   c_int,  # l_int32 factor
                                   c_int,  # l_int32 n
-                                  POINTER(c_float),  # l_float32 * pscore
+                                  c_float_p,  # l_float32 * pscore
                                   c_int,  # l_int32 debugflag
                                   ),
         'pixCropAlignedToCentroid': (c_int,
                                      LPPix,  # PIX * pix1
                                      LPPix,  # PIX * pix2
                                      c_int,  # l_int32 factor
-                                     POINTER(LPBox),  # BOX * * pbox1
-                                     POINTER(LPBox),  # BOX * * pbox2
+                                     LPLPBox,  # BOX ** pbox1
+                                     LPLPBox,  # BOX ** pbox2
                                      ),
-        'l_compressGrayHistograms': (POINTER(c_ubyte),
+        'l_compressGrayHistograms': (c_ubyte_p,
                                      LPNumaa,  # NUMAA * naa
                                      c_int,  # l_int32 w
                                      c_int,  # l_int32 h
-                                     POINTER(c_size_t),  # size_t * psize
+                                     c_size_t_p,  # size_t * psize
                                      ),
         'l_uncompressGrayHistograms': (LPNumaa,  # NUMAA *
-                                       POINTER(c_ubyte),  # l_uint8 * bytea
+                                       c_ubyte_p,  # l_uint8 * bytea
                                        c_size_t,  # size_t size
-                                       POINTER(c_int),  # l_int32 * pw
-                                       POINTER(c_int),  # l_int32 * ph
+                                       c_int_p,  # l_int32 * pw
+                                       c_int_p,  # l_int32 * ph
                                        ),
         'pixCompareWithTranslation': (c_int,
                                       LPPix,  # PIX * pix1
                                       LPPix,  # PIX * pix2
                                       c_int,  # l_int32 thresh
-                                      POINTER(c_int),  # l_int32 * pdelx
-                                      POINTER(c_int),  # l_int32 * pdely
-                                      POINTER(c_float),  # l_float32 * pscore
+                                      c_int_p,  # l_int32 * pdelx
+                                      c_int_p,  # l_int32 * pdely
+                                      c_float_p,  # l_float32 * pscore
                                       c_int,  # l_int32 debugflag
                                       ),
         'pixBestCorrelation': (c_int,
@@ -3456,20 +3458,20 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 etransx
                                c_int,  # l_int32 etransy
                                c_int,  # l_int32 maxshift
-                               POINTER(c_int),  # l_int32 * tab8
-                               POINTER(c_int),  # l_int32 * pdelx
-                               POINTER(c_int),  # l_int32 * pdely
-                               POINTER(c_float),  # l_float32 * pscore
+                               c_int_p,  # l_int32 * tab8
+                               c_int_p,  # l_int32 * pdelx
+                               c_int_p,  # l_int32 * pdely
+                               c_float_p,  # l_float32 * pscore
                                c_int,  # l_int32 debugflag
                                ),
         'pixConnComp': (LPBoxa,  # BOXA *
                         LPPix,  # PIX * pixs
-                        POINTER(LPPixa),  # PIXA * * ppixa
+                        LPLPPixa,  # PIXA ** ppixa
                         c_int,  # l_int32 connectivity
                         ),
         'pixConnCompPixa': (LPBoxa,  # BOXA *
                             LPPix,  # PIX * pixs
-                            POINTER(LPPixa),  # PIXA * * ppixa
+                            LPLPPixa,  # PIXA ** ppixa
                             c_int,  # l_int32 connectivity
                             ),
         'pixConnCompBB': (LPBoxa,  # BOXA *
@@ -3479,14 +3481,14 @@ class LeptonicaAPI(CAPI):
         'pixCountConnComp': (c_int,
                              LPPix,  # PIX * pixs
                              c_int,  # l_int32 connectivity
-                             POINTER(c_int),  # l_int32 * pcount
+                             c_int_p,  # l_int32 * pcount
                              ),
         'nextOnPixelInRaster': (c_int,
                                 LPPix,  # PIX * pixs
                                 c_int,  # l_int32 xstart
                                 c_int,  # l_int32 ystart
-                                POINTER(c_int),  # l_int32 * px
-                                POINTER(c_int),  # l_int32 * py
+                                c_int_p,  # l_int32 * px
+                                c_int_p,  # l_int32 * py
                                 ),
         'convertFilesTo1bpp': (c_int,
                                c_char_p,  # const char * dirin
@@ -3535,10 +3537,10 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 wc
                              c_int,  # l_int32 hc
                              c_int,  # l_int32 hasborder
-                             POINTER(LPPix),  # PIX * * ppixm
-                             POINTER(LPPix),  # PIX * * ppixms
-                             POINTER(LPFPix),  # FPIX * * pfpixv
-                             POINTER(LPFPix),  # FPIX * * pfpixrv
+                             LPLPPix,  # PIX ** ppixm
+                             LPLPPix,  # PIX ** ppixms
+                             LPLPFPix,  # FPIX ** pfpixv
+                             LPLPFPix,  # FPIX ** pfpixrv
                              ),
         'pixWindowedMean': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
@@ -3556,8 +3558,8 @@ class LeptonicaAPI(CAPI):
         'pixWindowedVariance': (c_int,
                                 LPPix,  # PIX * pixm
                                 LPPix,  # PIX * pixms
-                                POINTER(LPFPix),  # FPIX * * pfpixv
-                                POINTER(LPFPix),  # FPIX * * pfpixrv
+                                LPLPFPix,  # FPIX ** pfpixv
+                                LPLPFPix,  # FPIX ** pfpixrv
                                 ),
         'pixMeanSquareAccum': (LPDPix,  # DPIX *
                                LPPix,  # PIX * pixs
@@ -3598,8 +3600,8 @@ class LeptonicaAPI(CAPI):
                                 c_float,  # l_float32 dely
                                 c_int,  # l_int32 maxdiffw
                                 c_int,  # l_int32 maxdiffh
-                                POINTER(c_int),  # l_int32 * tab
-                                POINTER(c_float),  # l_float32 * pscore
+                                c_int_p,  # l_int32 * tab
+                                c_float_p,  # l_float32 * pscore
                                 ),
         'pixCorrelationScoreThresholded': (c_int,
                                            LPPix,  # PIX * pix1
@@ -3610,9 +3612,9 @@ class LeptonicaAPI(CAPI):
                                            c_float,  # l_float32 dely
                                            c_int,  # l_int32 maxdiffw
                                            c_int,  # l_int32 maxdiffh
-                                           POINTER(c_int),  # l_int32 * tab
+                                           c_int_p,  # l_int32 * tab
                                            # l_int32 * downcount
-                                           POINTER(c_int),
+                                           c_int_p,
                                            # l_float32 score_threshold
                                            c_float,
                                            ),
@@ -3625,8 +3627,8 @@ class LeptonicaAPI(CAPI):
                                       c_float,  # l_float32 dely
                                       c_int,  # l_int32 maxdiffw
                                       c_int,  # l_int32 maxdiffh
-                                      POINTER(c_int),  # l_int32 * tab
-                                      POINTER(c_float),  # l_float32 * pscore
+                                      c_int_p,  # l_int32 * tab
+                                      c_float_p,  # l_float32 * pscore
                                       ),
         'pixCorrelationScoreShifted': (c_int,
                                        LPPix,  # PIX * pix1
@@ -3635,8 +3637,8 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 area2
                                        c_int,  # l_int32 delx
                                        c_int,  # l_int32 dely
-                                       POINTER(c_int),  # l_int32 * tab
-                                       POINTER(c_float),  # l_float32 * pscore
+                                       c_int_p,  # l_int32 * tab
+                                       c_float_p,  # l_float32 * pscore
                                        ),
         'dewarpGetTextlineCenters': (LPPtaa,  # PTAA *
                                      LPPix,  # PIX * pixs
@@ -3661,11 +3663,11 @@ class LeptonicaAPI(CAPI):
                              c_char_p,  # char * selname
                              ),
         'fmorphopgen_low_2': (c_int,
-                              POINTER(c_uint),  # l_uint32 * datad
+                              c_uint_p,  # l_uint32 * datad
                               c_int,  # l_int32 w
                               c_int,  # l_int32 h
                               c_int,  # l_int32 wpld
-                              POINTER(c_uint),  # l_uint32 * datas
+                              c_uint_p,  # l_uint32 * datas
                               c_int,  # l_int32 wpls
                               c_int,  # l_int32 index
                               ),
@@ -3682,9 +3684,9 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 side
                                      c_int,  # l_int32 minjump
                                      c_int,  # l_int32 minreversal
-                                     POINTER(c_float),  # l_float32 * pjpl
-                                     POINTER(c_float),  # l_float32 * pjspl
-                                     POINTER(c_float),  # l_float32 * prpl
+                                     c_float_p,  # l_float32 * pjpl
+                                     c_float_p,  # l_float32 * pjspl
+                                     c_float_p,  # l_float32 * prpl
                                      c_char_p,  # const char * debugfile
                                      ),
         'pixGetEdgeProfile': (LPNuma,  # NUMA *
@@ -3697,44 +3699,44 @@ class LeptonicaAPI(CAPI):
                                     c_int,  # l_int32 x
                                     c_int,  # l_int32 y
                                     c_int,  # l_int32 direction
-                                    POINTER(c_int),  # l_int32 * ploc
+                                    c_int_p,  # l_int32 * ploc
                                     ),
         'pixGetLastOnPixelInRun': (c_int,
                                    LPPix,  # PIX * pixs
                                    c_int,  # l_int32 x
                                    c_int,  # l_int32 y
                                    c_int,  # l_int32 direction
-                                   POINTER(c_int),  # l_int32 * ploc
+                                   c_int_p,  # l_int32 * ploc
                                    ),
         'encodeBase64': (c_char_p,
-                         POINTER(c_ubyte),  # const l_uint8 * inarray
+                         c_ubyte_p,  # const l_uint8 * inarray
                          c_int,  # l_int32 insize
-                         POINTER(c_int),  # l_int32 * poutsize
+                         c_int_p,  # l_int32 * poutsize
                          ),
-        'decodeBase64': (POINTER(c_ubyte),
+        'decodeBase64': (c_ubyte_p,
                          c_char_p,  # const char * inarray
                          c_int,  # l_int32 insize
-                         POINTER(c_int),  # l_int32 * poutsize
+                         c_int_p,  # l_int32 * poutsize
                          ),
         'encodeAscii85': (c_char_p,
-                          POINTER(c_ubyte),  # const l_uint8 * inarray
+                          c_ubyte_p,  # const l_uint8 * inarray
                           c_size_t,  # size_t insize
-                          POINTER(c_size_t),  # size_t * poutsize
+                          c_size_t_p,  # size_t * poutsize
                           ),
-        'decodeAscii85': (POINTER(c_ubyte),
+        'decodeAscii85': (c_ubyte_p,
                           c_char_p,  # const char * inarray
                           c_size_t,  # size_t insize
-                          POINTER(c_size_t),  # size_t * poutsize
+                          c_size_t_p,  # size_t * poutsize
                           ),
         'encodeAscii85WithComp': (c_char_p,
-                                  POINTER(c_ubyte),  # const l_uint8 * indata
+                                  c_ubyte_p,  # const l_uint8 * indata
                                   c_size_t,  # size_t insize
-                                  POINTER(c_size_t),  # size_t * poutsize
+                                  c_size_t_p,  # size_t * poutsize
                                   ),
-        'decodeAscii85WithComp': (POINTER(c_ubyte),
+        'decodeAscii85WithComp': (c_ubyte_p,
                                   c_char_p,  # const char * instr
                                   c_size_t,  # size_t insize
-                                  POINTER(c_size_t),  # size_t * poutsize
+                                  c_size_t_p,  # size_t * poutsize
                                   ),
         'reformatPacked64': (c_char_p,
                              c_char_p,  # const char * inarray
@@ -3742,7 +3744,7 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 leadspace
                              c_int,  # l_int32 linechars
                              c_int,  # l_int32 addquotes
-                             POINTER(c_int),  # l_int32 * poutsize
+                             c_int_p,  # l_int32 * poutsize
                              ),
         'pixGammaTRC': (LPPix,  # PIX *
                         LPPix,  # PIX * pixd
@@ -3854,7 +3856,7 @@ class LeptonicaAPI(CAPI):
         'pixMeasureSaturation': (c_int,
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 factor
-                                 POINTER(c_float),  # l_float32 * psat
+                                 c_float_p,  # l_float32 * psat
                                  ),
         'pixModifyBrightness': (LPPix,  # PIX *
                                 LPPix,  # PIX * pixd
@@ -3905,11 +3907,11 @@ class LeptonicaAPI(CAPI):
                          c_char_p,  # const char * selname
                          ),
         'fhmtgen_low_1': (c_int,
-                          POINTER(c_uint),  # l_uint32 * datad
+                          c_uint_p,  # l_uint32 * datad
                           c_int,  # l_int32 w
                           c_int,  # l_int32 h
                           c_int,  # l_int32 wpld
-                          POINTER(c_uint),  # l_uint32 * datas
+                          c_uint_p,  # l_uint32 * datas
                           c_int,  # l_int32 wpls
                           c_int,  # l_int32 index
                           ),
@@ -3917,22 +3919,22 @@ class LeptonicaAPI(CAPI):
                            LPPix,  # PIX * pixs
                            LPBoxa,  # BOXA * boxaw
                            LPPix,  # PIX * pixw
-                           POINTER(LPBoxa),  # BOXA * * pboxa
+                           LPLPBoxa,  # BOXA ** pboxa
                            c_int,  # l_int32 debugflag
                            ),
         'pixOrientCorrect': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
                              c_float,  # l_float32 minupconf
                              c_float,  # l_float32 minratio
-                             POINTER(c_float),  # l_float32 * pupconf
-                             POINTER(c_float),  # l_float32 * pleftconf
-                             POINTER(c_int),  # l_int32 * protation
+                             c_float_p,  # l_float32 * pupconf
+                             c_float_p,  # l_float32 * pleftconf
+                             c_int_p,  # l_int32 * protation
                              c_int,  # l_int32 debug
                              ),
         'pixOrientDetect': (c_int,
                             LPPix,  # PIX * pixs
-                            POINTER(c_float),  # l_float32 * pupconf
-                            POINTER(c_float),  # l_float32 * pleftconf
+                            c_float_p,  # l_float32 * pupconf
+                            c_float_p,  # l_float32 * pleftconf
                             c_int,  # l_int32 mincount
                             c_int,  # l_int32 debug
                             ),
@@ -3941,19 +3943,19 @@ class LeptonicaAPI(CAPI):
                                c_float,  # l_float32 leftconf
                                c_float,  # l_float32 minupconf
                                c_float,  # l_float32 minratio
-                               POINTER(c_int),  # l_int32 * porient
+                               c_int_p,  # l_int32 * porient
                                c_int,  # l_int32 debug
                                ),
         'pixUpDownDetect': (c_int,
                             LPPix,  # PIX * pixs
-                            POINTER(c_float),  # l_float32 * pconf
+                            c_float_p,  # l_float32 * pconf
                             c_int,  # l_int32 mincount
                             c_int,  # l_int32 npixels
                             c_int,  # l_int32 debug
                             ),
         'pixMirrorDetect': (c_int,
                             LPPix,  # PIX * pixs
-                            POINTER(c_float),  # l_float32 * pconf
+                            c_float_p,  # l_float32 * pconf
                             c_int,  # l_int32 mincount
                             c_int,  # l_int32 debug
                             ),
@@ -3970,11 +3972,11 @@ class LeptonicaAPI(CAPI):
                              c_char_p,  # char * selname
                              ),
         'fmorphopgen_low_1': (c_int,
-                              POINTER(c_uint),  # l_uint32 * datad
+                              c_uint_p,  # l_uint32 * datad
                               c_int,  # l_int32 w
                               c_int,  # l_int32 h
                               c_int,  # l_int32 wpld
-                              POINTER(c_uint),  # l_uint32 * datas
+                              c_uint_p,  # l_uint32 * datas
                               c_int,  # l_int32 wpls
                               c_int,  # l_int32 index
                               ),
@@ -3992,12 +3994,12 @@ class LeptonicaAPI(CAPI):
                      LPFPix,  # FPIX * fpixs
                      ),
         'fpixDestroy': (None,
-                        POINTER(LPFPix),  # FPIX * * pfpix
+                        LPLPFPix,  # FPIX ** pfpix
                         ),
         'fpixGetDimensions': (c_int,
                               LPFPix,  # FPIX * fpix
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
                               ),
         'fpixSetDimensions': (c_int,
                               LPFPix,  # FPIX * fpix
@@ -4020,8 +4022,8 @@ class LeptonicaAPI(CAPI):
                                ),
         'fpixGetResolution': (c_int,
                               LPFPix,  # FPIX * fpix
-                              POINTER(c_int),  # l_int32 * pxres
-                              POINTER(c_int),  # l_int32 * pyres
+                              c_int_p,  # l_int32 * pxres
+                              c_int_p,  # l_int32 * pyres
                               ),
         'fpixSetResolution': (c_int,
                               LPFPix,  # FPIX * fpix
@@ -4032,18 +4034,18 @@ class LeptonicaAPI(CAPI):
                                LPFPix,  # FPIX * fpixd
                                LPFPix,  # FPIX * fpixs
                                ),
-        'fpixGetData': (POINTER(c_float),
+        'fpixGetData': (c_float_p,
                         LPFPix,  # FPIX * fpix
                         ),
         'fpixSetData': (c_int,
                         LPFPix,  # FPIX * fpix
-                        POINTER(c_float),  # l_float32 * data
+                        c_float_p,  # l_float32 * data
                         ),
         'fpixGetPixel': (c_int,
                          LPFPix,  # FPIX * fpix
                          c_int,  # l_int32 x
                          c_int,  # l_int32 y
-                         POINTER(c_float),  # l_float32 * pval
+                         c_float_p,  # l_float32 * pval
                          ),
         'fpixSetPixel': (c_int,
                          LPFPix,  # FPIX * fpix
@@ -4059,7 +4061,7 @@ class LeptonicaAPI(CAPI):
                       c_int,  # l_int32 copyflag
                       ),
         'fpixaDestroy': (None,
-                         POINTER(LPFPixa),  # FPIXA * * pfpixa
+                         LPLPFPixa,  # FPIXA ** pfpixa
                          ),
         'fpixaAddFPix': (c_int,
                          LPFPixa,  # FPIXA * fpixa
@@ -4081,10 +4083,10 @@ class LeptonicaAPI(CAPI):
         'fpixaGetFPixDimensions': (c_int,
                                    LPFPixa,  # FPIXA * fpixa
                                    c_int,  # l_int32 index
-                                   POINTER(c_int),  # l_int32 * pw
-                                   POINTER(c_int),  # l_int32 * ph
+                                   c_int_p,  # l_int32 * pw
+                                   c_int_p,  # l_int32 * ph
                                    ),
-        'fpixaGetData': (POINTER(c_float),
+        'fpixaGetData': (c_float_p,
                          LPFPixa,  # FPIXA * fpixa
                          c_int,  # l_int32 index
                          ),
@@ -4093,7 +4095,7 @@ class LeptonicaAPI(CAPI):
                           c_int,  # l_int32 index
                           c_int,  # l_int32 x
                           c_int,  # l_int32 y
-                          POINTER(c_float),  # l_float32 * pval
+                          c_float_p,  # l_float32 * pval
                           ),
         'fpixaSetPixel': (c_int,
                           LPFPixa,  # FPIXA * fpixa
@@ -4116,12 +4118,12 @@ class LeptonicaAPI(CAPI):
                      LPDPix,  # DPIX * dpixs
                      ),
         'dpixDestroy': (None,
-                        POINTER(LPDPix),  # DPIX * * pdpix
+                        LPLPDPix,  # DPIX ** pdpix
                         ),
         'dpixGetDimensions': (c_int,
                               LPDPix,  # DPIX * dpix
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
                               ),
         'dpixSetDimensions': (c_int,
                               LPDPix,  # DPIX * dpix
@@ -4144,8 +4146,8 @@ class LeptonicaAPI(CAPI):
                                ),
         'dpixGetResolution': (c_int,
                               LPDPix,  # DPIX * dpix
-                              POINTER(c_int),  # l_int32 * pxres
-                              POINTER(c_int),  # l_int32 * pyres
+                              c_int_p,  # l_int32 * pxres
+                              c_int_p,  # l_int32 * pyres
                               ),
         'dpixSetResolution': (c_int,
                               LPDPix,  # DPIX * dpix
@@ -4156,18 +4158,18 @@ class LeptonicaAPI(CAPI):
                                LPDPix,  # DPIX * dpixd
                                LPDPix,  # DPIX * dpixs
                                ),
-        'dpixGetData': (POINTER(c_double),
+        'dpixGetData': (c_double_p,
                         LPDPix,  # DPIX * dpix
                         ),
         'dpixSetData': (c_int,
                         LPDPix,  # DPIX * dpix
-                        POINTER(c_double),  # l_float64 * data
+                        c_double_p,  # l_float64 * data
                         ),
         'dpixGetPixel': (c_int,
                          LPDPix,  # DPIX * dpix
                          c_int,  # l_int32 x
                          c_int,  # l_int32 y
-                         POINTER(c_double),  # l_float64 * pval
+                         c_double_p,  # l_float64 * pval
                          ),
         'dpixSetPixel': (c_int,
                          LPDPix,  # DPIX * dpix
@@ -4182,7 +4184,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'fpixReadMem': (LPFPix,  # FPIX *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'fpixWrite': (c_int,
@@ -4194,8 +4196,8 @@ class LeptonicaAPI(CAPI):
                             LPFPix,  # FPIX * fpix
                             ),
         'fpixWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPFPix,  # FPIX * fpix
                          ),
         'fpixEndianByteSwap': (LPFPix,  # FPIX *
@@ -4209,7 +4211,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'dpixReadMem': (LPDPix,  # DPIX *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'dpixWrite': (c_int,
@@ -4221,8 +4223,8 @@ class LeptonicaAPI(CAPI):
                             LPDPix,  # DPIX * dpix
                             ),
         'dpixWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPDPix,  # DPIX * dpix
                          ),
         'dpixEndianByteSwap': (LPDPix,  # DPIX *
@@ -4265,27 +4267,27 @@ class LeptonicaAPI(CAPI):
                               ),
         'fpixGetMin': (c_int,
                        LPFPix,  # FPIX * fpix
-                       POINTER(c_float),  # l_float32 * pminval
-                       POINTER(c_int),  # l_int32 * pxminloc
-                       POINTER(c_int),  # l_int32 * pyminloc
+                       c_float_p,  # l_float32 * pminval
+                       c_int_p,  # l_int32 * pxminloc
+                       c_int_p,  # l_int32 * pyminloc
                        ),
         'fpixGetMax': (c_int,
                        LPFPix,  # FPIX * fpix
-                       POINTER(c_float),  # l_float32 * pmaxval
-                       POINTER(c_int),  # l_int32 * pxmaxloc
-                       POINTER(c_int),  # l_int32 * pymaxloc
+                       c_float_p,  # l_float32 * pmaxval
+                       c_int_p,  # l_int32 * pxmaxloc
+                       c_int_p,  # l_int32 * pymaxloc
                        ),
         'dpixGetMin': (c_int,
                        LPDPix,  # DPIX * dpix
-                       POINTER(c_double),  # l_float64 * pminval
-                       POINTER(c_int),  # l_int32 * pxminloc
-                       POINTER(c_int),  # l_int32 * pyminloc
+                       c_double_p,  # l_float64 * pminval
+                       c_int_p,  # l_int32 * pxminloc
+                       c_int_p,  # l_int32 * pyminloc
                        ),
         'dpixGetMax': (c_int,
                        LPDPix,  # DPIX * dpix
-                       POINTER(c_double),  # l_float64 * pmaxval
-                       POINTER(c_int),  # l_int32 * pxmaxloc
-                       POINTER(c_int),  # l_int32 * pymaxloc
+                       c_double_p,  # l_float64 * pmaxval
+                       c_int_p,  # l_int32 * pxmaxloc
+                       c_int_p,  # l_int32 * pymaxloc
                        ),
         'fpixScaleByInteger': (LPFPix,  # FPIX *
                                LPFPix,  # FPIX * fpixs
@@ -4401,7 +4403,7 @@ class LeptonicaAPI(CAPI):
                           ),
         'fpixAffine': (LPFPix,  # FPIX *
                        LPFPix,  # FPIX * fpixs
-                       POINTER(c_float),  # l_float32 * vc
+                       c_float_p,  # l_float32 * vc
                        c_float,  # l_float32 inval
                        ),
         'fpixProjectivePta': (LPFPix,  # FPIX *
@@ -4413,17 +4415,17 @@ class LeptonicaAPI(CAPI):
                               ),
         'fpixProjective': (LPFPix,  # FPIX *
                            LPFPix,  # FPIX * fpixs
-                           POINTER(c_float),  # l_float32 * vc
+                           c_float_p,  # l_float32 * vc
                            c_float,  # l_float32 inval
                            ),
         'linearInterpolatePixelFloat': (c_int,
-                                        POINTER(c_float),  # l_float32 * datas
+                                        c_float_p,  # l_float32 * datas
                                         c_int,  # l_int32 w
                                         c_int,  # l_int32 h
                                         c_float,  # l_float32 x
                                         c_float,  # l_float32 y
                                         c_float,  # l_float32 inval
-                                        POINTER(c_float),  # l_float32 * pval
+                                        c_float_p,  # l_float32 * pval
                                         ),
         'fpixThresholdToPix': (LPPix,  # PIX *
                                LPFPix,  # FPIX * fpix
@@ -4442,7 +4444,7 @@ class LeptonicaAPI(CAPI):
                              LPFile,  # FILE * fp
                              ),
         'pixReadMemGif': (LPPix,  # PIX *
-                          POINTER(c_ubyte),  # const l_uint8 * cdata
+                          c_ubyte_p,  # const l_uint8 * cdata
                           c_size_t,  # size_t size
                           ),
         'pixWriteStreamGif': (c_int,
@@ -4450,8 +4452,8 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pix
                               ),
         'pixWriteMemGif': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                           POINTER(c_size_t),  # size_t * psize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                           c_size_t_p,  # size_t * psize
                            LPPix,  # PIX * pix
                            ),
         'gplotSimple1': (c_int,
@@ -4592,11 +4594,11 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 yr
                              c_double,  # l_float64 dist
                              c_double,  # l_float64 radang
-                             POINTER(c_double),  # l_float64 * px
-                             POINTER(c_double),  # l_float64 * py
+                             c_double_p,  # l_float64 * px
+                             c_double_p,  # l_float64 * py
                              ),
         'pixRenderPlotFromNuma': (c_int,
-                                  POINTER(LPPix),  # PIX * * ppix
+                                  LPLPPix,  # PIX ** ppix
                                   LPNuma,  # NUMA * na
                                   c_int,  # l_int32 plotloc
                                   c_int,  # l_int32 linewidth
@@ -4611,7 +4613,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 max
                                 ),
         'pixRenderPlotFromNumaGen': (c_int,
-                                     POINTER(LPPix),  # PIX * * ppix
+                                     LPLPPix,  # PIX ** ppix
                                      LPNuma,  # NUMA * na
                                      c_int,  # l_int32 orient
                                      c_int,  # l_int32 linewidth
@@ -4850,8 +4852,8 @@ class LeptonicaAPI(CAPI):
         'pixRenderPolygon': (LPPix,  # PIX *
                              LPPta,  # PTA * ptas
                              c_int,  # l_int32 width
-                             POINTER(c_int),  # l_int32 * pxmin
-                             POINTER(c_int),  # l_int32 * pymin
+                             c_int_p,  # l_int32 * pxmin
+                             c_int_p,  # l_int32 * pymin
                              ),
         'pixFillPolygon': (LPPix,  # PIX *
                            LPPix,  # PIX * pixs
@@ -4927,10 +4929,10 @@ class LeptonicaAPI(CAPI):
                                   c_int,  # l_int32 upperclip
                                   ),
         'ditherToBinaryLineLow': (None,
-                                  POINTER(c_uint),  # l_uint32 * lined
+                                  c_uint_p,  # l_uint32 * lined
                                   c_int,  # l_int32 w
-                                  POINTER(c_uint),  # l_uint32 * bufs1
-                                  POINTER(c_uint),  # l_uint32 * bufs2
+                                  c_uint_p,  # l_uint32 * bufs1
+                                  c_uint_p,  # l_uint32 * bufs2
                                   c_int,  # l_int32 lowerclip
                                   c_int,  # l_int32 upperclip
                                   c_int,  # l_int32 lastlineflag
@@ -4940,9 +4942,9 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 thresh
                                  ),
         'thresholdToBinaryLineLow': (None,
-                                     POINTER(c_uint),  # l_uint32 * lined
+                                     c_uint_p,  # l_uint32 * lined
                                      c_int,  # l_int32 w
-                                     POINTER(c_uint),  # l_uint32 * lines
+                                     c_uint_p,  # l_uint32 * lines
                                      c_int,  # l_int32 d
                                      c_int,  # l_int32 thresh
                                      ),
@@ -5008,14 +5010,14 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 setblack
                                 c_int,  # l_int32 setwhite
                                 ),
-        'makeGrayQuantIndexTable': (POINTER(c_int),
+        'makeGrayQuantIndexTable': (c_int_p,
                                     c_int,  # l_int32 nlevels
                                     ),
         'makeGrayQuantTableArb': (c_int,
                                   LPNuma,  # NUMA * na
                                   c_int,  # l_int32 outdepth
-                                  POINTER(POINTER(c_int)),  # l_int32 * * ptab
-                                  POINTER(LPPixColormap),  # PIXCMAP * * pcmap
+                                  POINTER(c_int_p),  # l_int32 ** ptab
+                                  LPLPPixColormap,  # PIXCMAP ** pcmap
                                   ),
         'pixGenerateMaskByBand32': (LPPix,  # PIX *
                                     LPPix,  # PIX * pixs
@@ -5065,20 +5067,20 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 area1
                             c_int,  # l_int32 area3
                             c_float,  # l_float32 rank
-                            POINTER(c_int),  # l_int32 * tab8
+                            c_int_p,  # l_int32 * tab8
                             ),
         'jbGetComponents': (c_int,
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 components
                             c_int,  # l_int32 maxwidth
                             c_int,  # l_int32 maxheight
-                            POINTER(LPBoxa),  # BOXA * * pboxad
-                            POINTER(LPPixa),  # PIXA * * ppixad
+                            LPLPBoxa,  # BOXA ** pboxad
+                            LPLPPixa,  # PIXA ** ppixad
                             ),
         'pixWordMaskByDilation': (c_int,
                                   LPPix,  # PIX * pixs
-                                  POINTER(LPPix),  # PIX * * ppixm
-                                  POINTER(c_int),  # l_int32 * psize
+                                  LPLPPix,  # PIX ** ppixm
+                                  c_int_p,  # l_int32 * psize
                                   LPPixa,  # PIXA * pixadb
                                   ),
         'pixWordBoxesByDilation': (c_int,
@@ -5087,14 +5089,14 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 minheight
                                    c_int,  # l_int32 maxwidth
                                    c_int,  # l_int32 maxheight
-                                   POINTER(LPBoxa),  # BOXA * * pboxa
-                                   POINTER(c_int),  # l_int32 * psize
+                                   LPLPBoxa,  # BOXA ** pboxa
+                                   c_int_p,  # l_int32 * psize
                                    LPPixa,  # PIXA * pixadb
                                    ),
         'jbAccumulateComposites': (LPPixa,  # PIXA *
                                    LPPixaa,  # PIXAA * pixaa
-                                   POINTER(LPNuma),  # NUMA * * pna
-                                   POINTER(LPPta),  # PTA * * pptat
+                                   LPLPNuma,  # NUMA ** pna
+                                   LPLPPta,  # PTA ** pptat
                                    ),
         'jbTemplatesFromComposites': (LPPixa,  # PIXA *
                                       LPPixa,  # PIXA * pixac
@@ -5102,33 +5104,33 @@ class LeptonicaAPI(CAPI):
                                       ),
         'readHeaderJp2k': (c_int,
                            c_char_p,  # const char * filename
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pbps
-                           POINTER(c_int),  # l_int32 * pspp
-                           POINTER(c_int),  # l_int32 * pcodec
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pbps
+                           c_int_p,  # l_int32 * pspp
+                           c_int_p,  # l_int32 * pcodec
                            ),
         'freadHeaderJp2k': (c_int,
                             LPFile,  # FILE * fp
-                            POINTER(c_int),  # l_int32 * pw
-                            POINTER(c_int),  # l_int32 * ph
-                            POINTER(c_int),  # l_int32 * pbps
-                            POINTER(c_int),  # l_int32 * pspp
-                            POINTER(c_int),  # l_int32 * pcodec
+                            c_int_p,  # l_int32 * pw
+                            c_int_p,  # l_int32 * ph
+                            c_int_p,  # l_int32 * pbps
+                            c_int_p,  # l_int32 * pspp
+                            c_int_p,  # l_int32 * pcodec
                             ),
         'readHeaderMemJp2k': (c_int,
-                              POINTER(c_ubyte),  # const l_uint8 * data
+                              c_ubyte_p,  # const l_uint8 * data
                               c_size_t,  # size_t size
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
-                              POINTER(c_int),  # l_int32 * pbps
-                              POINTER(c_int),  # l_int32 * pspp
-                              POINTER(c_int),  # l_int32 * pcodec
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
+                              c_int_p,  # l_int32 * pbps
+                              c_int_p,  # l_int32 * pspp
+                              c_int_p,  # l_int32 * pcodec
                               ),
         'fgetJp2kResolution': (c_int,
                                LPFile,  # FILE * fp
-                               POINTER(c_int),  # l_int32 * pxres
-                               POINTER(c_int),  # l_int32 * pyres
+                               c_int_p,  # l_int32 * pxres
+                               c_int_p,  # l_int32 * pyres
                                ),
         'pixReadJp2k': (LPPix,  # PIX *
                         c_char_p,  # const char * filename
@@ -5162,7 +5164,7 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 debug
                                ),
         'pixReadMemJp2k': (LPPix,  # PIX *
-                           POINTER(c_ubyte),  # const l_uint8 * data
+                           c_ubyte_p,  # const l_uint8 * data
                            c_size_t,  # size_t size
                            c_uint,  # l_uint32 reduction
                            LPBox,  # BOX * box
@@ -5170,8 +5172,8 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 debug
                            ),
         'pixWriteMemJp2k': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                            POINTER(c_size_t),  # size_t * psize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                            c_size_t_p,  # size_t * psize
                             LPPix,  # PIX * pix
                             c_int,  # l_int32 quality
                             c_int,  # l_int32 nlevels
@@ -5182,40 +5184,40 @@ class LeptonicaAPI(CAPI):
                         c_char_p,  # const char * filename
                         c_int,  # l_int32 cmapflag
                         c_int,  # l_int32 reduction
-                        POINTER(c_int),  # l_int32 * pnwarn
+                        c_int_p,  # l_int32 * pnwarn
                         c_int,  # l_int32 hint
                         ),
         'pixReadStreamJpeg': (LPPix,  # PIX *
                               LPFile,  # FILE * fp
                               c_int,  # l_int32 cmapflag
                               c_int,  # l_int32 reduction
-                              POINTER(c_int),  # l_int32 * pnwarn
+                              c_int_p,  # l_int32 * pnwarn
                               c_int,  # l_int32 hint
                               ),
         'readHeaderJpeg': (c_int,
                            c_char_p,  # const char * filename
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pspp
-                           POINTER(c_int),  # l_int32 * pycck
-                           POINTER(c_int),  # l_int32 * pcmyk
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pspp
+                           c_int_p,  # l_int32 * pycck
+                           c_int_p,  # l_int32 * pcmyk
                            ),
         'freadHeaderJpeg': (c_int,
                             LPFile,  # FILE * fp
-                            POINTER(c_int),  # l_int32 * pw
-                            POINTER(c_int),  # l_int32 * ph
-                            POINTER(c_int),  # l_int32 * pspp
-                            POINTER(c_int),  # l_int32 * pycck
-                            POINTER(c_int),  # l_int32 * pcmyk
+                            c_int_p,  # l_int32 * pw
+                            c_int_p,  # l_int32 * ph
+                            c_int_p,  # l_int32 * pspp
+                            c_int_p,  # l_int32 * pycck
+                            c_int_p,  # l_int32 * pcmyk
                             ),
         'fgetJpegResolution': (c_int,
                                LPFile,  # FILE * fp
-                               POINTER(c_int),  # l_int32 * pxres
-                               POINTER(c_int),  # l_int32 * pyres
+                               c_int_p,  # l_int32 * pxres
+                               c_int_p,  # l_int32 * pyres
                                ),
         'fgetJpegComment': (c_int,
                             LPFile,  # FILE * fp
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pcomment
+                            POINTER(c_ubyte_p),  # l_uint8 ** pcomment
                             ),
         'pixWriteJpeg': (c_int,
                          c_char_p,  # const char * filename
@@ -5230,31 +5232,31 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 progressive
                                ),
         'pixReadMemJpeg': (LPPix,  # PIX *
-                           POINTER(c_ubyte),  # const l_uint8 * data
+                           c_ubyte_p,  # const l_uint8 * data
                            c_size_t,  # size_t size
                            c_int,  # l_int32 cmflag
                            c_int,  # l_int32 reduction
-                           POINTER(c_int),  # l_int32 * pnwarn
+                           c_int_p,  # l_int32 * pnwarn
                            c_int,  # l_int32 hint
                            ),
         'readHeaderMemJpeg': (c_int,
-                              POINTER(c_ubyte),  # const l_uint8 * data
+                              c_ubyte_p,  # const l_uint8 * data
                               c_size_t,  # size_t size
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
-                              POINTER(c_int),  # l_int32 * pspp
-                              POINTER(c_int),  # l_int32 * pycck
-                              POINTER(c_int),  # l_int32 * pcmyk
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
+                              c_int_p,  # l_int32 * pspp
+                              c_int_p,  # l_int32 * pycck
+                              c_int_p,  # l_int32 * pcmyk
                               ),
         'readResolutionMemJpeg': (c_int,
-                                  POINTER(c_ubyte),  # const l_uint8 * data
+                                  c_ubyte_p,  # const l_uint8 * data
                                   c_size_t,  # size_t size
-                                  POINTER(c_int),  # l_int32 * pxres
-                                  POINTER(c_int),  # l_int32 * pyres
+                                  c_int_p,  # l_int32 * pxres
+                                  c_int_p,  # l_int32 * pyres
                                   ),
         'pixWriteMemJpeg': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                            POINTER(c_size_t),  # size_t * psize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                            c_size_t_p,  # size_t * psize
                             LPPix,  # PIX * pix
                             c_int,  # l_int32 quality
                             c_int,  # l_int32 progressive
@@ -5263,7 +5265,7 @@ class LeptonicaAPI(CAPI):
                                  LPPix,  # PIX * pix
                                  c_int,  # l_int32 sampling
                                  ),
-        'create2dFloatArray': (POINTER(POINTER(c_float)),
+        'create2dFloatArray': (POINTER(c_float_p),
                                c_int,  # l_int32 sy
                                c_int,  # l_int32 sx
                                ),
@@ -5286,7 +5288,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 yi
                                 c_int,  # l_int32 xf
                                 c_int,  # l_int32 yf
-                                POINTER(LPPix),  # PIX * * ppixd
+                                LPLPPix,  # PIX ** ppixd
                                 ),
         'pixSearchGrayMaze': (LPPta,  # PTA *
                               LPPix,  # PIX * pixs
@@ -5294,7 +5296,7 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 yi
                               c_int,  # l_int32 xf
                               c_int,  # l_int32 yf
-                              POINTER(LPPix),  # PIX * * ppixd
+                              LPLPPix,  # PIX ** ppixd
                               ),
         'pixDilateBrick': (LPPix,  # PIX *
                            LPPix,  # PIX * pixd
@@ -5328,8 +5330,8 @@ class LeptonicaAPI(CAPI):
                               ),
         'selectComposableSizes': (c_int,
                                   c_int,  # l_int32 size
-                                  POINTER(c_int),  # l_int32 * pfactor1
-                                  POINTER(c_int),  # l_int32 * pfactor2
+                                  c_int_p,  # l_int32 * pfactor1
+                                  c_int_p,  # l_int32 * pfactor2
                                   ),
         'pixDilateCompBrick': (LPPix,  # PIX *
                                LPPix,  # PIX * pixd
@@ -5384,7 +5386,7 @@ class LeptonicaAPI(CAPI):
                                         c_int,  # l_int32 connectivity
                                         c_int,  # l_int32 minw
                                         c_int,  # l_int32 minh
-                                        POINTER(LPBoxa),  # BOXA * * pboxa
+                                        LPLPBoxa,  # BOXA ** pboxa
                                         ),
         'pixaMorphSequenceByComponent': (LPPixa,  # PIXA *
                                          LPPixa,  # PIXA * pixas
@@ -5399,7 +5401,7 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 connectivity
                                      c_int,  # l_int32 minw
                                      c_int,  # l_int32 minh
-                                     POINTER(LPBoxa),  # BOXA * * pboxa
+                                     LPLPBoxa,  # BOXA ** pboxa
                                      ),
         'pixaMorphSequenceByRegion': (LPPixa,  # PIXA *
                                       LPPix,  # PIX * pixs
@@ -5478,10 +5480,10 @@ class LeptonicaAPI(CAPI):
                           ),
         'pixCentroid': (c_int,
                         LPPix,  # PIX * pix
-                        POINTER(c_int),  # l_int32 * centtab
-                        POINTER(c_int),  # l_int32 * sumtab
-                        POINTER(c_float),  # l_float32 * pxave
-                        POINTER(c_float),  # l_float32 * pyave
+                        c_int_p,  # l_int32 * centtab
+                        c_int_p,  # l_int32 * sumtab
+                        c_float_p,  # l_float32 * pxave
+                        c_float_p,  # l_float32 * pyave
                         ),
         'pixDilateBrickDwa': (LPPix,  # PIX *
                               LPPix,  # PIX * pixd
@@ -5557,10 +5559,10 @@ class LeptonicaAPI(CAPI):
                                        ),
         'getExtendedCompositeParameters': (c_int,
                                            c_int,  # l_int32 size
-                                           POINTER(c_int),  # l_int32 * pn
-                                           POINTER(c_int),  # l_int32 * pextra
+                                           c_int_p,  # l_int32 * pn
+                                           c_int_p,  # l_int32 * pextra
                                            # l_int32 * pactualsize
-                                           POINTER(c_int),
+                                           c_int_p,
                                            ),
         'pixMorphSequence': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
@@ -5601,11 +5603,11 @@ class LeptonicaAPI(CAPI):
                        c_int,  # l_int32 n
                        ),
         'numaCreateFromIArray': (LPNuma,  # NUMA *
-                                 POINTER(c_int),  # l_int32 * iarray
+                                 c_int_p,  # l_int32 * iarray
                                  c_int,  # l_int32 size
                                  ),
         'numaCreateFromFArray': (LPNuma,  # NUMA *
-                                 POINTER(c_float),  # l_float32 * farray
+                                 c_float_p,  # l_float32 * farray
                                  c_int,  # l_int32 size
                                  c_int,  # l_int32 copyflag
                                  ),
@@ -5613,7 +5615,7 @@ class LeptonicaAPI(CAPI):
                                  c_char_p,  # const char * str
                                  ),
         'numaDestroy': (None,
-                        POINTER(LPNuma),  # NUMA * * pna
+                        LPLPNuma,  # NUMA ** pna
                         ),
         'numaCopy': (LPNuma,  # NUMA *
                      LPNuma,  # NUMA * na
@@ -5652,12 +5654,12 @@ class LeptonicaAPI(CAPI):
         'numaGetFValue': (c_int,
                           LPNuma,  # NUMA * na
                           c_int,  # l_int32 index
-                          POINTER(c_float),  # l_float32 * pval
+                          c_float_p,  # l_float32 * pval
                           ),
         'numaGetIValue': (c_int,
                           LPNuma,  # NUMA * na
                           c_int,  # l_int32 index
-                          POINTER(c_int),  # l_int32 * pival
+                          c_int_p,  # l_int32 * pival
                           ),
         'numaSetValue': (c_int,
                          LPNuma,  # NUMA * na
@@ -5669,10 +5671,10 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 index
                            c_float,  # l_float32 diff
                            ),
-        'numaGetIArray': (POINTER(c_int),
+        'numaGetIArray': (c_int_p,
                           LPNuma,  # NUMA * na
                           ),
-        'numaGetFArray': (POINTER(c_float),
+        'numaGetFArray': (c_float_p,
                           LPNuma,  # NUMA * na
                           c_int,  # l_int32 copyflag
                           ),
@@ -5685,8 +5687,8 @@ class LeptonicaAPI(CAPI):
                                ),
         'numaGetParameters': (c_int,
                               LPNuma,  # NUMA * na
-                              POINTER(c_float),  # l_float32 * pstartx
-                              POINTER(c_float),  # l_float32 * pdelx
+                              c_float_p,  # l_float32 * pstartx
+                              c_float_p,  # l_float32 * pdelx
                               ),
         'numaSetParameters': (c_int,
                               LPNuma,  # NUMA * na
@@ -5711,7 +5713,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'numaReadMem': (LPNuma,  # NUMA *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'numaWriteDebug': (c_int,
@@ -5730,8 +5732,8 @@ class LeptonicaAPI(CAPI):
                             LPNuma,  # NUMA * na
                             ),
         'numaWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPNuma,  # NUMA * na
                          ),
         'numaaCreate': (LPNumaa,  # NUMAA *
@@ -5745,7 +5747,7 @@ class LeptonicaAPI(CAPI):
                           LPNumaa,  # NUMAA * naa
                           ),
         'numaaDestroy': (None,
-                         LPLPNumaa,  # NUMAA * * pnaa
+                         LPLPNumaa,  # NUMAA ** pnaa
                          ),
         'numaaAddNuma': (c_int,
                          LPNumaa,  # NUMAA * naa
@@ -5762,7 +5764,7 @@ class LeptonicaAPI(CAPI):
         'numaaGetNumberCount': (c_int,
                                 LPNumaa,  # NUMAA * naa
                                 ),
-        'numaaGetPtrArray': (POINTER(LPNuma),  # NUMA *
+        'numaaGetPtrArray': (LPLPNuma,  # NUMA *
                              LPNumaa,  # NUMAA * naa
                              ),
         'numaaGetNuma': (LPNuma,  # NUMA *
@@ -5779,8 +5781,8 @@ class LeptonicaAPI(CAPI):
                           LPNumaa,  # NUMAA * naa
                           c_int,  # l_int32 i
                           c_int,  # l_int32 j
-                          POINTER(c_float),  # l_float32 * pfval
-                          POINTER(c_int),  # l_int32 * pival
+                          c_float_p,  # l_float32 * pfval
+                          c_int_p,  # l_int32 * pival
                           ),
         'numaaAddNumber': (c_int,
                            LPNumaa,  # NUMAA * naa
@@ -5794,7 +5796,7 @@ class LeptonicaAPI(CAPI):
                             LPFile,  # FILE * fp
                             ),
         'numaaReadMem': (LPNumaa,  # NUMAA *
-                         POINTER(c_ubyte),  # const l_uint8 * data
+                         c_ubyte_p,  # const l_uint8 * data
                          c_size_t,  # size_t size
                          ),
         'numaaWrite': (c_int,
@@ -5806,8 +5808,8 @@ class LeptonicaAPI(CAPI):
                              LPNumaa,  # NUMAA * naa
                              ),
         'numaaWriteMem': (c_int,
-                          POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                          POINTER(c_size_t),  # size_t * psize
+                          POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                          c_size_t_p,  # size_t * psize
                           LPNumaa,  # NUMAA * naa
                           ),
         'numaArithOp': (LPNuma,  # NUMA *
@@ -5830,7 +5832,7 @@ class LeptonicaAPI(CAPI):
                         LPNuma,  # NUMA * na1
                         LPNuma,  # NUMA * na2
                         c_float,  # l_float32 maxdiff
-                        POINTER(c_int),  # l_int32 * psimilar
+                        c_int_p,  # l_int32 * psimilar
                         ),
         'numaAddToNumber': (c_int,
                             LPNuma,  # NUMA * na
@@ -5839,17 +5841,17 @@ class LeptonicaAPI(CAPI):
                             ),
         'numaGetMin': (c_int,
                        LPNuma,  # NUMA * na
-                       POINTER(c_float),  # l_float32 * pminval
-                       POINTER(c_int),  # l_int32 * piminloc
+                       c_float_p,  # l_float32 * pminval
+                       c_int_p,  # l_int32 * piminloc
                        ),
         'numaGetMax': (c_int,
                        LPNuma,  # NUMA * na
-                       POINTER(c_float),  # l_float32 * pmaxval
-                       POINTER(c_int),  # l_int32 * pimaxloc
+                       c_float_p,  # l_float32 * pmaxval
+                       c_int_p,  # l_int32 * pimaxloc
                        ),
         'numaGetSum': (c_int,
                        LPNuma,  # NUMA * na
-                       POINTER(c_float),  # l_float32 * psum
+                       c_float_p,  # l_float32 * psum
                        ),
         'numaGetPartialSums': (LPNuma,  # NUMA *
                                LPNuma,  # NUMA * na
@@ -5858,19 +5860,19 @@ class LeptonicaAPI(CAPI):
                                  LPNuma,  # NUMA * na
                                  c_int,  # l_int32 first
                                  c_int,  # l_int32 last
-                                 POINTER(c_float),  # l_float32 * psum
+                                 c_float_p,  # l_float32 * psum
                                  ),
         'numaHasOnlyIntegers': (c_int,
                                 LPNuma,  # NUMA * na
-                                POINTER(c_int),  # l_int32 * pallints
+                                c_int_p,  # l_int32 * pallints
                                 ),
         'numaGetMean': (c_int,
                         LPNuma,  # NUMA * na
-                        POINTER(c_float),  # l_float32 * pave
+                        c_float_p,  # l_float32 * pave
                         ),
         'numaGetMeanAbsval': (c_int,
                               LPNuma,  # NUMA * na
-                              POINTER(c_float),  # l_float32 * paveabs
+                              c_float_p,  # l_float32 * paveabs
                               ),
         'numaSubsample': (LPNuma,  # NUMA *
                           LPNuma,  # NUMA * nas
@@ -5911,18 +5913,18 @@ class LeptonicaAPI(CAPI):
                              ),
         'numaCountNonzeroRuns': (c_int,
                                  LPNuma,  # NUMA * na
-                                 POINTER(c_int),  # l_int32 * pcount
+                                 c_int_p,  # l_int32 * pcount
                                  ),
         'numaGetNonzeroRange': (c_int,
                                 LPNuma,  # NUMA * na
                                 c_float,  # l_float32 eps
-                                POINTER(c_int),  # l_int32 * pfirst
-                                POINTER(c_int),  # l_int32 * plast
+                                c_int_p,  # l_int32 * pfirst
+                                c_int_p,  # l_int32 * plast
                                 ),
         'numaGetCountRelativeToZero': (c_int,
                                        LPNuma,  # NUMA * na
                                        c_int,  # l_int32 type
-                                       POINTER(c_int),  # l_int32 * pcount
+                                       c_int_p,  # l_int32 * pcount
                                        ),
         'numaClipToInterval': (LPNuma,  # NUMA *
                                LPNuma,  # NUMA * nas
@@ -5956,15 +5958,15 @@ class LeptonicaAPI(CAPI):
         'numaGetSpanValues': (c_int,
                               LPNuma,  # NUMA * na
                               c_int,  # l_int32 span
-                              POINTER(c_int),  # l_int32 * pstart
-                              POINTER(c_int),  # l_int32 * pend
+                              c_int_p,  # l_int32 * pstart
+                              c_int_p,  # l_int32 * pend
                               ),
         'numaGetEdgeValues': (c_int,
                               LPNuma,  # NUMA * na
                               c_int,  # l_int32 edge
-                              POINTER(c_int),  # l_int32 * pstart
-                              POINTER(c_int),  # l_int32 * pend
-                              POINTER(c_int),  # l_int32 * psign
+                              c_int_p,  # l_int32 * pstart
+                              c_int_p,  # l_int32 * pend
+                              c_int_p,  # l_int32 * psign
                               ),
         'numaInterpolateEqxVal': (c_int,
                                   c_float,  # l_float32 startx
@@ -5972,14 +5974,14 @@ class LeptonicaAPI(CAPI):
                                   LPNuma,  # NUMA * nay
                                   c_int,  # l_int32 type
                                   c_float,  # l_float32 xval
-                                  POINTER(c_float),  # l_float32 * pyval
+                                  c_float_p,  # l_float32 * pyval
                                   ),
         'numaInterpolateArbxVal': (c_int,
                                    LPNuma,  # NUMA * nax
                                    LPNuma,  # NUMA * nay
                                    c_int,  # l_int32 type
                                    c_float,  # l_float32 xval
-                                   POINTER(c_float),  # l_float32 * pyval
+                                   c_float_p,  # l_float32 * pyval
                                    ),
         'numaInterpolateEqxInterval': (c_int,
                                        c_float,  # l_float32 startx
@@ -5989,8 +5991,8 @@ class LeptonicaAPI(CAPI):
                                        c_float,  # l_float32 x0
                                        c_float,  # l_float32 x1
                                        c_int,  # l_int32 npts
-                                       POINTER(LPNuma),  # NUMA * * pnax
-                                       POINTER(LPNuma),  # NUMA * * pnay
+                                       LPLPNuma,  # NUMA ** pnax
+                                       LPLPNuma,  # NUMA ** pnay
                                        ),
         'numaInterpolateArbxInterval': (c_int,
                                         LPNuma,  # NUMA * nax
@@ -5999,14 +6001,14 @@ class LeptonicaAPI(CAPI):
                                         c_float,  # l_float32 x0
                                         c_float,  # l_float32 x1
                                         c_int,  # l_int32 npts
-                                        POINTER(LPNuma),  # NUMA * * pnadx
-                                        POINTER(LPNuma),  # NUMA * * pnady
+                                        LPLPNuma,  # NUMA ** pnadx
+                                        LPLPNuma,  # NUMA ** pnady
                                         ),
         'numaFitMax': (c_int,
                        LPNuma,  # NUMA * na
-                       POINTER(c_float),  # l_float32 * pmaxval
+                       c_float_p,  # l_float32 * pmaxval
                        LPNuma,  # NUMA * naloc
-                       POINTER(c_float),  # l_float32 * pmaxloc
+                       c_float_p,  # l_float32 * pmaxloc
                        ),
         'numaDifferentiateInterval': (c_int,
                                       LPNuma,  # NUMA * nax
@@ -6014,8 +6016,8 @@ class LeptonicaAPI(CAPI):
                                       c_float,  # l_float32 x0
                                       c_float,  # l_float32 x1
                                       c_int,  # l_int32 npts
-                                      POINTER(LPNuma),  # NUMA * * pnadx
-                                      POINTER(LPNuma),  # NUMA * * pnady
+                                      LPLPNuma,  # NUMA ** pnadx
+                                      LPLPNuma,  # NUMA ** pnady
                                       ),
         'numaIntegrateInterval': (c_int,
                                   LPNuma,  # NUMA * nax
@@ -6023,13 +6025,13 @@ class LeptonicaAPI(CAPI):
                                   c_float,  # l_float32 x0
                                   c_float,  # l_float32 x1
                                   c_int,  # l_int32 npts
-                                  POINTER(c_float),  # l_float32 * psum
+                                  c_float_p,  # l_float32 * psum
                                   ),
         'numaSortGeneral': (c_int,
                             LPNuma,  # NUMA * na
-                            POINTER(LPNuma),  # NUMA * * pnasort
-                            POINTER(LPNuma),  # NUMA * * pnaindex
-                            POINTER(LPNuma),  # NUMA * * pnainvert
+                            LPLPNuma,  # NUMA ** pnasort
+                            LPLPNuma,  # NUMA ** pnaindex
+                            LPLPNuma,  # NUMA ** pnainvert
                             c_int,  # l_int32 sortorder
                             c_int,  # l_int32 sorttype
                             ),
@@ -6068,14 +6070,14 @@ class LeptonicaAPI(CAPI):
         'numaIsSorted': (c_int,
                          LPNuma,  # NUMA * nas
                          c_int,  # l_int32 sortorder
-                         POINTER(c_int),  # l_int32 * psorted
+                         c_int_p,  # l_int32 * psorted
                          ),
         'numaSortPair': (c_int,
                          LPNuma,  # NUMA * nax
                          LPNuma,  # NUMA * nay
                          c_int,  # l_int32 sortorder
-                         POINTER(LPNuma),  # NUMA * * pnasx
-                         POINTER(LPNuma),  # NUMA * * pnasy
+                         LPLPNuma,  # NUMA ** pnasx
+                         LPLPNuma,  # NUMA ** pnasy
                          ),
         'numaInvertMap': (LPNuma,  # NUMA *
                           LPNuma,  # NUMA * nas
@@ -6087,7 +6089,7 @@ class LeptonicaAPI(CAPI):
         'numaFindSortedLoc': (c_int,
                               LPNuma,  # NUMA * na
                               c_float,  # l_float32 val
-                              POINTER(c_int),  # l_int32 * pindex
+                              c_int_p,  # l_int32 * pindex
                               ),
         'numaPseudorandomSequence': (LPNuma,  # NUMA *
                                      c_int,  # l_int32 size
@@ -6102,30 +6104,30 @@ class LeptonicaAPI(CAPI):
                              c_float,  # l_float32 fract
                              LPNuma,  # NUMA * nasort
                              c_int,  # l_int32 usebins
-                             POINTER(c_float),  # l_float32 * pval
+                             c_float_p,  # l_float32 * pval
                              ),
         'numaGetMedian': (c_int,
                           LPNuma,  # NUMA * na
-                          POINTER(c_float),  # l_float32 * pval
+                          c_float_p,  # l_float32 * pval
                           ),
         'numaGetBinnedMedian': (c_int,
                                 LPNuma,  # NUMA * na
-                                POINTER(c_int),  # l_int32 * pval
+                                c_int_p,  # l_int32 * pval
                                 ),
         'numaGetMeanDevFromMedian': (c_int,
                                      LPNuma,  # NUMA * na
                                      c_float,  # l_float32 med
-                                     POINTER(c_float),  # l_float32 * pdev
+                                     c_float_p,  # l_float32 * pdev
                                      ),
         'numaGetMedianDevFromMedian': (c_int,
                                        LPNuma,  # NUMA * na
-                                       POINTER(c_float),  # l_float32 * pmed
-                                       POINTER(c_float),  # l_float32 * pdev
+                                       c_float_p,  # l_float32 * pmed
+                                       c_float_p,  # l_float32 * pdev
                                        ),
         'numaGetMode': (c_int,
                         LPNuma,  # NUMA * na
-                        POINTER(c_float),  # l_float32 * pval
-                        POINTER(c_int),  # l_int32 * pcount
+                        c_float_p,  # l_float32 * pval
+                        c_int_p,  # l_int32 * pcount
                         ),
         'numaJoin': (c_int,
                      LPNuma,  # NUMA * nad
@@ -6167,17 +6169,17 @@ class LeptonicaAPI(CAPI):
                             LPNuma,  # NUMA * na
                             c_int,  # l_int32 first
                             c_int,  # l_int32 last
-                            POINTER(c_float),  # l_float32 * pmean
-                            POINTER(c_float),  # l_float32 * pvar
-                            POINTER(c_float),  # l_float32 * prvar
+                            c_float_p,  # l_float32 * pmean
+                            c_float_p,  # l_float32 * pvar
+                            c_float_p,  # l_float32 * prvar
                             ),
         'numaWindowedStats': (c_int,
                               LPNuma,  # NUMA * nas
                               c_int,  # l_int32 wc
-                              POINTER(LPNuma),  # NUMA * * pnam
-                              POINTER(LPNuma),  # NUMA * * pnams
-                              POINTER(LPNuma),  # NUMA * * pnav
-                              POINTER(LPNuma),  # NUMA * * pnarv
+                              LPLPNuma,  # NUMA ** pnam
+                              LPLPNuma,  # NUMA ** pnams
+                              LPLPNuma,  # NUMA ** pnav
+                              LPLPNuma,  # NUMA ** pnarv
                               ),
         'numaWindowedMean': (LPNuma,  # NUMA *
                              LPNuma,  # NUMA * nas
@@ -6190,8 +6192,8 @@ class LeptonicaAPI(CAPI):
         'numaWindowedVariance': (c_int,
                                  LPNuma,  # NUMA * nam
                                  LPNuma,  # NUMA * nams
-                                 POINTER(LPNuma),  # NUMA * * pnav
-                                 POINTER(LPNuma),  # NUMA * * pnarv
+                                 LPLPNuma,  # NUMA ** pnav
+                                 LPLPNuma,  # NUMA ** pnarv
                                  ),
         'numaWindowedMedian': (LPNuma,  # NUMA *
                                LPNuma,  # NUMA * nas
@@ -6203,8 +6205,8 @@ class LeptonicaAPI(CAPI):
         'numaMakeHistogram': (LPNuma,  # NUMA *
                               LPNuma,  # NUMA * na
                               c_int,  # l_int32 maxbins
-                              POINTER(c_int),  # l_int32 * pbinsize
-                              POINTER(c_int),  # l_int32 * pbinstart
+                              c_int_p,  # l_int32 * pbinsize
+                              c_int_p,  # l_int32 * pbinstart
                               ),
         'numaMakeHistogramAuto': (LPNuma,  # NUMA *
                                   LPNuma,  # NUMA * na
@@ -6226,25 +6228,25 @@ class LeptonicaAPI(CAPI):
         'numaGetStatsUsingHistogram': (c_int,
                                        LPNuma,  # NUMA * na
                                        c_int,  # l_int32 maxbins
-                                       POINTER(c_float),  # l_float32 * pmin
-                                       POINTER(c_float),  # l_float32 * pmax
-                                       POINTER(c_float),  # l_float32 * pmean
+                                       c_float_p,  # l_float32 * pmin
+                                       c_float_p,  # l_float32 * pmax
+                                       c_float_p,  # l_float32 * pmean
                                        # l_float32 * pvariance
-                                       POINTER(c_float),
+                                       c_float_p,
                                        # l_float32 * pmedian
-                                       POINTER(c_float),
+                                       c_float_p,
                                        c_float,  # l_float32 rank
-                                       POINTER(c_float),  # l_float32 * prval
-                                       POINTER(LPNuma),  # NUMA * * phisto
+                                       c_float_p,  # l_float32 * prval
+                                       LPLPNuma,  # NUMA ** phisto
                                        ),
         'numaGetHistogramStats': (c_int,
                                   LPNuma,  # NUMA * nahisto
                                   c_float,  # l_float32 startx
                                   c_float,  # l_float32 deltax
-                                  POINTER(c_float),  # l_float32 * pxmean
-                                  POINTER(c_float),  # l_float32 * pxmedian
-                                  POINTER(c_float),  # l_float32 * pxmode
-                                  POINTER(c_float),  # l_float32 * pxvariance
+                                  c_float_p,  # l_float32 * pxmean
+                                  c_float_p,  # l_float32 * pxmedian
+                                  c_float_p,  # l_float32 * pxmode
+                                  c_float_p,  # l_float32 * pxvariance
                                   ),
         'numaGetHistogramStatsOnInterval': (c_int,
                                             LPNuma,  # NUMA * nahisto
@@ -6253,47 +6255,47 @@ class LeptonicaAPI(CAPI):
                                             c_int,  # l_int32 ifirst
                                             c_int,  # l_int32 ilast
                                             # l_float32 * pxmean
-                                            POINTER(c_float),
+                                            c_float_p,
                                             # l_float32 * pxmedian
-                                            POINTER(c_float),
+                                            c_float_p,
                                             # l_float32 * pxmode
-                                            POINTER(c_float),
+                                            c_float_p,
                                             # l_float32 * pxvariance
-                                            POINTER(c_float),
+                                            c_float_p,
                                             ),
         'numaMakeRankFromHistogram': (c_int,
                                       c_float,  # l_float32 startx
                                       c_float,  # l_float32 deltax
                                       LPNuma,  # NUMA * nasy
                                       c_int,  # l_int32 npts
-                                      POINTER(LPNuma),  # NUMA * * pnax
-                                      POINTER(LPNuma),  # NUMA * * pnay
+                                      LPLPNuma,  # NUMA ** pnax
+                                      LPLPNuma,  # NUMA ** pnay
                                       ),
         'numaHistogramGetRankFromVal': (c_int,
                                         LPNuma,  # NUMA * na
                                         c_float,  # l_float32 rval
-                                        POINTER(c_float),  # l_float32 * prank
+                                        c_float_p,  # l_float32 * prank
                                         ),
         'numaHistogramGetValFromRank': (c_int,
                                         LPNuma,  # NUMA * na
                                         c_float,  # l_float32 rank
-                                        POINTER(c_float),  # l_float32 * prval
+                                        c_float_p,  # l_float32 * prval
                                         ),
         'numaDiscretizeSortedInBins': (c_int,
                                        LPNuma,  # NUMA * na
                                        c_int,  # l_int32 nbins
-                                       POINTER(LPNuma),  # NUMA * * pnabinval
+                                       LPLPNuma,  # NUMA ** pnabinval
                                        ),
         'numaDiscretizeHistoInBins': (c_int,
                                       LPNuma,  # NUMA * na
                                       c_int,  # l_int32 nbins
-                                      POINTER(LPNuma),  # NUMA * * pnabinval
-                                      POINTER(LPNuma),  # NUMA * * pnarank
+                                      LPLPNuma,  # NUMA ** pnabinval
+                                      LPLPNuma,  # NUMA ** pnarank
                                       ),
         'numaGetRankBinValues': (c_int,
                                  LPNuma,  # NUMA * na
                                  c_int,  # l_int32 nbins
-                                 POINTER(LPNuma),  # NUMA * * pnam
+                                 LPLPNuma,  # NUMA ** pnam
                                  ),
         'numaGetUniformBinSizes': (LPNuma,  # NUMA *
                                    c_int,  # l_int32 ntotal
@@ -6302,30 +6304,30 @@ class LeptonicaAPI(CAPI):
         'numaSplitDistribution': (c_int,
                                   LPNuma,  # NUMA * na
                                   c_float,  # l_float32 scorefract
-                                  POINTER(c_int),  # l_int32 * psplitindex
-                                  POINTER(c_float),  # l_float32 * pave1
-                                  POINTER(c_float),  # l_float32 * pave2
-                                  POINTER(c_float),  # l_float32 * pnum1
-                                  POINTER(c_float),  # l_float32 * pnum2
-                                  POINTER(LPNuma),  # NUMA * * pnascore
+                                  c_int_p,  # l_int32 * psplitindex
+                                  c_float_p,  # l_float32 * pave1
+                                  c_float_p,  # l_float32 * pave2
+                                  c_float_p,  # l_float32 * pnum1
+                                  c_float_p,  # l_float32 * pnum2
+                                  LPLPNuma,  # NUMA ** pnascore
                                   ),
         'grayHistogramsToEMD': (c_int,
                                 LPNumaa,  # NUMAA * naa1
                                 LPNumaa,  # NUMAA * naa2
-                                POINTER(LPNuma),  # NUMA * * pnad
+                                LPLPNuma,  # NUMA ** pnad
                                 ),
         'numaEarthMoverDistance': (c_int,
                                    LPNuma,  # NUMA * na1
                                    LPNuma,  # NUMA * na2
-                                   POINTER(c_float),  # l_float32 * pdist
+                                   c_float_p,  # l_float32 * pdist
                                    ),
         'grayInterHistogramStats': (c_int,
                                     LPNumaa,  # NUMAA * naa
                                     c_int,  # l_int32 wc
-                                    POINTER(LPNuma),  # NUMA * * pnam
-                                    POINTER(LPNuma),  # NUMA * * pnams
-                                    POINTER(LPNuma),  # NUMA * * pnav
-                                    POINTER(LPNuma),  # NUMA * * pnarv
+                                    LPLPNuma,  # NUMA ** pnam
+                                    LPLPNuma,  # NUMA ** pnams
+                                    LPLPNuma,  # NUMA ** pnav
+                                    LPLPNuma,  # NUMA ** pnarv
                                     ),
         'numaFindPeaks': (LPNuma,  # NUMA *
                           LPNuma,  # NUMA * nas
@@ -6336,26 +6338,26 @@ class LeptonicaAPI(CAPI):
         'numaFindExtrema': (LPNuma,  # NUMA *
                             LPNuma,  # NUMA * nas
                             c_float,  # l_float32 delta
-                            POINTER(LPNuma),  # NUMA * * pnav
+                            LPLPNuma,  # NUMA ** pnav
                             ),
         'numaFindLocForThreshold': (c_int,
                                     LPNuma,  # NUMA * na
                                     c_int,  # l_int32 skip
-                                    POINTER(c_int),  # l_int32 * pthresh
-                                    POINTER(c_float),  # l_float32 * pfract
+                                    c_int_p,  # l_int32 * pthresh
+                                    c_float_p,  # l_float32 * pfract
                                     ),
         'numaCountReversals': (c_int,
                                LPNuma,  # NUMA * nas
                                c_float,  # l_float32 minreversal
-                               POINTER(c_int),  # l_int32 * pnr
-                               POINTER(c_float),  # l_float32 * prd
+                               c_int_p,  # l_int32 * pnr
+                               c_float_p,  # l_float32 * prd
                                ),
         'numaSelectCrossingThreshold': (c_int,
                                         LPNuma,  # NUMA * nax
                                         LPNuma,  # NUMA * nay
                                         c_float,  # l_float32 estthresh
                                         # l_float32 * pbestthresh
-                                        POINTER(c_float),
+                                        c_float_p,
                                         ),
         'numaCrossingsByThreshold': (LPNuma,  # NUMA *
                                      LPNuma,  # NUMA * nax
@@ -6375,18 +6377,18 @@ class LeptonicaAPI(CAPI):
                                        c_float,  # l_float32 minwidth
                                        c_float,  # l_float32 maxwidth
                                        # l_float32 * pbestwidth
-                                       POINTER(c_float),
+                                       c_float_p,
                                        # l_float32 * pbestshift
-                                       POINTER(c_float),
+                                       c_float_p,
                                        # l_float32 * pbestscore
-                                       POINTER(c_float),
+                                       c_float_p,
                                        ),
         'numaEvalHaarSum': (c_int,
                             LPNuma,  # NUMA * nas
                             c_float,  # l_float32 width
                             c_float,  # l_float32 shift
                             c_float,  # l_float32 relweight
-                            POINTER(c_float),  # l_float32 * pscore
+                            c_float_p,  # l_float32 * pscore
                             ),
         'genConstrainedNumaInRange': (LPNuma,  # NUMA *
                                       c_int,  # l_int32 first
@@ -6396,27 +6398,27 @@ class LeptonicaAPI(CAPI):
                                       ),
         'pixGetRegionsBinary': (c_int,
                                 LPPix,  # PIX * pixs
-                                POINTER(LPPix),  # PIX * * ppixhm
-                                POINTER(LPPix),  # PIX * * ppixtm
-                                POINTER(LPPix),  # PIX * * ppixtb
+                                LPLPPix,  # PIX ** ppixhm
+                                LPLPPix,  # PIX ** ppixtm
+                                LPLPPix,  # PIX ** ppixtb
                                 LPPixa,  # PIXA * pixadb
                                 ),
         'pixGenHalftoneMask': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
-                               POINTER(LPPix),  # PIX * * ppixtext
-                               POINTER(c_int),  # l_int32 * phtfound
+                               LPLPPix,  # PIX ** ppixtext
+                               c_int_p,  # l_int32 * phtfound
                                c_int,  # l_int32 debug
                                ),
         'pixGenerateHalftoneMask': (LPPix,  # PIX *
                                     LPPix,  # PIX * pixs
-                                    POINTER(LPPix),  # PIX * * ppixtext
-                                    POINTER(c_int),  # l_int32 * phtfound
+                                    LPLPPix,  # PIX ** ppixtext
+                                    c_int_p,  # l_int32 * phtfound
                                     LPPixa,  # PIXA * pixadb
                                     ),
         'pixGenTextlineMask': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
-                               POINTER(LPPix),  # PIX * * ppixvws
-                               POINTER(c_int),  # l_int32 * ptlfound
+                               LPLPPix,  # PIX ** ppixvws
+                               c_int_p,  # l_int32 * ptlfound
                                LPPixa,  # PIXA * pixadb
                                ),
         'pixGenTextblockMask': (LPPix,  # PIX *
@@ -6436,15 +6438,15 @@ class LeptonicaAPI(CAPI):
                                    LPPix,  # PIX * pixs
                                    c_int,  # l_int32 minw
                                    c_int,  # l_int32 minh
-                                   POINTER(LPBoxa),  # BOXA * * pboxa
-                                   POINTER(LPPixa),  # PIXA * * ppixa
-                                   POINTER(LPPix),  # PIX * * ppixdebug
+                                   LPLPBoxa,  # BOXA ** pboxa
+                                   LPLPPixa,  # PIXA ** ppixa
+                                   LPLPPix,  # PIX ** ppixdebug
                                    ),
         'pixSplitComponentWithProfile': (LPBoxa,  # BOXA *
                                          LPPix,  # PIX * pixs
                                          c_int,  # l_int32 delta
                                          c_int,  # l_int32 mindel
-                                         POINTER(LPPix),  # PIX * * ppixdebug
+                                         LPLPPix,  # PIX ** ppixdebug
                                          ),
         'pixExtractTextlines': (LPPixa,  # PIXA *
                                 LPPix,  # PIX * pixs
@@ -6469,26 +6471,26 @@ class LeptonicaAPI(CAPI):
                                 c_float,  # l_float32 deltafract
                                 c_float,  # l_float32 peakfract
                                 c_float,  # l_float32 clipfract
-                                POINTER(c_int),  # l_int32 * pncols
+                                c_int_p,  # l_int32 * pncols
                                 LPPixa,  # PIXA * pixadb
                                 ),
         'pixDecideIfText': (c_int,
                             LPPix,  # PIX * pixs
                             LPBox,  # BOX * box
-                            POINTER(c_int),  # l_int32 * pistext
+                            c_int_p,  # l_int32 * pistext
                             LPPixa,  # PIXA * pixadb
                             ),
         'pixFindThreshFgExtent': (c_int,
                                   LPPix,  # PIX * pixs
                                   c_int,  # l_int32 thresh
-                                  POINTER(c_int),  # l_int32 * ptop
-                                  POINTER(c_int),  # l_int32 * pbot
+                                  c_int_p,  # l_int32 * ptop
+                                  c_int_p,  # l_int32 * pbot
                                   ),
         'pixDecideIfTable': (c_int,
                              LPPix,  # PIX * pixs
                              LPBox,  # BOX * box
                              c_int,  # l_int32 orient
-                             POINTER(c_int),  # l_int32 * pscore
+                             c_int_p,  # l_int32 * pscore
                              LPPixa,  # PIXA * pixadb
                              ),
         'pixPrepare1bpp': (LPPix,  # PIX *
@@ -6501,20 +6503,20 @@ class LeptonicaAPI(CAPI):
                                   LPPix,  # PIX * pixs
                                   c_int,  # l_int32 darkthresh
                                   c_float,  # l_float32 edgecrop
-                                  POINTER(c_int),  # l_int32 * pbg
+                                  c_int_p,  # l_int32 * pbg
                                   ),
         'pixFindLargeRectangles': (c_int,
                                    LPPix,  # PIX * pixs
                                    c_int,  # l_int32 polarity
                                    c_int,  # l_int32 nrect
-                                   POINTER(LPBoxa),  # BOXA * * pboxa
-                                   POINTER(LPPix),  # PIX * * ppixdb
+                                   LPLPBoxa,  # BOXA ** pboxa
+                                   LPLPPix,  # PIX ** ppixdb
                                    ),
         'pixFindLargestRectangle': (c_int,
                                     LPPix,  # PIX * pixs
                                     c_int,  # l_int32 polarity
-                                    POINTER(LPBox),  # BOX * * pbox
-                                    POINTER(LPPix),  # PIX * * ppixdb
+                                    LPLPBox,  # BOX ** pbox
+                                    LPLPPix,  # PIX ** ppixdb
                                     ),
         'pixFindRectangleInCC': (LPBox,  # BOX *
                                  LPPix,  # PIX * pixs
@@ -6527,7 +6529,7 @@ class LeptonicaAPI(CAPI):
         'pixAutoPhotoinvert': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
                                c_int,  # l_int32 thresh
-                               POINTER(LPPix),  # PIX * * ppixm
+                               LPLPPix,  # PIX ** ppixm
                                LPPixa,  # PIXA * pixadb
                                ),
         'pixSetSelectCmap': (c_int,
@@ -6568,7 +6570,7 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 rval
                                    c_int,  # l_int32 gval
                                    c_int,  # l_int32 bval
-                                   POINTER(LPNuma),  # NUMA * * pna
+                                   LPLPNuma,  # NUMA ** pna
                                    ),
         'pixSetSelectMaskedCmap': (c_int,
                                    LPPix,  # PIX * pixs
@@ -6646,13 +6648,13 @@ class LeptonicaAPI(CAPI):
                                     c_int,  # l_int32 type
                                     c_int,  # l_int32 quality
                                     c_char_p,  # const char * title
-                                    # l_uint8 * * pdata
-                                    POINTER(POINTER(c_ubyte)),
-                                    POINTER(c_size_t),  # size_t * pnbytes
+                                    # l_uint8 ** pdata
+                                    POINTER(c_ubyte_p),
+                                    c_size_t_p,  # size_t * pnbytes
                                     ),
         'selectDefaultPdfEncoding': (c_int,
                                      LPPix,  # PIX * pix
-                                     POINTER(c_int),  # l_int32 * ptype
+                                     c_int_p,  # l_int32 * ptype
                                      ),
         'convertUnscaledFilesToPdf': (c_int,
                                       c_char_p,  # const char * dirname
@@ -6668,17 +6670,17 @@ class LeptonicaAPI(CAPI):
         'saConvertUnscaledFilesToPdfData': (c_int,
                                             LPSarray,  # SARRAY * sa
                                             c_char_p,  # const char * title
-                                            # l_uint8 * * pdata
-                                            POINTER(POINTER(c_ubyte)),
+                                            # l_uint8 ** pdata
+                                            POINTER(c_ubyte_p),
                                             # size_t * pnbytes
-                                            POINTER(c_size_t),
+                                            c_size_t_p,
                                             ),
         'convertUnscaledToPdfData': (c_int,
                                      c_char_p,  # const char * fname
                                      c_char_p,  # const char * title
-                                     # l_uint8 * * pdata
-                                     POINTER(POINTER(c_ubyte)),
-                                     POINTER(c_size_t),  # size_t * pnbytes
+                                     # l_uint8 ** pdata
+                                     POINTER(c_ubyte_p),
+                                     c_size_t_p,  # size_t * pnbytes
                                      ),
         'pixaConvertToPdf': (c_int,
                              LPPixa,  # PIXA * pixa
@@ -6696,9 +6698,9 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 type
                                  c_int,  # l_int32 quality
                                  c_char_p,  # const char * title
-                                 # l_uint8 * * pdata
-                                 POINTER(POINTER(c_ubyte)),
-                                 POINTER(c_size_t),  # size_t * pnbytes
+                                 # l_uint8 ** pdata
+                                 POINTER(c_ubyte_p),
+                                 c_size_t_p,  # size_t * pnbytes
                                  ),
         'pixWriteStreamPdf': (c_int,
                               LPFile,  # FILE * fp
@@ -6707,8 +6709,8 @@ class LeptonicaAPI(CAPI):
                               c_char_p,  # const char * title
                               ),
         'pixWriteMemPdf': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                           POINTER(c_size_t),  # size_t * pnbytes
+                           POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                           c_size_t_p,  # size_t * pnbytes
                            LPPix,  # PIX * pix
                            c_int,  # l_int32 res
                            c_char_p,  # const char * title
@@ -6762,9 +6764,9 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 quality
                                       c_float,  # l_float32 scalefactor
                                       c_char_p,  # const char * title
-                                      # l_uint8 * * pdata
-                                      POINTER(POINTER(c_ubyte)),
-                                      POINTER(c_size_t),  # size_t * pnbytes
+                                      # l_uint8 ** pdata
+                                      POINTER(c_ubyte_p),
+                                      c_size_t_p,  # size_t * pnbytes
                                       ),
         'pixConvertToPdfDataSegmented': (c_int,
                                          LPPix,  # PIX * pixs
@@ -6775,10 +6777,10 @@ class LeptonicaAPI(CAPI):
                                          c_int,  # l_int32 quality
                                          c_float,  # l_float32 scalefactor
                                          c_char_p,  # const char * title
-                                         # l_uint8 * * pdata
-                                         POINTER(POINTER(c_ubyte)),
+                                         # l_uint8 ** pdata
+                                         POINTER(c_ubyte_p),
                                          # size_t * pnbytes
-                                         POINTER(c_size_t),
+                                         c_size_t_p,
                                          ),
         'concatenatePdf': (c_int,
                            c_char_p,  # const char * dirname
@@ -6792,15 +6794,15 @@ class LeptonicaAPI(CAPI):
         'concatenatePdfToData': (c_int,
                                  c_char_p,  # const char * dirname
                                  c_char_p,  # const char * substr
-                                 # l_uint8 * * pdata
-                                 POINTER(POINTER(c_ubyte)),
-                                 POINTER(c_size_t),  # size_t * pnbytes
+                                 # l_uint8 ** pdata
+                                 POINTER(c_ubyte_p),
+                                 c_size_t_p,  # size_t * pnbytes
                                  ),
         'saConcatenatePdfToData': (c_int,
                                    LPSarray,  # SARRAY * sa
-                                   # l_uint8 * * pdata
-                                   POINTER(POINTER(c_ubyte)),
-                                   POINTER(c_size_t),  # size_t * pnbytes
+                                   # l_uint8 ** pdata
+                                   POINTER(c_ubyte_p),
+                                   c_size_t_p,  # size_t * pnbytes
                                    ),
         'convertTiffMultipageToPdf': (c_int,
                                       c_char_p,  # const char * filein
@@ -6843,7 +6845,7 @@ class LeptonicaAPI(CAPI):
                      LPPix,  # PIX * pixs
                      ),
         'pixDestroy': (None,
-                       LPLPPix,  # PIX * * ppix
+                       LPLPPix,  # PIX ** ppix
                        ),
         'pixCopy': (LPPix,  # PIX *
                     LPPix,  # PIX * pixd
@@ -6859,13 +6861,13 @@ class LeptonicaAPI(CAPI):
                             ),
         'pixTransferAllData': (c_int,
                                LPPix,  # PIX * pixd
-                               POINTER(LPPix),  # PIX * * ppixs
+                               LPLPPix,  # PIX ** ppixs
                                c_int,  # l_int32 copytext
                                c_int,  # l_int32 copyformat
                                ),
         'pixSwapAndDestroy': (c_int,
-                              POINTER(LPPix),  # PIX * * ppixd
-                              POINTER(LPPix),  # PIX * * ppixs
+                              LPLPPix,  # PIX ** ppixd
+                              LPLPPix,  # PIX ** ppixs
                               ),
         'pixGetWidth': (c_int,
                         LPPix,  # const PIX * pix
@@ -6890,9 +6892,9 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixGetDimensions': (c_int,
                              LPPix,  # const PIX * pix
-                             POINTER(c_int),  # l_int32 * pw
-                             POINTER(c_int),  # l_int32 * ph
-                             POINTER(c_int),  # l_int32 * pd
+                             c_int_p,  # l_int32 * pw
+                             c_int_p,  # l_int32 * ph
+                             c_int_p,  # l_int32 * pd
                              ),
         'pixSetDimensions': (c_int,
                              LPPix,  # PIX * pix
@@ -6945,8 +6947,8 @@ class LeptonicaAPI(CAPI):
                        ),
         'pixGetResolution': (c_int,
                              LPPix,  # const PIX * pix
-                             POINTER(c_int),  # l_int32 * pxres
-                             POINTER(c_int),  # l_int32 * pyres
+                             c_int_p,  # l_int32 * pxres
+                             c_int_p,  # l_int32 * pyres
                              ),
         'pixSetResolution': (c_int,
                              LPPix,  # PIX * pix
@@ -6992,13 +6994,13 @@ class LeptonicaAPI(CAPI):
                         LPPix,  # PIX * pixd
                         LPPix,  # const PIX * pixs
                         ),
-        'pixGetTextCompNew': (POINTER(c_ubyte),
+        'pixGetTextCompNew': (c_ubyte_p,
                               LPPix,  # PIX * pix
-                              POINTER(c_size_t),  # size_t * psize
+                              c_size_t_p,  # size_t * psize
                               ),
         'pixSetTextCompNew': (c_int,
                               LPPix,  # PIX * pix
-                              POINTER(c_ubyte),  # const l_uint8 * data
+                              c_ubyte_p,  # const l_uint8 * data
                               c_size_t,  # size_t size
                               ),
         'pixGetColormap': (LPPixColormap,  # PIXCMAP *
@@ -7011,14 +7013,14 @@ class LeptonicaAPI(CAPI):
         'pixDestroyColormap': (c_int,
                                LPPix,  # PIX * pix
                                ),
-        'pixGetData': (POINTER(c_uint),
+        'pixGetData': (c_uint_p,
                        LPPix,  # PIX * pix
                        ),
         'pixSetData': (c_int,
                        LPPix,  # PIX * pix
-                       POINTER(c_uint),  # l_uint32 * data
+                       c_uint_p,  # l_uint32 * data
                        ),
-        'pixExtractData': (POINTER(c_uint),
+        'pixExtractData': (c_uint_p,
                            LPPix,  # PIX * pixs
                            ),
         'pixFreeData': (c_int,
@@ -7026,7 +7028,7 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixGetLinePtrs': (POINTER(c_void_p),
                            LPPix,  # PIX * pix
-                           POINTER(c_int),  # l_int32 * psize
+                           c_int_p,  # l_int32 * psize
                            ),
         'pixSizesEqual': (c_int,
                           LPPix,  # const PIX * pix1
@@ -7034,7 +7036,7 @@ class LeptonicaAPI(CAPI):
                           ),
         'pixMaxAspectRatio': (c_int,
                               LPPix,  # PIX * pixs
-                              POINTER(c_float),  # l_float32 * pratio
+                              c_float_p,  # l_float32 * pratio
                               ),
         'pixPrintStreamInfo': (c_int,
                                LPFile,  # FILE * fp
@@ -7045,7 +7047,7 @@ class LeptonicaAPI(CAPI):
                         LPPix,  # PIX * pix
                         c_int,  # l_int32 x
                         c_int,  # l_int32 y
-                        POINTER(c_uint),  # l_uint32 * pval
+                        c_uint_p,  # l_uint32 * pval
                         ),
         'pixSetPixel': (c_int,
                         LPPix,  # PIX * pix
@@ -7057,9 +7059,9 @@ class LeptonicaAPI(CAPI):
                            LPPix,  # PIX * pix
                            c_int,  # l_int32 x
                            c_int,  # l_int32 y
-                           POINTER(c_int),  # l_int32 * prval
-                           POINTER(c_int),  # l_int32 * pgval
-                           POINTER(c_int),  # l_int32 * pbval
+                           c_int_p,  # l_int32 * prval
+                           c_int_p,  # l_int32 * pgval
+                           c_int_p,  # l_int32 * pbval
                            ),
         'pixSetRGBPixel': (c_int,
                            LPPix,  # PIX * pix
@@ -7079,9 +7081,9 @@ class LeptonicaAPI(CAPI):
                             ),
         'pixGetRandomPixel': (c_int,
                               LPPix,  # PIX * pix
-                              POINTER(c_uint),  # l_uint32 * pval
-                              POINTER(c_int),  # l_int32 * px
-                              POINTER(c_int),  # l_int32 * py
+                              c_uint_p,  # l_uint32 * pval
+                              c_int_p,  # l_int32 * px
+                              c_int_p,  # l_int32 * py
                               ),
         'pixClearPixel': (c_int,
                           LPPix,  # PIX * pix
@@ -7094,7 +7096,7 @@ class LeptonicaAPI(CAPI):
                          c_int,  # l_int32 y
                          ),
         'setPixelLow': (None,
-                        POINTER(c_uint),  # l_uint32 * line
+                        c_uint_p,  # l_uint32 * line
                         c_int,  # l_int32 x
                         c_int,  # l_int32 depth
                         c_uint,  # l_uint32 val
@@ -7102,7 +7104,7 @@ class LeptonicaAPI(CAPI):
         'pixGetBlackOrWhiteVal': (c_int,
                                   LPPix,  # PIX * pixs
                                   c_int,  # l_int32 op
-                                  POINTER(c_uint),  # l_uint32 * pval
+                                  c_uint_p,  # l_uint32 * pval
                                   ),
         'pixClearAll': (c_int,
                         LPPix,  # PIX * pix
@@ -7295,27 +7297,27 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 rval
                             c_int,  # l_int32 gval
                             c_int,  # l_int32 bval
-                            POINTER(c_uint),  # l_uint32 * ppixel
+                            c_uint_p,  # l_uint32 * ppixel
                             ),
         'composeRGBAPixel': (c_int,
                              c_int,  # l_int32 rval
                              c_int,  # l_int32 gval
                              c_int,  # l_int32 bval
                              c_int,  # l_int32 aval
-                             POINTER(c_uint),  # l_uint32 * ppixel
+                             c_uint_p,  # l_uint32 * ppixel
                              ),
         'extractRGBValues': (None,
                              c_uint,  # l_uint32 pixel
-                             POINTER(c_int),  # l_int32 * prval
-                             POINTER(c_int),  # l_int32 * pgval
-                             POINTER(c_int),  # l_int32 * pbval
+                             c_int_p,  # l_int32 * prval
+                             c_int_p,  # l_int32 * pgval
+                             c_int_p,  # l_int32 * pbval
                              ),
         'extractRGBAValues': (None,
                               c_uint,  # l_uint32 pixel
-                              POINTER(c_int),  # l_int32 * prval
-                              POINTER(c_int),  # l_int32 * pgval
-                              POINTER(c_int),  # l_int32 * pbval
-                              POINTER(c_int),  # l_int32 * paval
+                              c_int_p,  # l_int32 * prval
+                              c_int_p,  # l_int32 * pgval
+                              c_int_p,  # l_int32 * pbval
+                              c_int_p,  # l_int32 * paval
                               ),
         'extractMinMaxComponent': (c_int,
                                    c_uint,  # l_uint32 pixel
@@ -7324,12 +7326,12 @@ class LeptonicaAPI(CAPI):
         'pixGetRGBLine': (c_int,
                           LPPix,  # PIX * pixs
                           c_int,  # l_int32 row
-                          POINTER(c_ubyte),  # l_uint8 * bufr
-                          POINTER(c_ubyte),  # l_uint8 * bufg
-                          POINTER(c_ubyte),  # l_uint8 * bufb
+                          c_ubyte_p,  # l_uint8 * bufr
+                          c_ubyte_p,  # l_uint8 * bufg
+                          c_ubyte_p,  # l_uint8 * bufb
                           ),
         'setLineDataVal': (c_int,
-                           POINTER(c_uint),  # l_uint32 * line
+                           c_uint_p,  # l_uint32 * line
                            c_int,  # l_int32 j
                            c_int,  # l_int32 d
                            c_uint,  # l_uint32 val
@@ -7341,8 +7343,8 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pixs
                               ),
         'lineEndianByteSwap': (c_int,
-                               POINTER(c_uint),  # l_uint32 * datad
-                               POINTER(c_uint),  # l_uint32 * datas
+                               c_uint_p,  # l_uint32 * datad
+                               c_uint_p,  # l_uint32 * datas
                                c_int,  # l_int32 wpl
                                ),
         'pixEndianTwoByteSwapNew': (LPPix,  # PIX *
@@ -7353,27 +7355,27 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixGetRasterData': (c_int,
                              LPPix,  # PIX * pixs
-                             POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                             POINTER(c_size_t),  # size_t * pnbytes
+                             POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                             c_size_t_p,  # size_t * pnbytes
                              ),
         'pixInferResolution': (c_int,
                                LPPix,  # PIX * pix
                                c_float,  # l_float32 longside
-                               POINTER(c_int),  # l_int32 * pres
+                               c_int_p,  # l_int32 * pres
                                ),
         'pixAlphaIsOpaque': (c_int,
                              LPPix,  # PIX * pix
-                             POINTER(c_int),  # l_int32 * popaque
+                             c_int_p,  # l_int32 * popaque
                              ),
-        'pixSetupByteProcessing': (POINTER(POINTER(c_ubyte)),
+        'pixSetupByteProcessing': (POINTER(c_ubyte_p),
                                    LPPix,  # PIX * pix
-                                   POINTER(c_int),  # l_int32 * pw
-                                   POINTER(c_int),  # l_int32 * ph
+                                   c_int_p,  # l_int32 * pw
+                                   c_int_p,  # l_int32 * ph
                                    ),
         'pixCleanupByteProcessing': (c_int,
                                      LPPix,  # PIX * pix
-                                     # l_uint8 * * lineptrs
-                                     POINTER(POINTER(c_ubyte)),
+                                     # l_uint8 ** lineptrs
+                                     POINTER(c_ubyte_p),
                                      ),
         'l_setAlphaMaskBorder': (None,
                                  c_float,  # l_float32 val1
@@ -7432,7 +7434,7 @@ class LeptonicaAPI(CAPI):
                                ),
         'pixMakeMaskFromLUT': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
-                               POINTER(c_int),  # l_int32 * tab
+                               c_int_p,  # l_int32 * tab
                                ),
         'pixMakeArbMaskFromRGB': (LPPix,  # PIX *
                                   LPPix,  # PIX * pixs
@@ -7449,14 +7451,14 @@ class LeptonicaAPI(CAPI):
         'pixMakeAlphaFromMask': (LPPix,  # PIX *
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 dist
-                                 POINTER(LPBox),  # BOX * * pbox
+                                 LPLPBox,  # BOX ** pbox
                                  ),
         'pixGetColorNearMaskBoundary': (c_int,
                                         LPPix,  # PIX * pixs
                                         LPPix,  # PIX * pixm
                                         LPBox,  # BOX * box
                                         c_int,  # l_int32 dist
-                                        POINTER(c_uint),  # l_uint32 * pval
+                                        c_uint_p,  # l_uint32 * pval
                                         c_int,  # l_int32 debug
                                         ),
         'pixInvert': (LPPix,  # PIX *
@@ -7485,25 +7487,25 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixZero': (c_int,
                     LPPix,  # PIX * pix
-                    POINTER(c_int),  # l_int32 * pempty
+                    c_int_p,  # l_int32 * pempty
                     ),
         'pixForegroundFraction': (c_int,
                                   LPPix,  # PIX * pix
-                                  POINTER(c_float),  # l_float32 * pfract
+                                  c_float_p,  # l_float32 * pfract
                                   ),
         'pixaCountPixels': (LPNuma,  # NUMA *
                             LPPixa,  # PIXA * pixa
                             ),
         'pixCountPixels': (c_int,
                            LPPix,  # PIX * pixs
-                           POINTER(c_int),  # l_int32 * pcount
-                           POINTER(c_int),  # l_int32 * tab8
+                           c_int_p,  # l_int32 * pcount
+                           c_int_p,  # l_int32 * tab8
                            ),
         'pixCountPixelsInRect': (c_int,
                                  LPPix,  # PIX * pixs
                                  LPBox,  # BOX * box
-                                 POINTER(c_int),  # l_int32 * pcount
-                                 POINTER(c_int),  # l_int32 * tab8
+                                 c_int_p,  # l_int32 * pcount
+                                 c_int_p,  # l_int32 * tab8
                                  ),
         'pixCountByRow': (LPNuma,  # NUMA *
                           LPPix,  # PIX * pix
@@ -7515,7 +7517,7 @@ class LeptonicaAPI(CAPI):
                              ),
         'pixCountPixelsByRow': (LPNuma,  # NUMA *
                                 LPPix,  # PIX * pix
-                                POINTER(c_int),  # l_int32 * tab8
+                                c_int_p,  # l_int32 * tab8
                                 ),
         'pixCountPixelsByColumn': (LPNuma,  # NUMA *
                                    LPPix,  # PIX * pix
@@ -7523,8 +7525,8 @@ class LeptonicaAPI(CAPI):
         'pixCountPixelsInRow': (c_int,
                                 LPPix,  # PIX * pix
                                 c_int,  # l_int32 row
-                                POINTER(c_int),  # l_int32 * pcount
-                                POINTER(c_int),  # l_int32 * tab8
+                                c_int_p,  # l_int32 * pcount
+                                c_int_p,  # l_int32 * tab8
                                 ),
         'pixGetMomentByColumn': (LPNuma,  # NUMA *
                                  LPPix,  # PIX * pix
@@ -7533,11 +7535,11 @@ class LeptonicaAPI(CAPI):
         'pixThresholdPixelSum': (c_int,
                                  LPPix,  # PIX * pix
                                  c_int,  # l_int32 thresh
-                                 POINTER(c_int),  # l_int32 * pabove
-                                 POINTER(c_int),  # l_int32 * tab8
+                                 c_int_p,  # l_int32 * pabove
+                                 c_int_p,  # l_int32 * tab8
                                  ),
-        'makePixelSumTab8': (POINTER(c_int), ),
-        'makePixelCentroidTab8': (POINTER(c_int), ),
+        'makePixelSumTab8': (c_int_p, ),
+        'makePixelCentroidTab8': (c_int_p, ),
         'pixAverageByRow': (LPNuma,  # NUMA *
                             LPPix,  # PIX * pix
                             LPBox,  # BOX * box
@@ -7555,14 +7557,14 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 minval
                              c_int,  # l_int32 maxval
                              c_int,  # l_int32 subsamp
-                             POINTER(c_float),  # l_float32 * pave
+                             c_float_p,  # l_float32 * pave
                              ),
         'pixAverageInRectRGB': (c_int,
                                 LPPix,  # PIX * pixs
                                 LPPix,  # PIX * pixm
                                 LPBox,  # BOX * box
                                 c_int,  # l_int32 subsamp
-                                POINTER(c_uint),  # l_uint32 * pave
+                                c_uint_p,  # l_uint32 * pave
                                 ),
         'pixVarianceByRow': (LPNuma,  # NUMA *
                              LPPix,  # PIX * pix
@@ -7575,7 +7577,7 @@ class LeptonicaAPI(CAPI):
         'pixVarianceInRect': (c_int,
                               LPPix,  # PIX * pix
                               LPBox,  # BOX * box
-                              POINTER(c_float),  # l_float32 * prootvar
+                              c_float_p,  # l_float32 * prootvar
                               ),
         'pixAbsDiffByRow': (LPNuma,  # NUMA *
                             LPPix,  # PIX * pix
@@ -7589,7 +7591,7 @@ class LeptonicaAPI(CAPI):
                              LPPix,  # PIX * pix
                              LPBox,  # BOX * box
                              c_int,  # l_int32 dir
-                             POINTER(c_float),  # l_float32 * pabsdiff
+                             c_float_p,  # l_float32 * pabsdiff
                              ),
         'pixAbsDiffOnLine': (c_int,
                              LPPix,  # PIX * pix
@@ -7597,14 +7599,14 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 y1
                              c_int,  # l_int32 x2
                              c_int,  # l_int32 y2
-                             POINTER(c_float),  # l_float32 * pabsdiff
+                             c_float_p,  # l_float32 * pabsdiff
                              ),
         'pixCountArbInRect': (c_int,
                               LPPix,  # PIX * pixs
                               LPBox,  # BOX * box
                               c_int,  # l_int32 val
                               c_int,  # l_int32 factor
-                              POINTER(c_int),  # l_int32 * pcount
+                              c_int_p,  # l_int32 * pcount
                               ),
         'pixMirroredTiling': (LPPix,  # PIX *
                               LPPix,  # PIX * pixs
@@ -7618,7 +7620,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 mindist
                                 c_int,  # l_int32 tsize
                                 c_int,  # l_int32 ntiles
-                                POINTER(LPBox),  # BOX * * pboxtile
+                                LPLPBox,  # BOX ** pboxtile
                                 c_int,  # l_int32 debug
                                 ),
         'pixGetGrayHistogram': (LPNuma,  # NUMA *
@@ -7646,9 +7648,9 @@ class LeptonicaAPI(CAPI):
         'pixGetColorHistogram': (c_int,
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 factor
-                                 POINTER(LPNuma),  # NUMA * * pnar
-                                 POINTER(LPNuma),  # NUMA * * pnag
-                                 POINTER(LPNuma),  # NUMA * * pnab
+                                 LPLPNuma,  # NUMA ** pnar
+                                 LPLPNuma,  # NUMA ** pnag
+                                 LPLPNuma,  # NUMA ** pnab
                                  ),
         'pixGetColorHistogramMasked': (c_int,
                                        LPPix,  # PIX * pixs
@@ -7656,9 +7658,9 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 x
                                        c_int,  # l_int32 y
                                        c_int,  # l_int32 factor
-                                       POINTER(LPNuma),  # NUMA * * pnar
-                                       POINTER(LPNuma),  # NUMA * * pnag
-                                       POINTER(LPNuma),  # NUMA * * pnab
+                                       LPLPNuma,  # NUMA ** pnar
+                                       LPLPNuma,  # NUMA ** pnag
+                                       LPLPNuma,  # NUMA ** pnab
                                        ),
         'pixGetCmapHistogram': (LPNuma,  # NUMA *
                                 LPPix,  # PIX * pixs
@@ -7678,18 +7680,18 @@ class LeptonicaAPI(CAPI):
                                       ),
         'pixCountRGBColorsByHash': (c_int,
                                     LPPix,  # PIX * pixs
-                                    POINTER(c_int),  # l_int32 * pncolors
+                                    c_int_p,  # l_int32 * pncolors
                                     ),
         'pixCountRGBColors': (c_int,
                               LPPix,  # PIX * pixs
                               c_int,  # l_int32 factor
-                              POINTER(c_int),  # l_int32 * pncolors
+                              c_int_p,  # l_int32 * pncolors
                               ),
         'pixGetRankValue': (c_int,
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 factor
                             c_float,  # l_float32 rank
-                            POINTER(c_uint),  # l_uint32 * pvalue
+                            c_uint_p,  # l_uint32 * pvalue
                             ),
         'pixGetRankValueMaskedRGB': (c_int,
                                      LPPix,  # PIX * pixs
@@ -7698,9 +7700,9 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 y
                                      c_int,  # l_int32 factor
                                      c_float,  # l_float32 rank
-                                     POINTER(c_float),  # l_float32 * prval
-                                     POINTER(c_float),  # l_float32 * pgval
-                                     POINTER(c_float),  # l_float32 * pbval
+                                     c_float_p,  # l_float32 * prval
+                                     c_float_p,  # l_float32 * pgval
+                                     c_float_p,  # l_float32 * pbval
                                      ),
         'pixGetRankValueMasked': (c_int,
                                   LPPix,  # PIX * pixs
@@ -7709,8 +7711,8 @@ class LeptonicaAPI(CAPI):
                                   c_int,  # l_int32 y
                                   c_int,  # l_int32 factor
                                   c_float,  # l_float32 rank
-                                  POINTER(c_float),  # l_float32 * pval
-                                  POINTER(LPNuma),  # NUMA * * pna
+                                  c_float_p,  # l_float32 * pval
+                                  LPLPNuma,  # NUMA ** pna
                                   ),
         'pixGetPixelAverage': (c_int,
                                LPPix,  # PIX * pixs
@@ -7718,13 +7720,13 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 x
                                c_int,  # l_int32 y
                                c_int,  # l_int32 factor
-                               POINTER(c_uint),  # l_uint32 * pval
+                               c_uint_p,  # l_uint32 * pval
                                ),
         'pixGetPixelStats': (c_int,
                              LPPix,  # PIX * pixs
                              c_int,  # l_int32 factor
                              c_int,  # l_int32 type
-                             POINTER(c_uint),  # l_uint32 * pvalue
+                             c_uint_p,  # l_uint32 * pvalue
                              ),
         'pixGetAverageMaskedRGB': (c_int,
                                    LPPix,  # PIX * pixs
@@ -7733,9 +7735,9 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 y
                                    c_int,  # l_int32 factor
                                    c_int,  # l_int32 type
-                                   POINTER(c_float),  # l_float32 * prval
-                                   POINTER(c_float),  # l_float32 * pgval
-                                   POINTER(c_float),  # l_float32 * pbval
+                                   c_float_p,  # l_float32 * prval
+                                   c_float_p,  # l_float32 * pgval
+                                   c_float_p,  # l_float32 * pbval
                                    ),
         'pixGetAverageMasked': (c_int,
                                 LPPix,  # PIX * pixs
@@ -7744,16 +7746,16 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 y
                                 c_int,  # l_int32 factor
                                 c_int,  # l_int32 type
-                                POINTER(c_float),  # l_float32 * pval
+                                c_float_p,  # l_float32 * pval
                                 ),
         'pixGetAverageTiledRGB': (c_int,
                                   LPPix,  # PIX * pixs
                                   c_int,  # l_int32 sx
                                   c_int,  # l_int32 sy
                                   c_int,  # l_int32 type
-                                  POINTER(LPPix),  # PIX * * ppixr
-                                  POINTER(LPPix),  # PIX * * ppixg
-                                  POINTER(LPPix),  # PIX * * ppixb
+                                  LPLPPix,  # PIX ** ppixr
+                                  LPLPPix,  # PIX ** ppixg
+                                  LPLPPix,  # PIX ** ppixb
                                   ),
         'pixGetAverageTiled': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
@@ -7764,59 +7766,59 @@ class LeptonicaAPI(CAPI):
         'pixRowStats': (c_int,
                         LPPix,  # PIX * pixs
                         LPBox,  # BOX * box
-                        POINTER(LPNuma),  # NUMA * * pnamean
-                        POINTER(LPNuma),  # NUMA * * pnamedian
-                        POINTER(LPNuma),  # NUMA * * pnamode
-                        POINTER(LPNuma),  # NUMA * * pnamodecount
-                        POINTER(LPNuma),  # NUMA * * pnavar
-                        POINTER(LPNuma),  # NUMA * * pnarootvar
+                        LPLPNuma,  # NUMA ** pnamean
+                        LPLPNuma,  # NUMA ** pnamedian
+                        LPLPNuma,  # NUMA ** pnamode
+                        LPLPNuma,  # NUMA ** pnamodecount
+                        LPLPNuma,  # NUMA ** pnavar
+                        LPLPNuma,  # NUMA ** pnarootvar
                         ),
         'pixColumnStats': (c_int,
                            LPPix,  # PIX * pixs
                            LPBox,  # BOX * box
-                           POINTER(LPNuma),  # NUMA * * pnamean
-                           POINTER(LPNuma),  # NUMA * * pnamedian
-                           POINTER(LPNuma),  # NUMA * * pnamode
-                           POINTER(LPNuma),  # NUMA * * pnamodecount
-                           POINTER(LPNuma),  # NUMA * * pnavar
-                           POINTER(LPNuma),  # NUMA * * pnarootvar
+                           LPLPNuma,  # NUMA ** pnamean
+                           LPLPNuma,  # NUMA ** pnamedian
+                           LPLPNuma,  # NUMA ** pnamode
+                           LPLPNuma,  # NUMA ** pnamodecount
+                           LPLPNuma,  # NUMA ** pnavar
+                           LPLPNuma,  # NUMA ** pnarootvar
                            ),
         'pixGetRangeValues': (c_int,
                               LPPix,  # PIX * pixs
                               c_int,  # l_int32 factor
                               c_int,  # l_int32 color
-                              POINTER(c_int),  # l_int32 * pminval
-                              POINTER(c_int),  # l_int32 * pmaxval
+                              c_int_p,  # l_int32 * pminval
+                              c_int_p,  # l_int32 * pmaxval
                               ),
         'pixGetExtremeValue': (c_int,
                                LPPix,  # PIX * pixs
                                c_int,  # l_int32 factor
                                c_int,  # l_int32 type
-                               POINTER(c_int),  # l_int32 * prval
-                               POINTER(c_int),  # l_int32 * pgval
-                               POINTER(c_int),  # l_int32 * pbval
-                               POINTER(c_int),  # l_int32 * pgrayval
+                               c_int_p,  # l_int32 * prval
+                               c_int_p,  # l_int32 * pgval
+                               c_int_p,  # l_int32 * pbval
+                               c_int_p,  # l_int32 * pgrayval
                                ),
         'pixGetMaxValueInRect': (c_int,
                                  LPPix,  # PIX * pixs
                                  LPBox,  # BOX * box
-                                 POINTER(c_uint),  # l_uint32 * pmaxval
-                                 POINTER(c_int),  # l_int32 * pxmax
-                                 POINTER(c_int),  # l_int32 * pymax
+                                 c_uint_p,  # l_uint32 * pmaxval
+                                 c_int_p,  # l_int32 * pxmax
+                                 c_int_p,  # l_int32 * pymax
                                  ),
         'pixGetMaxColorIndex': (c_int,
                                 LPPix,  # PIX * pixs
-                                POINTER(c_int),  # l_int32 * pmaxindex
+                                c_int_p,  # l_int32 * pmaxindex
                                 ),
         'pixGetBinnedComponentRange': (c_int,
                                        LPPix,  # PIX * pixs
                                        c_int,  # l_int32 nbins
                                        c_int,  # l_int32 factor
                                        c_int,  # l_int32 color
-                                       POINTER(c_int),  # l_int32 * pminval
-                                       POINTER(c_int),  # l_int32 * pmaxval
-                                       # l_uint32 * * pcarray
-                                       POINTER(POINTER(c_uint)),
+                                       c_int_p,  # l_int32 * pminval
+                                       c_int_p,  # l_int32 * pmaxval
+                                       # l_uint32 ** pcarray
+                                       POINTER(c_uint_p),
                                        c_int,  # l_int32 fontsize
                                        ),
         'pixGetRankColorArray': (c_int,
@@ -7824,8 +7826,8 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 nbins
                                  c_int,  # l_int32 type
                                  c_int,  # l_int32 factor
-                                 # l_uint32 * * pcarray
-                                 POINTER(POINTER(c_uint)),
+                                 # l_uint32 ** pcarray
+                                 POINTER(c_uint_p),
                                  LPPixa,  # PIXA * pixadb
                                  c_int,  # l_int32 fontsize
                                  ),
@@ -7834,12 +7836,12 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pixg
                               c_int,  # l_int32 factor
                               c_int,  # l_int32 nbins
-                              # l_uint32 * * pcarray
-                              POINTER(POINTER(c_uint)),
+                              # l_uint32 ** pcarray
+                              POINTER(c_uint_p),
                               LPPixa,  # PIXA * pixadb
                               ),
         'pixDisplayColorArray': (LPPix,  # PIX *
-                                 POINTER(c_uint),  # l_uint32 * carray
+                                 c_uint_p,  # l_uint32 * carray
                                  c_int,  # l_int32 ncolors
                                  c_int,  # l_int32 side
                                  c_int,  # l_int32 ncols
@@ -7868,69 +7870,69 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 type
                            c_int,  # l_int32 nbins
                            c_int,  # l_int32 thresh
-                           POINTER(c_float),  # l_float32 * colvect
+                           c_float_p,  # l_float32 * colvect
                            ),
         'pixGetColumnStats': (c_int,
                               LPPix,  # PIX * pixs
                               c_int,  # l_int32 type
                               c_int,  # l_int32 nbins
                               c_int,  # l_int32 thresh
-                              POINTER(c_float),  # l_float32 * rowvect
+                              c_float_p,  # l_float32 * rowvect
                               ),
         'pixSetPixelColumn': (c_int,
                               LPPix,  # PIX * pix
                               c_int,  # l_int32 col
-                              POINTER(c_float),  # l_float32 * colvect
+                              c_float_p,  # l_float32 * colvect
                               ),
         'pixThresholdForFgBg': (c_int,
                                 LPPix,  # PIX * pixs
                                 c_int,  # l_int32 factor
                                 c_int,  # l_int32 thresh
-                                POINTER(c_int),  # l_int32 * pfgval
-                                POINTER(c_int),  # l_int32 * pbgval
+                                c_int_p,  # l_int32 * pfgval
+                                c_int_p,  # l_int32 * pbgval
                                 ),
         'pixSplitDistributionFgBg': (c_int,
                                      LPPix,  # PIX * pixs
                                      c_float,  # l_float32 scorefract
                                      c_int,  # l_int32 factor
-                                     POINTER(c_int),  # l_int32 * pthresh
-                                     POINTER(c_int),  # l_int32 * pfgval
-                                     POINTER(c_int),  # l_int32 * pbgval
-                                     POINTER(LPPix),  # PIX * * ppixdb
+                                     c_int_p,  # l_int32 * pthresh
+                                     c_int_p,  # l_int32 * pfgval
+                                     c_int_p,  # l_int32 * pbgval
+                                     LPLPPix,  # PIX ** ppixdb
                                      ),
         'pixaFindDimensions': (c_int,
                                LPPixa,  # PIXA * pixa
-                               POINTER(LPNuma),  # NUMA * * pnaw
-                               POINTER(LPNuma),  # NUMA * * pnah
+                               LPLPNuma,  # NUMA ** pnaw
+                               LPLPNuma,  # NUMA ** pnah
                                ),
         'pixFindAreaPerimRatio': (c_int,
                                   LPPix,  # PIX * pixs
-                                  POINTER(c_int),  # l_int32 * tab
-                                  POINTER(c_float),  # l_float32 * pfract
+                                  c_int_p,  # l_int32 * tab
+                                  c_float_p,  # l_float32 * pfract
                                   ),
         'pixaFindPerimToAreaRatio': (LPNuma,  # NUMA *
                                      LPPixa,  # PIXA * pixa
                                      ),
         'pixFindPerimToAreaRatio': (c_int,
                                     LPPix,  # PIX * pixs
-                                    POINTER(c_int),  # l_int32 * tab
-                                    POINTER(c_float),  # l_float32 * pfract
+                                    c_int_p,  # l_int32 * tab
+                                    c_float_p,  # l_float32 * pfract
                                     ),
         'pixaFindPerimSizeRatio': (LPNuma,  # NUMA *
                                    LPPixa,  # PIXA * pixa
                                    ),
         'pixFindPerimSizeRatio': (c_int,
                                   LPPix,  # PIX * pixs
-                                  POINTER(c_int),  # l_int32 * tab
-                                  POINTER(c_float),  # l_float32 * pratio
+                                  c_int_p,  # l_int32 * tab
+                                  c_float_p,  # l_float32 * pratio
                                   ),
         'pixaFindAreaFraction': (LPNuma,  # NUMA *
                                  LPPixa,  # PIXA * pixa
                                  ),
         'pixFindAreaFraction': (c_int,
                                 LPPix,  # PIX * pixs
-                                POINTER(c_int),  # l_int32 * tab
-                                POINTER(c_float),  # l_float32 * pfract
+                                c_int_p,  # l_int32 * tab
+                                c_float_p,  # l_float32 * pfract
                                 ),
         'pixaFindAreaFractionMasked': (LPNuma,  # NUMA *
                                        LPPixa,  # PIXA * pixa
@@ -7941,8 +7943,8 @@ class LeptonicaAPI(CAPI):
                                       LPPix,  # PIX * pixs
                                       LPBox,  # BOX * box
                                       LPPix,  # PIX * pixm
-                                      POINTER(c_int),  # l_int32 * tab
-                                      POINTER(c_float),  # l_float32 * pfract
+                                      c_int_p,  # l_int32 * tab
+                                      c_float_p,  # l_float32 * pfract
                                       ),
         'pixaFindWidthHeightRatio': (LPNuma,  # NUMA *
                                      LPPixa,  # PIXA * pixa
@@ -7955,9 +7957,9 @@ class LeptonicaAPI(CAPI):
                                    LPPix,  # PIX * pixs2
                                    c_int,  # l_int32 x2
                                    c_int,  # l_int32 y2
-                                   POINTER(c_int),  # l_int32 * tab
-                                   POINTER(c_float),  # l_float32 * pratio
-                                   POINTER(c_int),  # l_int32 * pnoverlap
+                                   c_int_p,  # l_int32 * tab
+                                   c_float_p,  # l_float32 * pratio
+                                   c_int_p,  # l_int32 * pnoverlap
                                    ),
         'pixFindRectangleComps': (LPBoxa,  # BOXA *
                                   LPPix,  # PIX * pixs
@@ -7969,7 +7971,7 @@ class LeptonicaAPI(CAPI):
                                    LPPix,  # PIX * pixs
                                    LPBox,  # BOX * box
                                    c_int,  # l_int32 dist
-                                   POINTER(c_int),  # l_int32 * pconforms
+                                   c_int_p,  # l_int32 * pconforms
                                    ),
         'pixClipRectangles': (LPPixa,  # PIXA *
                               LPPix,  # PIX * pixs
@@ -7978,13 +7980,13 @@ class LeptonicaAPI(CAPI):
         'pixClipRectangle': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
                              LPBox,  # BOX * box
-                             POINTER(LPBox),  # BOX * * pboxc
+                             LPLPBox,  # BOX ** pboxc
                              ),
         'pixClipRectangleWithBorder': (LPPix,  # PIX *
                                        LPPix,  # PIX * pixs
                                        LPBox,  # BOX * box
                                        c_int,  # l_int32 maxbord
-                                       POINTER(LPBox),  # BOX * * pboxn
+                                       LPLPBox,  # BOX ** pboxn
                                        ),
         'pixClipMasked': (LPPix,  # PIX *
                           LPPix,  # PIX * pixs
@@ -7996,8 +7998,8 @@ class LeptonicaAPI(CAPI):
         'pixCropToMatch': (c_int,
                            LPPix,  # PIX * pixs1
                            LPPix,  # PIX * pixs2
-                           POINTER(LPPix),  # PIX * * ppixd1
-                           POINTER(LPPix),  # PIX * * ppixd2
+                           LPLPPix,  # PIX ** ppixd1
+                           LPLPPix,  # PIX ** ppixd2
                            ),
         'pixCropToSize': (LPPix,  # PIX *
                           LPPix,  # PIX * pixs
@@ -8015,14 +8017,14 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 rankorder
                                      c_int,  # l_int32 type
                                      c_int,  # l_int32 connectivity
-                                     POINTER(LPBox),  # BOX * * pbox
+                                     LPLPBox,  # BOX ** pbox
                                      ),
         'pixFilterComponentBySize': (LPPix,  # PIX *
                                      LPPix,  # PIX * pixs
                                      c_int,  # l_int32 rankorder
                                      c_int,  # l_int32 type
                                      c_int,  # l_int32 connectivity
-                                     POINTER(LPBox),  # BOX * * pbox
+                                     LPLPBox,  # BOX ** pbox
                                      ),
         'pixMakeSymmetricMask': (LPPix,  # PIX *
                                  c_int,  # l_int32 w
@@ -8046,28 +8048,28 @@ class LeptonicaAPI(CAPI):
         'pixFractionFgInMask': (c_int,
                                 LPPix,  # PIX * pix1
                                 LPPix,  # PIX * pix2
-                                POINTER(c_float),  # l_float32 * pfract
+                                c_float_p,  # l_float32 * pfract
                                 ),
         'pixClipToForeground': (c_int,
                                 LPPix,  # PIX * pixs
-                                POINTER(LPPix),  # PIX * * ppixd
-                                POINTER(LPBox),  # BOX * * pbox
+                                LPLPPix,  # PIX ** ppixd
+                                LPLPBox,  # BOX ** pbox
                                 ),
         'pixTestClipToForeground': (c_int,
                                     LPPix,  # PIX * pixs
-                                    POINTER(c_int),  # l_int32 * pcanclip
+                                    c_int_p,  # l_int32 * pcanclip
                                     ),
         'pixClipBoxToForeground': (c_int,
                                    LPPix,  # PIX * pixs
                                    LPBox,  # BOX * boxs
-                                   POINTER(LPPix),  # PIX * * ppixd
-                                   POINTER(LPBox),  # BOX * * pboxd
+                                   LPLPPix,  # PIX ** ppixd
+                                   LPLPBox,  # BOX ** pboxd
                                    ),
         'pixScanForForeground': (c_int,
                                  LPPix,  # PIX * pixs
                                  LPBox,  # BOX * box
                                  c_int,  # l_int32 scanflag
-                                 POINTER(c_int),  # l_int32 * ploc
+                                 c_int_p,  # l_int32 * ploc
                                  ),
         'pixClipBoxToEdges': (c_int,
                               LPPix,  # PIX * pixs
@@ -8076,8 +8078,8 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 highthresh
                               c_int,  # l_int32 maxwidth
                               c_int,  # l_int32 factor
-                              POINTER(LPPix),  # PIX * * ppixd
-                              POINTER(LPBox),  # BOX * * pboxd
+                              LPLPPix,  # PIX ** ppixd
+                              LPLPBox,  # BOX ** pboxd
                               ),
         'pixScanForEdge': (c_int,
                            LPPix,  # PIX * pixs
@@ -8087,7 +8089,7 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 maxwidth
                            c_int,  # l_int32 factor
                            c_int,  # l_int32 scanflag
-                           POINTER(c_int),  # l_int32 * ploc
+                           c_int_p,  # l_int32 * ploc
                            ),
         'pixExtractOnLine': (LPNuma,  # NUMA *
                              LPPix,  # PIX * pixs
@@ -8131,7 +8133,7 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 c1
                                       c_int,  # l_int32 c2
                                       c_int,  # l_int32 size
-                                      POINTER(LPNuma),  # NUMA * * pnad
+                                      LPLPNuma,  # NUMA ** pnad
                                       ),
         'pixMinMaxNearLine': (c_int,
                               LPPix,  # PIX * pixs
@@ -8141,10 +8143,10 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 y2
                               c_int,  # l_int32 dist
                               c_int,  # l_int32 direction
-                              POINTER(LPNuma),  # NUMA * * pnamin
-                              POINTER(LPNuma),  # NUMA * * pnamax
-                              POINTER(c_float),  # l_float32 * pminave
-                              POINTER(c_float),  # l_float32 * pmaxave
+                              LPLPNuma,  # NUMA ** pnamin
+                              LPLPNuma,  # NUMA ** pnamax
+                              c_float_p,  # l_float32 * pminave
+                              c_float_p,  # l_float32 * pmaxave
                               ),
         'pixRankRowTransform': (LPPix,  # PIX *
                                 LPPix,  # PIX * pixs
@@ -8166,7 +8168,7 @@ class LeptonicaAPI(CAPI):
                                LPBoxa,  # BOXA * boxa
                                c_int,  # l_int32 start
                                c_int,  # l_int32 num
-                               POINTER(c_int),  # l_int32 * pcropwarn
+                               c_int_p,  # l_int32 * pcropwarn
                                ),
         'pixaSplitPix': (LPPixa,  # PIXA *
                          LPPix,  # PIX * pixs
@@ -8176,7 +8178,7 @@ class LeptonicaAPI(CAPI):
                          c_uint,  # l_uint32 bordercolor
                          ),
         'pixaDestroy': (None,
-                        POINTER(LPPixa),  # PIXA * * ppixa
+                        LPLPPixa,  # PIXA ** ppixa
                         ),
         'pixaCopy': (LPPixa,  # PIXA *
                      LPPixa,  # PIXA * pixa
@@ -8211,9 +8213,9 @@ class LeptonicaAPI(CAPI):
         'pixaGetPixDimensions': (c_int,
                                  LPPixa,  # PIXA * pixa
                                  c_int,  # l_int32 index
-                                 POINTER(c_int),  # l_int32 * pw
-                                 POINTER(c_int),  # l_int32 * ph
-                                 POINTER(c_int),  # l_int32 * pd
+                                 c_int_p,  # l_int32 * pw
+                                 c_int_p,  # l_int32 * ph
+                                 c_int_p,  # l_int32 * pd
                                  ),
         'pixaGetBoxa': (LPBoxa,  # BOXA *
                         LPPixa,  # PIXA * pixa
@@ -8230,38 +8232,38 @@ class LeptonicaAPI(CAPI):
         'pixaGetBoxGeometry': (c_int,
                                LPPixa,  # PIXA * pixa
                                c_int,  # l_int32 index
-                               POINTER(c_int),  # l_int32 * px
-                               POINTER(c_int),  # l_int32 * py
-                               POINTER(c_int),  # l_int32 * pw
-                               POINTER(c_int),  # l_int32 * ph
+                               c_int_p,  # l_int32 * px
+                               c_int_p,  # l_int32 * py
+                               c_int_p,  # l_int32 * pw
+                               c_int_p,  # l_int32 * ph
                                ),
         'pixaSetBoxa': (c_int,
                         LPPixa,  # PIXA * pixa
                         LPBoxa,  # BOXA * boxa
                         c_int,  # l_int32 accesstype
                         ),
-        'pixaGetPixArray': (POINTER(LPPix),  # PIX *
+        'pixaGetPixArray': (LPLPPix,  # PIX *
                             LPPixa,  # PIXA * pixa
                             ),
         'pixaVerifyDepth': (c_int,
                             LPPixa,  # PIXA * pixa
-                            POINTER(c_int),  # l_int32 * psame
-                            POINTER(c_int),  # l_int32 * pmaxd
+                            c_int_p,  # l_int32 * psame
+                            c_int_p,  # l_int32 * pmaxd
                             ),
         'pixaVerifyDimensions': (c_int,
                                  LPPixa,  # PIXA * pixa
-                                 POINTER(c_int),  # l_int32 * psame
-                                 POINTER(c_int),  # l_int32 * pmaxw
-                                 POINTER(c_int),  # l_int32 * pmaxh
+                                 c_int_p,  # l_int32 * psame
+                                 c_int_p,  # l_int32 * pmaxw
+                                 c_int_p,  # l_int32 * pmaxh
                                  ),
         'pixaIsFull': (c_int,
                        LPPixa,  # PIXA * pixa
-                       POINTER(c_int),  # l_int32 * pfullpa
-                       POINTER(c_int),  # l_int32 * pfullba
+                       c_int_p,  # l_int32 * pfullpa
+                       c_int_p,  # l_int32 * pfullba
                        ),
         'pixaCountText': (c_int,
                           LPPixa,  # PIXA * pixa
-                          POINTER(c_int),  # l_int32 * pntext
+                          c_int_p,  # l_int32 * pntext
                           ),
         'pixaSetText': (c_int,
                         LPPixa,  # PIXA * pixa
@@ -8270,7 +8272,7 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixaGetLinePtrs': (POINTER(POINTER(c_void_p)),
                             LPPixa,  # PIXA * pixa
-                            POINTER(c_int),  # l_int32 * psize
+                            c_int_p,  # l_int32 * psize
                             ),
         'pixaWriteStreamInfo': (c_int,
                                 LPFile,  # FILE * fp
@@ -8295,8 +8297,8 @@ class LeptonicaAPI(CAPI):
         'pixaRemovePixAndSave': (c_int,
                                  LPPixa,  # PIXA * pixa
                                  c_int,  # l_int32 index
-                                 POINTER(LPPix),  # PIX * * ppix
-                                 POINTER(LPBox),  # BOX * * pbox
+                                 LPLPPix,  # PIX ** ppix
+                                 LPLPBox,  # BOX ** pbox
                                  ),
         'pixaRemoveSelected': (c_int,
                                LPPixa,  # PIXA * pixa
@@ -8337,7 +8339,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 copyflag
                                 ),
         'pixaaDestroy': (None,
-                         POINTER(LPPixaa),  # PIXAA * * ppaa
+                         LPLPPixaa,  # PIXAA ** ppaa
                          ),
         'pixaaAddPixa': (c_int,
                          LPPixaa,  # PIXAA * paa
@@ -8358,7 +8360,7 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixaaGetCount': (c_int,
                           LPPixaa,  # PIXAA * paa
-                          POINTER(LPNuma),  # NUMA * * pna
+                          LPLPNuma,  # NUMA ** pna
                           ),
         'pixaaGetPixa': (LPPixa,  # PIXA *
                          LPPixaa,  # PIXAA * paa
@@ -8377,18 +8379,18 @@ class LeptonicaAPI(CAPI):
                         ),
         'pixaaVerifyDepth': (c_int,
                              LPPixaa,  # PIXAA * paa
-                             POINTER(c_int),  # l_int32 * psame
-                             POINTER(c_int),  # l_int32 * pmaxd
+                             c_int_p,  # l_int32 * psame
+                             c_int_p,  # l_int32 * pmaxd
                              ),
         'pixaaVerifyDimensions': (c_int,
                                   LPPixaa,  # PIXAA * paa
-                                  POINTER(c_int),  # l_int32 * psame
-                                  POINTER(c_int),  # l_int32 * pmaxw
-                                  POINTER(c_int),  # l_int32 * pmaxh
+                                  c_int_p,  # l_int32 * psame
+                                  c_int_p,  # l_int32 * pmaxw
+                                  c_int_p,  # l_int32 * pmaxh
                                   ),
         'pixaaIsFull': (c_int,
                         LPPixaa,  # PIXAA * paa
-                        POINTER(c_int),  # l_int32 * pfull
+                        c_int_p,  # l_int32 * pfull
                         ),
         'pixaaInitFull': (c_int,
                           LPPixaa,  # PIXAA * paa
@@ -8412,7 +8414,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'pixaReadMem': (LPPixa,  # PIXA *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'pixaWriteDebug': (c_int,
@@ -8428,8 +8430,8 @@ class LeptonicaAPI(CAPI):
                             LPPixa,  # PIXA * pixa
                             ),
         'pixaWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPPixa,  # PIXA * pixa
                          ),
         'pixaReadBoth': (LPPixa,  # PIXA *
@@ -8448,7 +8450,7 @@ class LeptonicaAPI(CAPI):
                             LPFile,  # FILE * fp
                             ),
         'pixaaReadMem': (LPPixaa,  # PIXAA *
-                         POINTER(c_ubyte),  # const l_uint8 * data
+                         c_ubyte_p,  # const l_uint8 * data
                          c_size_t,  # size_t size
                          ),
         'pixaaWrite': (c_int,
@@ -8460,8 +8462,8 @@ class LeptonicaAPI(CAPI):
                              LPPixaa,  # PIXAA * paa
                              ),
         'pixaaWriteMem': (c_int,
-                          POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                          POINTER(c_size_t),  # size_t * psize
+                          POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                          c_size_t_p,  # size_t * psize
                           LPPixaa,  # PIXAA * paa
                           ),
         'pixaccCreate': (LPPixacc,  # PIXACC *
@@ -8474,7 +8476,7 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 negflag
                                 ),
         'pixaccDestroy': (None,
-                          POINTER(LPPixacc),  # PIXACC * * ppixacc
+                          LPLPPixacc,  # PIXACC ** ppixacc
                           ),
         'pixaccFinal': (LPPix,  # PIX *
                         LPPixacc,  # PIXACC * pixacc
@@ -8510,7 +8512,7 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 connectivity
                             c_int,  # l_int32 type
                             c_int,  # l_int32 relation
-                            POINTER(c_int),  # l_int32 * pchanged
+                            c_int_p,  # l_int32 * pchanged
                             ),
         'pixaSelectBySize': (LPPixa,  # PIXA *
                              LPPixa,  # PIXA * pixas
@@ -8518,7 +8520,7 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 height
                              c_int,  # l_int32 type
                              c_int,  # l_int32 relation
-                             POINTER(c_int),  # l_int32 * pchanged
+                             c_int_p,  # l_int32 * pchanged
                              ),
         'pixaMakeSizeIndicator': (LPNuma,  # NUMA *
                                   LPPixa,  # PIXA * pixa
@@ -8532,77 +8534,77 @@ class LeptonicaAPI(CAPI):
                                         c_float,  # l_float32 thresh
                                         c_int,  # l_int32 connectivity
                                         c_int,  # l_int32 type
-                                        POINTER(c_int),  # l_int32 * pchanged
+                                        c_int_p,  # l_int32 * pchanged
                                         ),
         'pixaSelectByPerimToAreaRatio': (LPPixa,  # PIXA *
                                          LPPixa,  # PIXA * pixas
                                          c_float,  # l_float32 thresh
                                          c_int,  # l_int32 type
-                                         POINTER(c_int),  # l_int32 * pchanged
+                                         c_int_p,  # l_int32 * pchanged
                                          ),
         'pixSelectByPerimSizeRatio': (LPPix,  # PIX *
                                       LPPix,  # PIX * pixs
                                       c_float,  # l_float32 thresh
                                       c_int,  # l_int32 connectivity
                                       c_int,  # l_int32 type
-                                      POINTER(c_int),  # l_int32 * pchanged
+                                      c_int_p,  # l_int32 * pchanged
                                       ),
         'pixaSelectByPerimSizeRatio': (LPPixa,  # PIXA *
                                        LPPixa,  # PIXA * pixas
                                        c_float,  # l_float32 thresh
                                        c_int,  # l_int32 type
-                                       POINTER(c_int),  # l_int32 * pchanged
+                                       c_int_p,  # l_int32 * pchanged
                                        ),
         'pixSelectByAreaFraction': (LPPix,  # PIX *
                                     LPPix,  # PIX * pixs
                                     c_float,  # l_float32 thresh
                                     c_int,  # l_int32 connectivity
                                     c_int,  # l_int32 type
-                                    POINTER(c_int),  # l_int32 * pchanged
+                                    c_int_p,  # l_int32 * pchanged
                                     ),
         'pixaSelectByAreaFraction': (LPPixa,  # PIXA *
                                      LPPixa,  # PIXA * pixas
                                      c_float,  # l_float32 thresh
                                      c_int,  # l_int32 type
-                                     POINTER(c_int),  # l_int32 * pchanged
+                                     c_int_p,  # l_int32 * pchanged
                                      ),
         'pixSelectByArea': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
                             c_float,  # l_float32 thresh
                             c_int,  # l_int32 connectivity
                             c_int,  # l_int32 type
-                            POINTER(c_int),  # l_int32 * pchanged
+                            c_int_p,  # l_int32 * pchanged
                             ),
         'pixaSelectByArea': (LPPixa,  # PIXA *
                              LPPixa,  # PIXA * pixas
                              c_float,  # l_float32 thresh
                              c_int,  # l_int32 type
-                             POINTER(c_int),  # l_int32 * pchanged
+                             c_int_p,  # l_int32 * pchanged
                              ),
         'pixSelectByWidthHeightRatio': (LPPix,  # PIX *
                                         LPPix,  # PIX * pixs
                                         c_float,  # l_float32 thresh
                                         c_int,  # l_int32 connectivity
                                         c_int,  # l_int32 type
-                                        POINTER(c_int),  # l_int32 * pchanged
+                                        c_int_p,  # l_int32 * pchanged
                                         ),
         'pixaSelectByWidthHeightRatio': (LPPixa,  # PIXA *
                                          LPPixa,  # PIXA * pixas
                                          c_float,  # l_float32 thresh
                                          c_int,  # l_int32 type
-                                         POINTER(c_int),  # l_int32 * pchanged
+                                         c_int_p,  # l_int32 * pchanged
                                          ),
         'pixaSelectByNumConnComp': (LPPixa,  # PIXA *
                                     LPPixa,  # PIXA * pixas
                                     c_int,  # l_int32 nmin
                                     c_int,  # l_int32 nmax
                                     c_int,  # l_int32 connectivity
-                                    POINTER(c_int),  # l_int32 * pchanged
+                                    c_int_p,  # l_int32 * pchanged
                                     ),
         'pixaSelectWithIndicator': (LPPixa,  # PIXA *
                                     LPPixa,  # PIXA * pixas
                                     LPNuma,  # NUMA * na
-                                    POINTER(c_int),  # l_int32 * pchanged
+                                    c_int_p,  # l_int32 * pchanged
                                     ),
         'pixRemoveWithIndicator': (c_int,
                                    LPPix,  # PIX * pixs
@@ -8617,7 +8619,7 @@ class LeptonicaAPI(CAPI):
         'pixaSelectWithString': (LPPixa,  # PIXA *
                                  LPPixa,  # PIXA * pixas
                                  c_char_p,  # const char * str
-                                 POINTER(c_int),  # l_int32 * perror
+                                 c_int_p,  # l_int32 * perror
                                  ),
         'pixaRenderComponent': (LPPix,  # PIX *
                                 LPPix,  # PIX * pixs
@@ -8628,14 +8630,14 @@ class LeptonicaAPI(CAPI):
                      LPPixa,  # PIXA * pixas
                      c_int,  # l_int32 sorttype
                      c_int,  # l_int32 sortorder
-                     POINTER(LPNuma),  # NUMA * * pnaindex
+                     LPLPNuma,  # NUMA ** pnaindex
                      c_int,  # l_int32 copyflag
                      ),
         'pixaBinSort': (LPPixa,  # PIXA *
                         LPPixa,  # PIXA * pixas
                         c_int,  # l_int32 sorttype
                         c_int,  # l_int32 sortorder
-                        POINTER(LPNuma),  # NUMA * * pnaindex
+                        LPLPNuma,  # NUMA ** pnaindex
                         c_int,  # l_int32 copyflag
                         ),
         'pixaSortByIndex': (LPPixa,  # PIXA *
@@ -8719,22 +8721,22 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixaaFlattenToPixa': (LPPixa,  # PIXA *
                                LPPixaa,  # PIXAA * paa
-                               POINTER(LPNuma),  # NUMA * * pnaindex
+                               LPLPNuma,  # NUMA ** pnaindex
                                c_int,  # l_int32 copyflag
                                ),
         'pixaaSizeRange': (c_int,
                            LPPixaa,  # PIXAA * paa
-                           POINTER(c_int),  # l_int32 * pminw
-                           POINTER(c_int),  # l_int32 * pminh
-                           POINTER(c_int),  # l_int32 * pmaxw
-                           POINTER(c_int),  # l_int32 * pmaxh
+                           c_int_p,  # l_int32 * pminw
+                           c_int_p,  # l_int32 * pminh
+                           c_int_p,  # l_int32 * pmaxw
+                           c_int_p,  # l_int32 * pmaxh
                            ),
         'pixaSizeRange': (c_int,
                           LPPixa,  # PIXA * pixa
-                          POINTER(c_int),  # l_int32 * pminw
-                          POINTER(c_int),  # l_int32 * pminh
-                          POINTER(c_int),  # l_int32 * pmaxw
-                          POINTER(c_int),  # l_int32 * pmaxh
+                          c_int_p,  # l_int32 * pminw
+                          c_int_p,  # l_int32 * pminh
+                          c_int_p,  # l_int32 * pmaxw
+                          c_int_p,  # l_int32 * pmaxh
                           ),
         'pixaClipToPix': (LPPixa,  # PIXA *
                           LPPixa,  # PIXA * pixas
@@ -8742,25 +8744,25 @@ class LeptonicaAPI(CAPI):
                           ),
         'pixaClipToForeground': (c_int,
                                  LPPixa,  # PIXA * pixas
-                                 POINTER(LPPixa),  # PIXA * * ppixad
-                                 POINTER(LPBoxa),  # BOXA * * pboxa
+                                 LPLPPixa,  # PIXA ** ppixad
+                                 LPLPBoxa,  # BOXA ** pboxa
                                  ),
         'pixaGetRenderingDepth': (c_int,
                                   LPPixa,  # PIXA * pixa
-                                  POINTER(c_int),  # l_int32 * pdepth
+                                  c_int_p,  # l_int32 * pdepth
                                   ),
         'pixaHasColor': (c_int,
                          LPPixa,  # PIXA * pixa
-                         POINTER(c_int),  # l_int32 * phascolor
+                         c_int_p,  # l_int32 * phascolor
                          ),
         'pixaAnyColormaps': (c_int,
                              LPPixa,  # PIXA * pixa
-                             POINTER(c_int),  # l_int32 * phascmap
+                             c_int_p,  # l_int32 * phascmap
                              ),
         'pixaGetDepthInfo': (c_int,
                              LPPixa,  # PIXA * pixa
-                             POINTER(c_int),  # l_int32 * pmaxdepth
-                             POINTER(c_int),  # l_int32 * psame
+                             c_int_p,  # l_int32 * pmaxdepth
+                             c_int_p,  # l_int32 * psame
                              ),
         'pixaConvertToSameDepth': (LPPixa,  # PIXA *
                                    LPPixa,  # PIXA * pixas
@@ -8773,8 +8775,8 @@ class LeptonicaAPI(CAPI):
                       LPPixa,  # PIXA * pixa1
                       LPPixa,  # PIXA * pixa2
                       c_int,  # l_int32 maxdist
-                      POINTER(LPNuma),  # NUMA * * pnaindex
-                      POINTER(c_int),  # l_int32 * psame
+                      LPLPNuma,  # NUMA ** pnaindex
+                      c_int_p,  # l_int32 * psame
                       ),
         'pixaSetFullSizeBoxa': (c_int,
                                 LPPixa,  # PIXA * pixa
@@ -8796,14 +8798,14 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 background
                                 c_int,  # l_int32 spacing
                                 c_int,  # l_int32 border
-                                POINTER(LPBoxa),  # BOXA * * pboxa
+                                LPLPBoxa,  # BOXA ** pboxa
                                 ),
         'pixaDisplayOnLattice': (LPPix,  # PIX *
                                  LPPixa,  # PIXA * pixa
                                  c_int,  # l_int32 cellw
                                  c_int,  # l_int32 cellh
-                                 POINTER(c_int),  # l_int32 * pncols
-                                 POINTER(LPBoxa),  # BOXA * * pboxa
+                                 c_int_p,  # l_int32 * pncols
+                                 LPLPBoxa,  # BOXA ** pboxa
                                  ),
         'pixaDisplayUnsplit': (LPPix,  # PIX *
                                LPPixa,  # PIXA * pixa
@@ -8947,7 +8949,7 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixGetTileCount': (c_int,
                             LPPix,  # PIX * pix
-                            POINTER(c_int),  # l_int32 * pn
+                            c_int_p,  # l_int32 * pn
                             ),
         'pixaDisplayMultiTiled': (LPPixa,  # PIXA *
                                   LPPixa,  # PIXA * pixas
@@ -9028,11 +9030,11 @@ class LeptonicaAPI(CAPI):
                         ),
         'pmsGetLevelForAlloc': (c_int,
                                 c_size_t,  # size_t nbytes
-                                POINTER(c_int),  # l_int32 * plevel
+                                c_int_p,  # l_int32 * plevel
                                 ),
         'pmsGetLevelForDealloc': (c_int,
                                   c_void_p,  # void * data
-                                  POINTER(c_int),  # l_int32 * plevel
+                                  c_int_p,  # l_int32 * plevel
                                   ),
         'pmsLogInfo': (None, ),
         'pixAddConstantGray': (c_int,
@@ -9117,20 +9119,20 @@ class LeptonicaAPI(CAPI):
                               ),
         'logScaleRGBVal': (c_uint,
                            c_uint,  # l_uint32 sval
-                           POINTER(c_float),  # l_float32 * tab
+                           c_float_p,  # l_float32 * tab
                            c_float,  # l_float32 factor
                            ),
-        'makeLogBase2Tab': (POINTER(c_float), ),
+        'makeLogBase2Tab': (c_float_p, ),
         'getLogBase2': (c_float,
                         c_int,  # l_int32 val
-                        POINTER(c_float),  # l_float32 * logtab
+                        c_float_p,  # l_float32 * logtab
                         ),
         'pixcompCreateFromPix': (LPPixComp,  # PIXC *
                                  LPPix,  # PIX * pix
                                  c_int,  # l_int32 comptype
                                  ),
         'pixcompCreateFromString': (LPPixComp,  # PIXC *
-                                    POINTER(c_ubyte),  # l_uint8 * data
+                                    c_ubyte_p,  # l_uint8 * data
                                     c_size_t,  # size_t size
                                     c_int,  # l_int32 copyflag
                                     ),
@@ -9139,29 +9141,29 @@ class LeptonicaAPI(CAPI):
                                   c_int,  # l_int32 comptype
                                   ),
         'pixcompDestroy': (None,
-                           POINTER(LPPixComp),  # PIXC * * ppixc
+                           LPLPPixComp,  # PIXC ** ppixc
                            ),
         'pixcompCopy': (LPPixComp,  # PIXC *
                         LPPixComp,  # PIXC * pixcs
                         ),
         'pixcompGetDimensions': (c_int,
                                  LPPixComp,  # PIXC * pixc
-                                 POINTER(c_int),  # l_int32 * pw
-                                 POINTER(c_int),  # l_int32 * ph
-                                 POINTER(c_int),  # l_int32 * pd
+                                 c_int_p,  # l_int32 * pw
+                                 c_int_p,  # l_int32 * ph
+                                 c_int_p,  # l_int32 * pd
                                  ),
         'pixcompGetParameters': (c_int,
                                  LPPixComp,  # PIXC * pixc
-                                 POINTER(c_int),  # l_int32 * pxres
-                                 POINTER(c_int),  # l_int32 * pyres
-                                 POINTER(c_int),  # l_int32 * pcomptype
-                                 POINTER(c_int),  # l_int32 * pcmapflag
+                                 c_int_p,  # l_int32 * pxres
+                                 c_int_p,  # l_int32 * pyres
+                                 c_int_p,  # l_int32 * pcomptype
+                                 c_int_p,  # l_int32 * pcmapflag
                                  ),
         'pixcompDetermineFormat': (c_int,
                                    c_int,  # l_int32 comptype
                                    c_int,  # l_int32 d
                                    c_int,  # l_int32 cmapflag
-                                   POINTER(c_int),  # l_int32 * pformat
+                                   c_int_p,  # l_int32 * pformat
                                    ),
         'pixCreateFromPixcomp': (LPPix,  # PIX *
                                  LPPixComp,  # PIXC * pixc
@@ -9190,7 +9192,7 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 comptype
                                  ),
         'pixacompDestroy': (None,
-                            POINTER(LPPixaComp),  # PIXAC * * ppixac
+                            LPLPPixaComp,  # PIXAC ** ppixac
                             ),
         'pixacompAddPix': (c_int,
                            LPPixaComp,  # PIXAC * pixac
@@ -9233,9 +9235,9 @@ class LeptonicaAPI(CAPI):
         'pixacompGetPixDimensions': (c_int,
                                      LPPixaComp,  # PIXAC * pixac
                                      c_int,  # l_int32 index
-                                     POINTER(c_int),  # l_int32 * pw
-                                     POINTER(c_int),  # l_int32 * ph
-                                     POINTER(c_int),  # l_int32 * pd
+                                     c_int_p,  # l_int32 * pw
+                                     c_int_p,  # l_int32 * ph
+                                     c_int_p,  # l_int32 * pd
                                      ),
         'pixacompGetBoxa': (LPBoxa,  # BOXA *
                             LPPixaComp,  # PIXAC * pixac
@@ -9252,10 +9254,10 @@ class LeptonicaAPI(CAPI):
         'pixacompGetBoxGeometry': (c_int,
                                    LPPixaComp,  # PIXAC * pixac
                                    c_int,  # l_int32 index
-                                   POINTER(c_int),  # l_int32 * px
-                                   POINTER(c_int),  # l_int32 * py
-                                   POINTER(c_int),  # l_int32 * pw
-                                   POINTER(c_int),  # l_int32 * ph
+                                   c_int_p,  # l_int32 * px
+                                   c_int_p,  # l_int32 * py
+                                   c_int_p,  # l_int32 * pw
+                                   c_int_p,  # l_int32 * ph
                                    ),
         'pixacompGetOffset': (c_int,
                               LPPixaComp,  # PIXAC * pixac
@@ -9285,7 +9287,7 @@ class LeptonicaAPI(CAPI):
                                LPFile,  # FILE * fp
                                ),
         'pixacompReadMem': (LPPixaComp,  # PIXAC *
-                            POINTER(c_ubyte),  # const l_uint8 * data
+                            c_ubyte_p,  # const l_uint8 * data
                             c_size_t,  # size_t size
                             ),
         'pixacompWrite': (c_int,
@@ -9297,8 +9299,8 @@ class LeptonicaAPI(CAPI):
                                 LPPixaComp,  # PIXAC * pixac
                                 ),
         'pixacompWriteMem': (c_int,
-                             POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                             POINTER(c_size_t),  # size_t * psize
+                             POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                             c_size_t_p,  # size_t * psize
                              LPPixaComp,  # PIXAC * pixac
                              ),
         'pixacompConvertToPdf': (c_int,
@@ -9317,17 +9319,17 @@ class LeptonicaAPI(CAPI):
                                      c_int,  # l_int32 type
                                      c_int,  # l_int32 quality
                                      c_char_p,  # const char * title
-                                     # l_uint8 * * pdata
-                                     POINTER(POINTER(c_ubyte)),
-                                     POINTER(c_size_t),  # size_t * pnbytes
+                                     # l_uint8 ** pdata
+                                     POINTER(c_ubyte_p),
+                                     c_size_t_p,  # size_t * pnbytes
                                      ),
         'pixacompFastConvertToPdfData': (c_int,
                                          LPPixaComp,  # PIXAC * pixac
                                          c_char_p,  # const char * title
-                                         # l_uint8 * * pdata
-                                         POINTER(POINTER(c_ubyte)),
+                                         # l_uint8 ** pdata
+                                         POINTER(c_ubyte_p),
                                          # size_t * pnbytes
-                                         POINTER(c_size_t),
+                                         c_size_t_p,
                                          ),
         'pixacompWriteStreamInfo': (c_int,
                                     LPFile,  # FILE * fp
@@ -9442,7 +9444,7 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 maxcolors
                                    c_int,  # l_int32 mingraycolors
                                    c_int,  # l_int32 octlevel
-                                   POINTER(LPPix),  # PIX * * ppixd
+                                   LPLPPix,  # PIX ** ppixd
                                    ),
         'pixConvert16To8': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
@@ -9629,14 +9631,14 @@ class LeptonicaAPI(CAPI):
         'pixConnCompIncrInit': (c_int,
                                 LPPix,  # PIX * pixs
                                 c_int,  # l_int32 conn
-                                POINTER(LPPix),  # PIX * * ppixd
-                                POINTER(LPPtaa),  # PTAA * * pptaa
-                                POINTER(c_int),  # l_int32 * pncc
+                                LPLPPix,  # PIX ** ppixd
+                                LPLPPtaa,  # PTAA ** pptaa
+                                c_int_p,  # l_int32 * pncc
                                 ),
         'pixConnCompIncrAdd': (c_int,
                                LPPix,  # PIX * pixs
                                LPPtaa,  # PTAA * ptaa
-                               POINTER(c_int),  # l_int32 * pncc
+                               c_int_p,  # l_int32 * pncc
                                c_float,  # l_float32 x
                                c_float,  # l_float32 y
                                c_int,  # l_int32 debug
@@ -9646,9 +9648,9 @@ class LeptonicaAPI(CAPI):
                                        c_int,  # l_int32 x
                                        c_int,  # l_int32 y
                                        c_int,  # l_int32 conn
-                                       # l_int32 * * pneigh
-                                       POINTER(POINTER(c_int)),
-                                       POINTER(c_int),  # l_int32 * pnvals
+                                       # l_int32 ** pneigh
+                                       POINTER(c_int_p),
+                                       c_int_p,  # l_int32 * pnvals
                                        ),
         'pixLocToColorTransform': (LPPix,  # PIX *
                                    LPPix,  # PIX * pixs
@@ -9663,17 +9665,17 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 yoverlap
                             ),
         'pixTilingDestroy': (None,
-                             POINTER(LPPixTiling),  # PIXTILING * * ppt
+                             LPLPPixTiling,  # PIXTILING ** ppt
                              ),
         'pixTilingGetCount': (c_int,
                               LPPixTiling,  # PIXTILING * pt
-                              POINTER(c_int),  # l_int32 * pnx
-                              POINTER(c_int),  # l_int32 * pny
+                              c_int_p,  # l_int32 * pnx
+                              c_int_p,  # l_int32 * pny
                               ),
         'pixTilingGetSize': (c_int,
                              LPPixTiling,  # PIXTILING * pt
-                             POINTER(c_int),  # l_int32 * pw
-                             POINTER(c_int),  # l_int32 * ph
+                             c_int_p,  # l_int32 * pw
+                             c_int_p,  # l_int32 * ph
                              ),
         'pixTilingGetTile': (LPPix,  # PIX *
                              LPPixTiling,  # PIXTILING * pt
@@ -9695,42 +9697,42 @@ class LeptonicaAPI(CAPI):
                              ),
         'readHeaderPng': (c_int,
                           c_char_p,  # const char * filename
-                          POINTER(c_int),  # l_int32 * pw
-                          POINTER(c_int),  # l_int32 * ph
-                          POINTER(c_int),  # l_int32 * pbps
-                          POINTER(c_int),  # l_int32 * pspp
-                          POINTER(c_int),  # l_int32 * piscmap
+                          c_int_p,  # l_int32 * pw
+                          c_int_p,  # l_int32 * ph
+                          c_int_p,  # l_int32 * pbps
+                          c_int_p,  # l_int32 * pspp
+                          c_int_p,  # l_int32 * piscmap
                           ),
         'freadHeaderPng': (c_int,
                            LPFile,  # FILE * fp
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pbps
-                           POINTER(c_int),  # l_int32 * pspp
-                           POINTER(c_int),  # l_int32 * piscmap
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pbps
+                           c_int_p,  # l_int32 * pspp
+                           c_int_p,  # l_int32 * piscmap
                            ),
         'readHeaderMemPng': (c_int,
-                             POINTER(c_ubyte),  # const l_uint8 * data
+                             c_ubyte_p,  # const l_uint8 * data
                              c_size_t,  # size_t size
-                             POINTER(c_int),  # l_int32 * pw
-                             POINTER(c_int),  # l_int32 * ph
-                             POINTER(c_int),  # l_int32 * pbps
-                             POINTER(c_int),  # l_int32 * pspp
-                             POINTER(c_int),  # l_int32 * piscmap
+                             c_int_p,  # l_int32 * pw
+                             c_int_p,  # l_int32 * ph
+                             c_int_p,  # l_int32 * pbps
+                             c_int_p,  # l_int32 * pspp
+                             c_int_p,  # l_int32 * piscmap
                              ),
         'fgetPngResolution': (c_int,
                               LPFile,  # FILE * fp
-                              POINTER(c_int),  # l_int32 * pxres
-                              POINTER(c_int),  # l_int32 * pyres
+                              c_int_p,  # l_int32 * pxres
+                              c_int_p,  # l_int32 * pyres
                               ),
         'isPngInterlaced': (c_int,
                             c_char_p,  # const char * filename
-                            POINTER(c_int),  # l_int32 * pinterlaced
+                            c_int_p,  # l_int32 * pinterlaced
                             ),
         'fgetPngColormapInfo': (c_int,
                                 LPFile,  # FILE * fp
-                                POINTER(LPPixColormap),  # PIXCMAP * * pcmap
-                                POINTER(c_int),  # l_int32 * ptransparency
+                                LPLPPixColormap,  # PIXCMAP ** pcmap
+                                c_int_p,  # l_int32 * ptransparency
                                 ),
         'pixWritePng': (c_int,
                         c_char_p,  # const char * filename
@@ -9750,12 +9752,12 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 flag
                                    ),
         'pixReadMemPng': (LPPix,  # PIX *
-                          POINTER(c_ubyte),  # const l_uint8 * filedata
+                          c_ubyte_p,  # const l_uint8 * filedata
                           c_size_t,  # size_t filesize
                           ),
         'pixWriteMemPng': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pfiledata
-                           POINTER(c_size_t),  # size_t * pfilesize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pfiledata
+                           c_size_t_p,  # size_t * pfilesize
                            LPPix,  # PIX * pix
                            c_float,  # l_float32 gamma
                            ),
@@ -9764,21 +9766,21 @@ class LeptonicaAPI(CAPI):
                              ),
         'readHeaderPnm': (c_int,
                           c_char_p,  # const char * filename
-                          POINTER(c_int),  # l_int32 * pw
-                          POINTER(c_int),  # l_int32 * ph
-                          POINTER(c_int),  # l_int32 * pd
-                          POINTER(c_int),  # l_int32 * ptype
-                          POINTER(c_int),  # l_int32 * pbps
-                          POINTER(c_int),  # l_int32 * pspp
+                          c_int_p,  # l_int32 * pw
+                          c_int_p,  # l_int32 * ph
+                          c_int_p,  # l_int32 * pd
+                          c_int_p,  # l_int32 * ptype
+                          c_int_p,  # l_int32 * pbps
+                          c_int_p,  # l_int32 * pspp
                           ),
         'freadHeaderPnm': (c_int,
                            LPFile,  # FILE * fp
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pd
-                           POINTER(c_int),  # l_int32 * ptype
-                           POINTER(c_int),  # l_int32 * pbps
-                           POINTER(c_int),  # l_int32 * pspp
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pd
+                           c_int_p,  # l_int32 * ptype
+                           c_int_p,  # l_int32 * pbps
+                           c_int_p,  # l_int32 * pspp
                            ),
         'pixWriteStreamPnm': (c_int,
                               LPFile,  # FILE * fp
@@ -9793,27 +9795,27 @@ class LeptonicaAPI(CAPI):
                               LPPix,  # PIX * pix
                               ),
         'pixReadMemPnm': (LPPix,  # PIX *
-                          POINTER(c_ubyte),  # const l_uint8 * data
+                          c_ubyte_p,  # const l_uint8 * data
                           c_size_t,  # size_t size
                           ),
         'readHeaderMemPnm': (c_int,
-                             POINTER(c_ubyte),  # const l_uint8 * data
+                             c_ubyte_p,  # const l_uint8 * data
                              c_size_t,  # size_t size
-                             POINTER(c_int),  # l_int32 * pw
-                             POINTER(c_int),  # l_int32 * ph
-                             POINTER(c_int),  # l_int32 * pd
-                             POINTER(c_int),  # l_int32 * ptype
-                             POINTER(c_int),  # l_int32 * pbps
-                             POINTER(c_int),  # l_int32 * pspp
+                             c_int_p,  # l_int32 * pw
+                             c_int_p,  # l_int32 * ph
+                             c_int_p,  # l_int32 * pd
+                             c_int_p,  # l_int32 * ptype
+                             c_int_p,  # l_int32 * pbps
+                             c_int_p,  # l_int32 * pspp
                              ),
         'pixWriteMemPnm': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                           POINTER(c_size_t),  # size_t * psize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                           c_size_t_p,  # size_t * psize
                            LPPix,  # PIX * pix
                            ),
         'pixWriteMemPam': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                           POINTER(c_size_t),  # size_t * psize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                           c_size_t_p,  # size_t * psize
                            LPPix,  # PIX * pix
                            ),
         'pixProjectiveSampledPta': (LPPix,  # PIX *
@@ -9824,7 +9826,7 @@ class LeptonicaAPI(CAPI):
                                     ),
         'pixProjectiveSampled': (LPPix,  # PIX *
                                  LPPix,  # PIX * pixs
-                                 POINTER(c_float),  # l_float32 * vc
+                                 c_float_p,  # l_float32 * vc
                                  c_int,  # l_int32 incolor
                                  ),
         'pixProjectivePta': (LPPix,  # PIX *
@@ -9835,7 +9837,7 @@ class LeptonicaAPI(CAPI):
                              ),
         'pixProjective': (LPPix,  # PIX *
                           LPPix,  # PIX * pixs
-                          POINTER(c_float),  # l_float32 * vc
+                          c_float_p,  # l_float32 * vc
                           c_int,  # l_int32 incolor
                           ),
         'pixProjectivePtaColor': (LPPix,  # PIX *
@@ -9846,7 +9848,7 @@ class LeptonicaAPI(CAPI):
                                   ),
         'pixProjectiveColor': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs
-                               POINTER(c_float),  # l_float32 * vc
+                               c_float_p,  # l_float32 * vc
                                c_uint,  # l_uint32 colorval
                                ),
         'pixProjectivePtaGray': (LPPix,  # PIX *
@@ -9857,7 +9859,7 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixProjectiveGray': (LPPix,  # PIX *
                               LPPix,  # PIX * pixs
-                              POINTER(c_float),  # l_float32 * vc
+                              c_float_p,  # l_float32 * vc
                               c_ubyte,  # l_uint8 grayval
                               ),
         'pixProjectivePtaWithAlpha': (LPPix,  # PIX *
@@ -9871,22 +9873,22 @@ class LeptonicaAPI(CAPI):
         'getProjectiveXformCoeffs': (c_int,
                                      LPPta,  # PTA * ptas
                                      LPPta,  # PTA * ptad
-                                     # l_float32 * * pvc
-                                     POINTER(POINTER(c_float)),
+                                     # l_float32 ** pvc
+                                     POINTER(c_float_p),
                                      ),
         'projectiveXformSampledPt': (c_int,
-                                     POINTER(c_float),  # l_float32 * vc
+                                     c_float_p,  # l_float32 * vc
                                      c_int,  # l_int32 x
                                      c_int,  # l_int32 y
-                                     POINTER(c_int),  # l_int32 * pxp
-                                     POINTER(c_int),  # l_int32 * pyp
+                                     c_int_p,  # l_int32 * pxp
+                                     c_int_p,  # l_int32 * pyp
                                      ),
         'projectiveXformPt': (c_int,
-                              POINTER(c_float),  # l_float32 * vc
+                              c_float_p,  # l_float32 * vc
                               c_int,  # l_int32 x
                               c_int,  # l_int32 y
-                              POINTER(c_float),  # l_float32 * pxp
-                              POINTER(c_float),  # l_float32 * pyp
+                              c_float_p,  # l_float32 * pxp
+                              c_float_p,  # l_float32 * pyp
                               ),
         'convertFilesToPS': (c_int,
                              c_char_p,  # const char * dirin
@@ -9916,7 +9918,7 @@ class LeptonicaAPI(CAPI):
                                          c_char_p,  # const char * filein
                                          c_char_p,  # const char * fileout
                                          c_int,  # l_int32 res
-                                         POINTER(c_int),  # l_int32 * pindex
+                                         c_int_p,  # l_int32 * pindex
                                          ),
         'convertSegmentedPagesToPS': (c_int,
                                       c_char_p,  # const char * pagedir
@@ -9964,7 +9966,7 @@ class LeptonicaAPI(CAPI):
                                    c_char_p,  # const char * fileout
                                    c_int,  # l_int32 res
                                    c_int,  # l_int32 level
-                                   POINTER(c_int),  # l_int32 * pindex
+                                   c_int_p,  # l_int32 * pindex
                                    ),
         'pixWritePSEmbed': (c_int,
                             c_char_p,  # const char * filein
@@ -10048,8 +10050,8 @@ class LeptonicaAPI(CAPI):
                              c_int,  # l_int32 endpage
                              ),
         'pixWriteMemPS': (c_int,
-                          POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                          POINTER(c_size_t),  # size_t * psize
+                          POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                          c_size_t_p,  # size_t * psize
                           LPPix,  # PIX * pix
                           LPBox,  # BOX * box
                           c_int,  # l_int32 res
@@ -10076,7 +10078,7 @@ class LeptonicaAPI(CAPI):
                               LPNuma,  # NUMA * nay
                               ),
         'ptaDestroy': (None,
-                       POINTER(LPPta),  # PTA * * ppta
+                       LPLPPta,  # PTA ** ppta
                        ),
         'ptaCopy': (LPPta,  # PTA *
                     LPPta,  # PTA * pta
@@ -10120,14 +10122,14 @@ class LeptonicaAPI(CAPI):
         'ptaGetPt': (c_int,
                      LPPta,  # PTA * pta
                      c_int,  # l_int32 index
-                     POINTER(c_float),  # l_float32 * px
-                     POINTER(c_float),  # l_float32 * py
+                     c_float_p,  # l_float32 * px
+                     c_float_p,  # l_float32 * py
                      ),
         'ptaGetIPt': (c_int,
                       LPPta,  # PTA * pta
                       c_int,  # l_int32 index
-                      POINTER(c_int),  # l_int32 * px
-                      POINTER(c_int),  # l_int32 * py
+                      c_int_p,  # l_int32 * px
+                      c_int_p,  # l_int32 * py
                       ),
         'ptaSetPt': (c_int,
                      LPPta,  # PTA * pta
@@ -10137,8 +10139,8 @@ class LeptonicaAPI(CAPI):
                      ),
         'ptaGetArrays': (c_int,
                          LPPta,  # PTA * pta
-                         POINTER(LPNuma),  # NUMA * * pnax
-                         POINTER(LPNuma),  # NUMA * * pnay
+                         LPLPNuma,  # NUMA ** pnax
+                         LPLPNuma,  # NUMA ** pnay
                          ),
         'ptaRead': (LPPta,  # PTA *
                     c_char_p,  # const char * filename
@@ -10147,7 +10149,7 @@ class LeptonicaAPI(CAPI):
                           LPFile,  # FILE * fp
                           ),
         'ptaReadMem': (LPPta,  # PTA *
-                       POINTER(c_ubyte),  # const l_uint8 * data
+                       c_ubyte_p,  # const l_uint8 * data
                        c_size_t,  # size_t size
                        ),
         'ptaWriteDebug': (c_int,
@@ -10166,8 +10168,8 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 type
                            ),
         'ptaWriteMem': (c_int,
-                        POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                        POINTER(c_size_t),  # size_t * psize
+                        POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                        c_size_t_p,  # size_t * psize
                         LPPta,  # PTA * pta
                         c_int,  # l_int32 type
                         ),
@@ -10175,7 +10177,7 @@ class LeptonicaAPI(CAPI):
                        c_int,  # l_int32 n
                        ),
         'ptaaDestroy': (None,
-                        POINTER(LPPtaa),  # PTAA * * pptaa
+                        LPLPPtaa,  # PTAA ** pptaa
                         ),
         'ptaaAddPta': (c_int,
                        LPPtaa,  # PTAA * ptaa
@@ -10194,8 +10196,8 @@ class LeptonicaAPI(CAPI):
                       LPPtaa,  # PTAA * ptaa
                       c_int,  # l_int32 ipta
                       c_int,  # l_int32 jpt
-                      POINTER(c_float),  # l_float32 * px
-                      POINTER(c_float),  # l_float32 * py
+                      c_float_p,  # l_float32 * px
+                      c_float_p,  # l_float32 * py
                       ),
         'ptaaInitFull': (c_int,
                          LPPtaa,  # PTAA * ptaa
@@ -10222,7 +10224,7 @@ class LeptonicaAPI(CAPI):
                            LPFile,  # FILE * fp
                            ),
         'ptaaReadMem': (LPPtaa,  # PTAA *
-                        POINTER(c_ubyte),  # const l_uint8 * data
+                        c_ubyte_p,  # const l_uint8 * data
                         c_size_t,  # size_t size
                         ),
         'ptaaWriteDebug': (c_int,
@@ -10241,8 +10243,8 @@ class LeptonicaAPI(CAPI):
                             c_int,  # l_int32 type
                             ),
         'ptaaWriteMem': (c_int,
-                         POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                         POINTER(c_size_t),  # size_t * psize
+                         POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                         c_size_t_p,  # size_t * psize
                          LPPtaa,  # PTAA * ptaa
                          c_int,  # l_int32 type
                          ),
@@ -10284,10 +10286,10 @@ class LeptonicaAPI(CAPI):
                                  ),
         'ptaGetRange': (c_int,
                         LPPta,  # PTA * pta
-                        POINTER(c_float),  # l_float32 * pminx
-                        POINTER(c_float),  # l_float32 * pmaxx
-                        POINTER(c_float),  # l_float32 * pminy
-                        POINTER(c_float),  # l_float32 * pmaxy
+                        c_float_p,  # l_float32 * pminx
+                        c_float_p,  # l_float32 * pmaxx
+                        c_float_p,  # l_float32 * pminy
+                        c_float_p,  # l_float32 * pmaxy
                         ),
         'ptaGetInsideBox': (LPPta,  # PTA *
                             LPPta,  # PTA * ptas
@@ -10316,7 +10318,7 @@ class LeptonicaAPI(CAPI):
                                LPPta,  # PTA * pta
                                c_float,  # l_float32 x
                                c_float,  # l_float32 y
-                               POINTER(c_int),  # l_int32 * pinside
+                               c_int_p,  # l_int32 * pinside
                                ),
         'l_angleBetweenVectors': (c_float,
                                   c_float,  # l_float32 x1
@@ -10326,14 +10328,14 @@ class LeptonicaAPI(CAPI):
                                   ),
         'ptaPolygonIsConvex': (c_int,
                                LPPta,  # PTA * pta
-                               POINTER(c_int),  # l_int32 * pisconvex
+                               c_int_p,  # l_int32 * pisconvex
                                ),
         'ptaGetMinMax': (c_int,
                          LPPta,  # PTA * pta
-                         POINTER(c_float),  # l_float32 * pxmin
-                         POINTER(c_float),  # l_float32 * pymin
-                         POINTER(c_float),  # l_float32 * pxmax
-                         POINTER(c_float),  # l_float32 * pymax
+                         c_float_p,  # l_float32 * pxmin
+                         c_float_p,  # l_float32 * pymin
+                         c_float_p,  # l_float32 * pxmax
+                         c_float_p,  # l_float32 * pymax
                          ),
         'ptaSelectByValue': (LPPta,  # PTA *
                              LPPta,  # PTA * ptas
@@ -10348,65 +10350,65 @@ class LeptonicaAPI(CAPI):
                           ),
         'ptaGetLinearLSF': (c_int,
                             LPPta,  # PTA * pta
-                            POINTER(c_float),  # l_float32 * pa
-                            POINTER(c_float),  # l_float32 * pb
-                            POINTER(LPNuma),  # NUMA * * pnafit
+                            c_float_p,  # l_float32 * pa
+                            c_float_p,  # l_float32 * pb
+                            LPLPNuma,  # NUMA ** pnafit
                             ),
         'ptaGetQuadraticLSF': (c_int,
                                LPPta,  # PTA * pta
-                               POINTER(c_float),  # l_float32 * pa
-                               POINTER(c_float),  # l_float32 * pb
-                               POINTER(c_float),  # l_float32 * pc
-                               POINTER(LPNuma),  # NUMA * * pnafit
+                               c_float_p,  # l_float32 * pa
+                               c_float_p,  # l_float32 * pb
+                               c_float_p,  # l_float32 * pc
+                               LPLPNuma,  # NUMA ** pnafit
                                ),
         'ptaGetCubicLSF': (c_int,
                            LPPta,  # PTA * pta
-                           POINTER(c_float),  # l_float32 * pa
-                           POINTER(c_float),  # l_float32 * pb
-                           POINTER(c_float),  # l_float32 * pc
-                           POINTER(c_float),  # l_float32 * pd
-                           POINTER(LPNuma),  # NUMA * * pnafit
+                           c_float_p,  # l_float32 * pa
+                           c_float_p,  # l_float32 * pb
+                           c_float_p,  # l_float32 * pc
+                           c_float_p,  # l_float32 * pd
+                           LPLPNuma,  # NUMA ** pnafit
                            ),
         'ptaGetQuarticLSF': (c_int,
                              LPPta,  # PTA * pta
-                             POINTER(c_float),  # l_float32 * pa
-                             POINTER(c_float),  # l_float32 * pb
-                             POINTER(c_float),  # l_float32 * pc
-                             POINTER(c_float),  # l_float32 * pd
-                             POINTER(c_float),  # l_float32 * pe
-                             POINTER(LPNuma),  # NUMA * * pnafit
+                             c_float_p,  # l_float32 * pa
+                             c_float_p,  # l_float32 * pb
+                             c_float_p,  # l_float32 * pc
+                             c_float_p,  # l_float32 * pd
+                             c_float_p,  # l_float32 * pe
+                             LPLPNuma,  # NUMA ** pnafit
                              ),
         'ptaNoisyLinearLSF': (c_int,
                               LPPta,  # PTA * pta
                               c_float,  # l_float32 factor
-                              POINTER(LPPta),  # PTA * * pptad
-                              POINTER(c_float),  # l_float32 * pa
-                              POINTER(c_float),  # l_float32 * pb
-                              POINTER(c_float),  # l_float32 * pmederr
-                              POINTER(LPNuma),  # NUMA * * pnafit
+                              LPLPPta,  # PTA ** pptad
+                              c_float_p,  # l_float32 * pa
+                              c_float_p,  # l_float32 * pb
+                              c_float_p,  # l_float32 * pmederr
+                              LPLPNuma,  # NUMA ** pnafit
                               ),
         'ptaNoisyQuadraticLSF': (c_int,
                                  LPPta,  # PTA * pta
                                  c_float,  # l_float32 factor
-                                 POINTER(LPPta),  # PTA * * pptad
-                                 POINTER(c_float),  # l_float32 * pa
-                                 POINTER(c_float),  # l_float32 * pb
-                                 POINTER(c_float),  # l_float32 * pc
-                                 POINTER(c_float),  # l_float32 * pmederr
-                                 POINTER(LPNuma),  # NUMA * * pnafit
+                                 LPLPPta,  # PTA ** pptad
+                                 c_float_p,  # l_float32 * pa
+                                 c_float_p,  # l_float32 * pb
+                                 c_float_p,  # l_float32 * pc
+                                 c_float_p,  # l_float32 * pmederr
+                                 LPLPNuma,  # NUMA ** pnafit
                                  ),
         'applyLinearFit': (c_int,
                            c_float,  # l_float32 a
                            c_float,  # l_float32 b
                            c_float,  # l_float32 x
-                           POINTER(c_float),  # l_float32 * py
+                           c_float_p,  # l_float32 * py
                            ),
         'applyQuadraticFit': (c_int,
                               c_float,  # l_float32 a
                               c_float,  # l_float32 b
                               c_float,  # l_float32 c
                               c_float,  # l_float32 x
-                              POINTER(c_float),  # l_float32 * py
+                              c_float_p,  # l_float32 * py
                               ),
         'applyCubicFit': (c_int,
                           c_float,  # l_float32 a
@@ -10414,7 +10416,7 @@ class LeptonicaAPI(CAPI):
                           c_float,  # l_float32 c
                           c_float,  # l_float32 d
                           c_float,  # l_float32 x
-                          POINTER(c_float),  # l_float32 * py
+                          c_float_p,  # l_float32 * py
                           ),
         'applyQuarticFit': (c_int,
                             c_float,  # l_float32 a
@@ -10423,7 +10425,7 @@ class LeptonicaAPI(CAPI):
                             c_float,  # l_float32 d
                             c_float,  # l_float32 e
                             c_float,  # l_float32 x
-                            POINTER(c_float),  # l_float32 * py
+                            c_float_p,  # l_float32 * py
                             ),
         'pixPlotAlongPta': (c_int,
                             LPPix,  # PIX * pixs
@@ -10448,12 +10450,12 @@ class LeptonicaAPI(CAPI):
                                   LPPix,  # PIX * pixs
                                   c_int,  # l_int32 type
                                   c_int,  # l_int32 connectivity
-                                  POINTER(LPBoxa),  # BOXA * * pboxa
-                                  POINTER(LPPixa),  # PIXA * * ppixa
+                                  LPLPBoxa,  # BOXA ** pboxa
+                                  LPLPPixa,  # PIXA ** ppixa
                                   ),
         'ptaaIndexLabeledPixels': (LPPtaa,  # PTAA *
                                    LPPix,  # PIX * pixs
-                                   POINTER(c_int),  # l_int32 * pncc
+                                   c_int_p,  # l_int32 * pncc
                                    ),
         'ptaGetNeighborPixLocs': (LPPta,  # PTA *
                                   LPPix,  # PIX * pixs
@@ -10470,8 +10472,8 @@ class LeptonicaAPI(CAPI):
                               ),
         'ptaConvertToNuma': (c_int,
                              LPPta,  # PTA * pta
-                             POINTER(LPNuma),  # NUMA * * pnax
-                             POINTER(LPNuma),  # NUMA * * pnay
+                             LPLPNuma,  # NUMA ** pnax
+                             LPLPNuma,  # NUMA ** pnay
                              ),
         'pixDisplayPta': (LPPix,  # PIX *
                           LPPix,  # PIX * pixd
@@ -10512,13 +10514,13 @@ class LeptonicaAPI(CAPI):
                     LPPta,  # PTA * ptas
                     c_int,  # l_int32 sorttype
                     c_int,  # l_int32 sortorder
-                    POINTER(LPNuma),  # NUMA * * pnaindex
+                    LPLPNuma,  # NUMA ** pnaindex
                     ),
         'ptaGetSortIndex': (c_int,
                             LPPta,  # PTA * ptas
                             c_int,  # l_int32 sorttype
                             c_int,  # l_int32 sortorder
-                            POINTER(LPNuma),  # NUMA * * pnaindex
+                            LPLPNuma,  # NUMA ** pnaindex
                             ),
         'ptaSortByIndex': (LPPta,  # PTA *
                            LPPta,  # PTA * ptas
@@ -10533,7 +10535,7 @@ class LeptonicaAPI(CAPI):
                             c_float,  # l_float32 fract
                             LPPta,  # PTA * ptasort
                             c_int,  # l_int32 sorttype
-                            POINTER(c_float),  # l_float32 * pval
+                            c_float_p,  # l_float32 * pval
                             ),
         'ptaSort2d': (LPPta,  # PTA *
                       LPPta,  # PTA * pta
@@ -10541,59 +10543,59 @@ class LeptonicaAPI(CAPI):
         'ptaEqual': (c_int,
                      LPPta,  # PTA * pta1
                      LPPta,  # PTA * pta2
-                     POINTER(c_int),  # l_int32 * psame
+                     c_int_p,  # l_int32 * psame
                      ),
         'ptaRemoveDupsByAset': (c_int,
                                 LPPta,  # PTA * ptas
-                                POINTER(LPPta),  # PTA * * pptad
+                                LPLPPta,  # PTA ** pptad
                                 ),
         'ptaUnionByAset': (c_int,
                            LPPta,  # PTA * pta1
                            LPPta,  # PTA * pta2
-                           POINTER(LPPta),  # PTA * * pptad
+                           LPLPPta,  # PTA ** pptad
                            ),
         'ptaIntersectionByAset': (c_int,
                                   LPPta,  # PTA * pta1
                                   LPPta,  # PTA * pta2
-                                  POINTER(LPPta),  # PTA * * pptad
+                                  LPLPPta,  # PTA ** pptad
                                   ),
         'ptaUnionByHmap': (c_int,
                            LPPta,  # PTA * pta1
                            LPPta,  # PTA * pta2
-                           POINTER(LPPta),  # PTA * * pptad
+                           LPLPPta,  # PTA ** pptad
                            ),
         'ptaIntersectionByHmap': (c_int,
                                   LPPta,  # PTA * pta1
                                   LPPta,  # PTA * pta2
-                                  POINTER(LPPta),  # PTA * * pptad
+                                  LPLPPta,  # PTA ** pptad
                                   ),
         'pixQuadtreeMean': (c_int,
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 nlevels
                             LPPix,  # PIX * pix_ma
-                            POINTER(LPFPixa),  # FPIXA * * pfpixa
+                            LPLPFPixa,  # FPIXA ** pfpixa
                             ),
         'pixQuadtreeVariance': (c_int,
                                 LPPix,  # PIX * pixs
                                 c_int,  # l_int32 nlevels
                                 LPPix,  # PIX * pix_ma
                                 LPDPix,  # DPIX * dpix_msa
-                                POINTER(LPFPixa),  # FPIXA * * pfpixa_v
-                                POINTER(LPFPixa),  # FPIXA * * pfpixa_rv
+                                LPLPFPixa,  # FPIXA ** pfpixa_v
+                                LPLPFPixa,  # FPIXA ** pfpixa_rv
                                 ),
         'pixMeanInRectangle': (c_int,
                                LPPix,  # PIX * pixs
                                LPBox,  # BOX * box
                                LPPix,  # PIX * pixma
-                               POINTER(c_float),  # l_float32 * pval
+                               c_float_p,  # l_float32 * pval
                                ),
         'pixVarianceInRectangle': (c_int,
                                    LPPix,  # PIX * pixs
                                    LPBox,  # BOX * box
                                    LPPix,  # PIX * pix_ma
                                    LPDPix,  # DPIX * dpix_msa
-                                   POINTER(c_float),  # l_float32 * pvar
-                                   POINTER(c_float),  # l_float32 * prvar
+                                   c_float_p,  # l_float32 * pvar
+                                   c_float_p,  # l_float32 * prvar
                                    ),
         'boxaaQuadtreeRegions': (LPBoxaa,  # BOXAA *
                                  c_int,  # l_int32 w
@@ -10605,17 +10607,17 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 level
                               c_int,  # l_int32 x
                               c_int,  # l_int32 y
-                              POINTER(c_float),  # l_float32 * pval
+                              c_float_p,  # l_float32 * pval
                               ),
         'quadtreeGetChildren': (c_int,
                                 LPFPixa,  # FPIXA * fpixa
                                 c_int,  # l_int32 level
                                 c_int,  # l_int32 x
                                 c_int,  # l_int32 y
-                                POINTER(c_float),  # l_float32 * pval00
-                                POINTER(c_float),  # l_float32 * pval10
-                                POINTER(c_float),  # l_float32 * pval01
-                                POINTER(c_float),  # l_float32 * pval11
+                                c_float_p,  # l_float32 * pval00
+                                c_float_p,  # l_float32 * pval10
+                                c_float_p,  # l_float32 * pval01
+                                c_float_p,  # l_float32 * pval11
                                 ),
         'quadtreeMaxLevels': (c_int,
                               c_int,  # l_int32 w
@@ -10660,7 +10662,7 @@ class LeptonicaAPI(CAPI):
                                LPPix,  # PIX * pixs
                                c_int,  # l_int32 format
                                c_int,  # l_int32 method
-                               POINTER(LPSarray),  # SARRAY * * psaw
+                               LPLPSarray,  # SARRAY ** psaw
                                c_int,  # l_int32 debugflag
                                ),
         'pixExtractBarcodes': (LPPixa,  # PIXA *
@@ -10671,7 +10673,7 @@ class LeptonicaAPI(CAPI):
                             LPPixa,  # PIXA * pixa
                             c_int,  # l_int32 format
                             c_int,  # l_int32 method
-                            POINTER(LPSarray),  # SARRAY * * psaw
+                            LPLPSarray,  # SARRAY ** psaw
                             c_int,  # l_int32 debugflag
                             ),
         'pixReadBarcodeWidths': (LPNuma,  # NUMA *
@@ -10682,8 +10684,8 @@ class LeptonicaAPI(CAPI):
         'pixLocateBarcodes': (LPBoxa,  # BOXA *
                               LPPix,  # PIX * pixs
                               c_int,  # l_int32 thresh
-                              POINTER(LPPix),  # PIX * * ppixb
-                              POINTER(LPPix),  # PIX * * ppixm
+                              LPLPPix,  # PIX ** ppixb
+                              LPLPPix,  # PIX ** ppixm
                               ),
         'pixDeskewBarcode': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
@@ -10691,22 +10693,22 @@ class LeptonicaAPI(CAPI):
                              LPBox,  # BOX * box
                              c_int,  # l_int32 margin
                              c_int,  # l_int32 threshold
-                             POINTER(c_float),  # l_float32 * pangle
-                             POINTER(c_float),  # l_float32 * pconf
+                             c_float_p,  # l_float32 * pangle
+                             c_float_p,  # l_float32 * pconf
                              ),
         'pixExtractBarcodeWidths1': (LPNuma,  # NUMA *
                                      LPPix,  # PIX * pixs
                                      c_float,  # l_float32 thresh
                                      c_float,  # l_float32 binfract
-                                     POINTER(LPNuma),  # NUMA * * pnaehist
-                                     POINTER(LPNuma),  # NUMA * * pnaohist
+                                     LPLPNuma,  # NUMA ** pnaehist
+                                     LPLPNuma,  # NUMA ** pnaohist
                                      c_int,  # l_int32 debugflag
                                      ),
         'pixExtractBarcodeWidths2': (LPNuma,  # NUMA *
                                      LPPix,  # PIX * pixs
                                      c_float,  # l_float32 thresh
-                                     POINTER(c_float),  # l_float32 * pwidth
-                                     POINTER(LPNuma),  # NUMA * * pnac
+                                     c_float_p,  # l_float32 * pwidth
+                                     LPLPNuma,  # NUMA ** pnac
                                      c_int,  # l_int32 debugflag
                                      ),
         'pixExtractBarcodeCrossings': (LPNuma,  # NUMA *
@@ -10717,18 +10719,18 @@ class LeptonicaAPI(CAPI):
         'numaQuantizeCrossingsByWidth': (LPNuma,  # NUMA *
                                          LPNuma,  # NUMA * nas
                                          c_float,  # l_float32 binfract
-                                         POINTER(LPNuma),  # NUMA * * pnaehist
-                                         POINTER(LPNuma),  # NUMA * * pnaohist
+                                         LPLPNuma,  # NUMA ** pnaehist
+                                         LPLPNuma,  # NUMA ** pnaohist
                                          c_int,  # l_int32 debugflag
                                          ),
         'numaQuantizeCrossingsByWindow': (LPNuma,  # NUMA *
                                           LPNuma,  # NUMA * nas
                                           c_float,  # l_float32 ratio
                                           # l_float32 * pwidth
-                                          POINTER(c_float),
+                                          c_float_p,
                                           # l_float32 * pfirstloc
-                                          POINTER(c_float),
-                                          POINTER(LPNuma),  # NUMA * * pnac
+                                          c_float_p,
+                                          LPLPNuma,  # NUMA ** pnac
                                           c_int,  # l_int32 debugflag
                                           ),
         'pixaReadFiles': (LPPixa,  # PIXA *
@@ -10755,41 +10757,41 @@ class LeptonicaAPI(CAPI):
                           ),
         'pixReadHeader': (c_int,
                           c_char_p,  # const char * filename
-                          POINTER(c_int),  # l_int32 * pformat
-                          POINTER(c_int),  # l_int32 * pw
-                          POINTER(c_int),  # l_int32 * ph
-                          POINTER(c_int),  # l_int32 * pbps
-                          POINTER(c_int),  # l_int32 * pspp
-                          POINTER(c_int),  # l_int32 * piscmap
+                          c_int_p,  # l_int32 * pformat
+                          c_int_p,  # l_int32 * pw
+                          c_int_p,  # l_int32 * ph
+                          c_int_p,  # l_int32 * pbps
+                          c_int_p,  # l_int32 * pspp
+                          c_int_p,  # l_int32 * piscmap
                           ),
         'findFileFormat': (c_int,
                            c_char_p,  # const char * filename
-                           POINTER(c_int),  # l_int32 * pformat
+                           c_int_p,  # l_int32 * pformat
                            ),
         'findFileFormatStream': (c_int,
                                  LPFile,  # FILE * fp
-                                 POINTER(c_int),  # l_int32 * pformat
+                                 c_int_p,  # l_int32 * pformat
                                  ),
         'findFileFormatBuffer': (c_int,
-                                 POINTER(c_ubyte),  # const l_uint8 * buf
-                                 POINTER(c_int),  # l_int32 * pformat
+                                 c_ubyte_p,  # const l_uint8 * buf
+                                 c_int_p,  # l_int32 * pformat
                                  ),
         'fileFormatIsTiff': (c_int,
                              LPFile,  # FILE * fp
                              ),
         'pixReadMem': (LPPix,  # PIX *
-                       POINTER(c_ubyte),  # const l_uint8 * data
+                       c_ubyte_p,  # const l_uint8 * data
                        c_size_t,  # size_t size
                        ),
         'pixReadHeaderMem': (c_int,
-                             POINTER(c_ubyte),  # const l_uint8 * data
+                             c_ubyte_p,  # const l_uint8 * data
                              c_size_t,  # size_t size
-                             POINTER(c_int),  # l_int32 * pformat
-                             POINTER(c_int),  # l_int32 * pw
-                             POINTER(c_int),  # l_int32 * ph
-                             POINTER(c_int),  # l_int32 * pbps
-                             POINTER(c_int),  # l_int32 * pspp
-                             POINTER(c_int),  # l_int32 * piscmap
+                             c_int_p,  # l_int32 * pformat
+                             c_int_p,  # l_int32 * pw
+                             c_int_p,  # l_int32 * ph
+                             c_int_p,  # l_int32 * pbps
+                             c_int_p,  # l_int32 * pspp
+                             c_int_p,  # l_int32 * piscmap
                              ),
         'writeImageFileInfo': (c_int,
                                c_char_p,  # const char * filename
@@ -10801,28 +10803,28 @@ class LeptonicaAPI(CAPI):
                          ),
         'l_convertCharstrToInt': (c_int,
                                   c_char_p,  # const char * str
-                                  POINTER(c_int),  # l_int32 * pval
+                                  c_int_p,  # l_int32 * pval
                                   ),
         'showExtractNumbers': (LPPixa,  # PIXA *
                                LPPix,  # PIX * pixs
                                LPSarray,  # SARRAY * sa
                                LPBoxaa,  # BOXAA * baa
                                LPNumaa,  # NUMAA * naa
-                               POINTER(LPPix),  # PIX * * ppixdb
+                               LPLPPix,  # PIX ** ppixdb
                                ),
         'pixaAccumulateSamples': (c_int,
                                   LPPixa,  # PIXA * pixa
                                   LPPta,  # PTA * pta
-                                  POINTER(LPPix),  # PIX * * ppixd
-                                  POINTER(c_float),  # l_float32 * px
-                                  POINTER(c_float),  # l_float32 * py
+                                  LPLPPix,  # PIX ** ppixd
+                                  c_float_p,  # l_float32 * px
+                                  c_float_p,  # l_float32 * py
                                   ),
         'recogFilterPixaBySize': (LPPixa,  # PIXA *
                                   LPPixa,  # PIXA * pixas
                                   c_int,  # l_int32 setsize
                                   c_int,  # l_int32 maxkeep
                                   c_float,  # l_float32 max_ht_ratio
-                                  POINTER(LPNuma),  # NUMA * * pna
+                                  LPLPNuma,  # NUMA ** pna
                                   ),
         'recogSortPixaByClass': (LPPixaa,  # PIXAA *
                                  LPPixa,  # PIXA * pixa
@@ -10833,15 +10835,15 @@ class LeptonicaAPI(CAPI):
                                 c_float,  # l_float32 minscore
                                 c_int,  # l_int32 mintarget
                                 c_int,  # l_int32 minsize
-                                POINTER(LPPix),  # PIX * * ppixsave
-                                POINTER(LPPix),  # PIX * * ppixrem
+                                LPLPPix,  # PIX ** ppixsave
+                                LPLPPix,  # PIX ** ppixrem
                                 ),
         'pixaRemoveOutliers2': (LPPixa,  # PIXA *
                                 LPPixa,  # PIXA * pixas
                                 c_float,  # l_float32 minscore
                                 c_int,  # l_int32 minsize
-                                POINTER(LPPix),  # PIX * * ppixsave
-                                POINTER(LPPix),  # PIX * * ppixrem
+                                LPLPPix,  # PIX ** ppixsave
+                                LPLPPix,  # PIX ** ppixrem
                                 ),
         'recogMakeBootDigitTemplates': (LPPixa,  # PIXA *
                                         c_int,  # l_int32 nsamp
@@ -10891,7 +10893,7 @@ class LeptonicaAPI(CAPI):
                                  c_int,  # l_int32 op
                                  ),
         'rasteropUniLow': (None,
-                           POINTER(c_uint),  # l_uint32 * datad
+                           c_uint_p,  # l_uint32 * datad
                            c_int,  # l_int32 dpixw
                            c_int,  # l_int32 dpixh
                            c_int,  # l_int32 depth
@@ -10903,7 +10905,7 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 op
                            ),
         'rasteropLow': (None,
-                        POINTER(c_uint),  # l_uint32 * datad
+                        c_uint_p,  # l_uint32 * datad
                         c_int,  # l_int32 dpixw
                         c_int,  # l_int32 dpixh
                         c_int,  # l_int32 depth
@@ -10913,7 +10915,7 @@ class LeptonicaAPI(CAPI):
                         c_int,  # l_int32 dw
                         c_int,  # l_int32 dh
                         c_int,  # l_int32 op
-                        POINTER(c_uint),  # l_uint32 * datas
+                        c_uint_p,  # l_uint32 * datas
                         c_int,  # l_int32 spixw
                         c_int,  # l_int32 spixh
                         c_int,  # l_int32 swpl
@@ -10921,7 +10923,7 @@ class LeptonicaAPI(CAPI):
                         c_int,  # l_int32 sy
                         ),
         'rasteropVipLow': (None,
-                           POINTER(c_uint),  # l_uint32 * data
+                           c_uint_p,  # l_uint32 * data
                            c_int,  # l_int32 pixw
                            c_int,  # l_int32 pixh
                            c_int,  # l_int32 depth
@@ -10931,7 +10933,7 @@ class LeptonicaAPI(CAPI):
                            c_int,  # l_int32 shift
                            ),
         'rasteropHipLow': (None,
-                           POINTER(c_uint),  # l_uint32 * data
+                           c_uint_p,  # l_uint32 * data
                            c_int,  # l_int32 pixh
                            c_int,  # l_int32 depth
                            c_int,  # l_int32 wpl
@@ -11080,43 +11082,43 @@ class LeptonicaAPI(CAPI):
         'pixFindHorizontalRuns': (c_int,
                                   LPPix,  # PIX * pix
                                   c_int,  # l_int32 y
-                                  POINTER(c_int),  # l_int32 * xstart
-                                  POINTER(c_int),  # l_int32 * xend
-                                  POINTER(c_int),  # l_int32 * pn
+                                  c_int_p,  # l_int32 * xstart
+                                  c_int_p,  # l_int32 * xend
+                                  c_int_p,  # l_int32 * pn
                                   ),
         'pixFindVerticalRuns': (c_int,
                                 LPPix,  # PIX * pix
                                 c_int,  # l_int32 x
-                                POINTER(c_int),  # l_int32 * ystart
-                                POINTER(c_int),  # l_int32 * yend
-                                POINTER(c_int),  # l_int32 * pn
+                                c_int_p,  # l_int32 * ystart
+                                c_int_p,  # l_int32 * yend
+                                c_int_p,  # l_int32 * pn
                                 ),
         'pixFindMaxRuns': (LPNuma,  # NUMA *
                            LPPix,  # PIX * pix
                            c_int,  # l_int32 direction
-                           POINTER(LPNuma),  # NUMA * * pnastart
+                           LPLPNuma,  # NUMA ** pnastart
                            ),
         'pixFindMaxHorizontalRunOnLine': (c_int,
                                           LPPix,  # PIX * pix
                                           c_int,  # l_int32 y
-                                          POINTER(c_int),  # l_int32 * pxstart
-                                          POINTER(c_int),  # l_int32 * psize
+                                          c_int_p,  # l_int32 * pxstart
+                                          c_int_p,  # l_int32 * psize
                                           ),
         'pixFindMaxVerticalRunOnLine': (c_int,
                                         LPPix,  # PIX * pix
                                         c_int,  # l_int32 x
-                                        POINTER(c_int),  # l_int32 * pystart
-                                        POINTER(c_int),  # l_int32 * psize
+                                        c_int_p,  # l_int32 * pystart
+                                        c_int_p,  # l_int32 * psize
                                         ),
         'runlengthMembershipOnLine': (c_int,
-                                      POINTER(c_int),  # l_int32 * buffer
+                                      c_int_p,  # l_int32 * buffer
                                       c_int,  # l_int32 size
                                       c_int,  # l_int32 depth
-                                      POINTER(c_int),  # l_int32 * start
-                                      POINTER(c_int),  # l_int32 * end
+                                      c_int_p,  # l_int32 * start
+                                      c_int_p,  # l_int32 * end
                                       c_int,  # l_int32 n
                                       ),
-        'makeMSBitLocTab': (POINTER(c_int),
+        'makeMSBitLocTab': (c_int_p,
                             c_int,  # l_int32 bitval
                             ),
         'sarrayCreate': (LPSarray,  # SARRAY *
@@ -11134,7 +11136,7 @@ class LeptonicaAPI(CAPI):
                                         c_int,  # l_int32 blankflag
                                         ),
         'sarrayDestroy': (None,
-                          POINTER(LPSarray),  # SARRAY * * psa
+                          LPLPSarray,  # SARRAY ** psa
                           ),
         'sarrayCopy': (LPSarray,  # SARRAY *
                        LPSarray,  # SARRAY * sa
@@ -11165,8 +11167,8 @@ class LeptonicaAPI(CAPI):
                            ),
         'sarrayGetArray': (POINTER(c_char_p),
                            LPSarray,  # SARRAY * sa
-                           POINTER(c_int),  # l_int32 * pnalloc
-                           POINTER(c_int),  # l_int32 * pn
+                           c_int_p,  # l_int32 * pnalloc
+                           c_int_p,  # l_int32 * pn
                            ),
         'sarrayGetString': (c_char_p,
                             LPSarray,  # SARRAY * sa
@@ -11231,9 +11233,9 @@ class LeptonicaAPI(CAPI):
         'sarrayParseRange': (c_int,
                              LPSarray,  # SARRAY * sa
                              c_int,  # l_int32 start
-                             POINTER(c_int),  # l_int32 * pactualstart
-                             POINTER(c_int),  # l_int32 * pend
-                             POINTER(c_int),  # l_int32 * pnewstart
+                             c_int_p,  # l_int32 * pactualstart
+                             c_int_p,  # l_int32 * pend
+                             c_int_p,  # l_int32 * pnewstart
                              c_char_p,  # const char * substr
                              c_int,  # l_int32 loc
                              ),
@@ -11244,7 +11246,7 @@ class LeptonicaAPI(CAPI):
                              LPFile,  # FILE * fp
                              ),
         'sarrayReadMem': (LPSarray,  # SARRAY *
-                          POINTER(c_ubyte),  # const l_uint8 * data
+                          c_ubyte_p,  # const l_uint8 * data
                           c_size_t,  # size_t size
                           ),
         'sarrayWrite': (c_int,
@@ -11259,8 +11261,8 @@ class LeptonicaAPI(CAPI):
                               LPSarray,  # SARRAY * sa
                               ),
         'sarrayWriteMem': (c_int,
-                           POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                           POINTER(c_size_t),  # size_t * psize
+                           POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                           c_size_t_p,  # size_t * psize
                            LPSarray,  # SARRAY * sa
                            ),
         'sarrayAppend': (c_int,
@@ -11304,27 +11306,27 @@ class LeptonicaAPI(CAPI):
                                  ),
         'sarrayRemoveDupsByAset': (c_int,
                                    LPSarray,  # SARRAY * sas
-                                   POINTER(LPSarray),  # SARRAY * * psad
+                                   LPLPSarray,  # SARRAY ** psad
                                    ),
         'sarrayUnionByAset': (c_int,
                               LPSarray,  # SARRAY * sa1
                               LPSarray,  # SARRAY * sa2
-                              POINTER(LPSarray),  # SARRAY * * psad
+                              LPLPSarray,  # SARRAY ** psad
                               ),
         'sarrayIntersectionByAset': (c_int,
                                      LPSarray,  # SARRAY * sa1
                                      LPSarray,  # SARRAY * sa2
-                                     POINTER(LPSarray),  # SARRAY * * psad
+                                     LPLPSarray,  # SARRAY ** psad
                                      ),
         'sarrayUnionByHmap': (c_int,
                               LPSarray,  # SARRAY * sa1
                               LPSarray,  # SARRAY * sa2
-                              POINTER(LPSarray),  # SARRAY * * psad
+                              LPLPSarray,  # SARRAY ** psad
                               ),
         'sarrayIntersectionByHmap': (c_int,
                                      LPSarray,  # SARRAY * sa1
                                      LPSarray,  # SARRAY * sa2
-                                     POINTER(LPSarray),  # SARRAY * * psad
+                                     LPLPSarray,  # SARRAY ** psad
                                      ),
         'sarrayGenerateIntegers': (LPSarray,  # SARRAY *
                                    c_int,  # l_int32 n
@@ -11332,7 +11334,7 @@ class LeptonicaAPI(CAPI):
         'sarrayLookupCSKV': (c_int,
                              LPSarray,  # SARRAY * sa
                              c_char_p,  # const char * keystring
-                             POINTER(c_char_p),  # char * * pvalstring
+                             POINTER(c_char_p),  # char ** pvalstring
                              ),
         'pixScale': (LPPix,  # PIX *
                      LPPix,  # PIX * pixs
@@ -11353,7 +11355,7 @@ class LeptonicaAPI(CAPI):
                                  LPPix,  # PIX * pixs
                                  c_float,  # l_float32 target
                                  c_float,  # l_float32 assumed
-                                 POINTER(c_float),  # l_float32 * pscalefact
+                                 c_float_p,  # l_float32 * pscalefact
                                  ),
         'pixScaleGeneral': (LPPix,  # PIX *
                             LPPix,  # PIX * pixs
@@ -11619,14 +11621,14 @@ class LeptonicaAPI(CAPI):
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 maxmin
                             c_int,  # l_int32 minmax
-                            POINTER(LPPix),  # PIX * * ppixmin
-                            POINTER(LPPix),  # PIX * * ppixmax
+                            LPLPPix,  # PIX ** ppixmin
+                            LPLPPix,  # PIX ** ppixmax
                             ),
         'pixSelectedLocalExtrema': (c_int,
                                     LPPix,  # PIX * pixs
                                     c_int,  # l_int32 mindist
-                                    POINTER(LPPix),  # PIX * * ppixmin
-                                    POINTER(LPPix),  # PIX * * ppixmax
+                                    LPLPPix,  # PIX ** ppixmin
+                                    LPLPPix,  # PIX ** ppixmax
                                     ),
         'pixFindEqualValues': (LPPix,  # PIX *
                                LPPix,  # PIX * pixs1
@@ -11635,8 +11637,8 @@ class LeptonicaAPI(CAPI):
         'pixSelectMinInConnComp': (c_int,
                                    LPPix,  # PIX * pixs
                                    LPPix,  # PIX * pixm
-                                   POINTER(LPPta),  # PTA * * ppta
-                                   POINTER(LPNuma),  # NUMA * * pnav
+                                   LPLPPta,  # PTA ** ppta
+                                   LPLPNuma,  # NUMA ** pnav
                                    ),
         'pixRemoveSeededComponents': (LPPix,  # PIX *
                                       LPPix,  # PIX * pixd
@@ -11645,18 +11647,18 @@ class LeptonicaAPI(CAPI):
                                       c_int,  # l_int32 connectivity
                                       c_int,  # l_int32 bordersize
                                       ),
-        'create2dIntArray': (POINTER(POINTER(c_int)),
+        'create2dIntArray': (POINTER(c_int_p),
                              c_int,  # l_int32 sy
                              c_int,  # l_int32 sx
                              ),
         'getCompositeParameters': (c_int,
                                    c_int,  # l_int32 size
-                                   POINTER(c_int),  # l_int32 * psize1
-                                   POINTER(c_int),  # l_int32 * psize2
-                                   POINTER(c_char_p),  # char * * pnameh1
-                                   POINTER(c_char_p),  # char * * pnameh2
-                                   POINTER(c_char_p),  # char * * pnamev1
-                                   POINTER(c_char_p),  # char * * pnamev2
+                                   c_int_p,  # l_int32 * psize1
+                                   c_int_p,  # l_int32 * psize2
+                                   POINTER(c_char_p),  # char ** pnameh1
+                                   POINTER(c_char_p),  # char ** pnameh2
+                                   POINTER(c_char_p),  # char ** pnamev1
+                                   POINTER(c_char_p),  # char ** pnamev2
                                    ),
         'pixGetRunCentersOnLine': (LPNuma,  # NUMA *
                                    LPPix,  # PIX * pixs
@@ -11679,8 +11681,8 @@ class LeptonicaAPI(CAPI):
                                     LPPix,  # PIX * pixs
                                     c_int,  # l_int32 x
                                     c_int,  # l_int32 y
-                                    POINTER(c_int),  # l_int32 * pxa
-                                    POINTER(c_int),  # l_int32 * pya
+                                    c_int_p,  # l_int32 * pxa
+                                    c_int_p,  # l_int32 * pya
                                     ),
         'pixHShear': (LPPix,  # PIX *
                       LPPix,  # PIX * pixd
@@ -11755,8 +11757,8 @@ class LeptonicaAPI(CAPI):
         'pixFindSkewAndDeskew': (LPPix,  # PIX *
                                  LPPix,  # PIX * pixs
                                  c_int,  # l_int32 redsearch
-                                 POINTER(c_float),  # l_float32 * pangle
-                                 POINTER(c_float),  # l_float32 * pconf
+                                 c_float_p,  # l_float32 * pangle
+                                 c_float_p,  # l_float32 * pconf
                                  ),
         'pixDeskewGeneral': (LPPix,  # PIX *
                              LPPix,  # PIX * pixs
@@ -11765,25 +11767,25 @@ class LeptonicaAPI(CAPI):
                              c_float,  # l_float32 sweepdelta
                              c_int,  # l_int32 redsearch
                              c_int,  # l_int32 thresh
-                             POINTER(c_float),  # l_float32 * pangle
-                             POINTER(c_float),  # l_float32 * pconf
+                             c_float_p,  # l_float32 * pangle
+                             c_float_p,  # l_float32 * pconf
                              ),
         'pixFindSkew': (c_int,
                         LPPix,  # PIX * pixs
-                        POINTER(c_float),  # l_float32 * pangle
-                        POINTER(c_float),  # l_float32 * pconf
+                        c_float_p,  # l_float32 * pangle
+                        c_float_p,  # l_float32 * pconf
                         ),
         'pixFindSkewSweep': (c_int,
                              LPPix,  # PIX * pixs
-                             POINTER(c_float),  # l_float32 * pangle
+                             c_float_p,  # l_float32 * pangle
                              c_int,  # l_int32 reduction
                              c_float,  # l_float32 sweeprange
                              c_float,  # l_float32 sweepdelta
                              ),
         'pixFindSkewSweepAndSearch': (c_int,
                                       LPPix,  # PIX * pixs
-                                      POINTER(c_float),  # l_float32 * pangle
-                                      POINTER(c_float),  # l_float32 * pconf
+                                      c_float_p,  # l_float32 * pangle
+                                      c_float_p,  # l_float32 * pconf
                                       c_int,  # l_int32 redsweep
                                       c_int,  # l_int32 redsearch
                                       c_float,  # l_float32 sweeprange
@@ -11793,11 +11795,11 @@ class LeptonicaAPI(CAPI):
         'pixFindSkewSweepAndSearchScore': (c_int,
                                            LPPix,  # PIX * pixs
                                            # l_float32 * pangle
-                                           POINTER(c_float),
+                                           c_float_p,
                                            # l_float32 * pconf
-                                           POINTER(c_float),
+                                           c_float_p,
                                            # l_float32 * pendscore
-                                           POINTER(c_float),
+                                           c_float_p,
                                            c_int,  # l_int32 redsweep
                                            c_int,  # l_int32 redsearch
                                            c_float,  # l_float32 sweepcenter
@@ -11808,11 +11810,11 @@ class LeptonicaAPI(CAPI):
         'pixFindSkewSweepAndSearchScorePivot': (c_int,
                                                 LPPix,  # PIX * pixs
                                                 # l_float32 * pangle
-                                                POINTER(c_float),
+                                                c_float_p,
                                                 # l_float32 * pconf
-                                                POINTER(c_float),
+                                                c_float_p,
                                                 # l_float32 * pendscore
-                                                POINTER(c_float),
+                                                c_float_p,
                                                 c_int,  # l_int32 redsweep
                                                 c_int,  # l_int32 redsearch
                                                 # l_float32 sweepcenter
@@ -11827,8 +11829,8 @@ class LeptonicaAPI(CAPI):
                                                 ),
         'pixFindSkewOrthogonalRange': (c_int,
                                        LPPix,  # PIX * pixs
-                                       POINTER(c_float),  # l_float32 * pangle
-                                       POINTER(c_float),  # l_float32 * pconf
+                                       c_float_p,  # l_float32 * pangle
+                                       c_float_p,  # l_float32 * pconf
                                        c_int,  # l_int32 redsweep
                                        c_int,  # l_int32 redsearch
                                        c_float,  # l_float32 sweeprange
@@ -11838,65 +11840,65 @@ class LeptonicaAPI(CAPI):
                                        ),
         'pixFindDifferentialSquareSum': (c_int,
                                          LPPix,  # PIX * pixs
-                                         POINTER(c_float),  # l_float32 * psum
+                                         c_float_p,  # l_float32 * psum
                                          ),
         'pixFindNormalizedSquareSum': (c_int,
                                        LPPix,  # PIX * pixs
                                        # l_float32 * phratio
-                                       POINTER(c_float),
+                                       c_float_p,
                                        # l_float32 * pvratio
-                                       POINTER(c_float),
-                                       POINTER(c_float),  # l_float32 * pfract
+                                       c_float_p,
+                                       c_float_p,  # l_float32 * pfract
                                        ),
         'pixReadStreamSpix': (LPPix,  # PIX *
                               LPFile,  # FILE * fp
                               ),
         'readHeaderSpix': (c_int,
                            c_char_p,  # const char * filename
-                           POINTER(c_int),  # l_int32 * pwidth
-                           POINTER(c_int),  # l_int32 * pheight
-                           POINTER(c_int),  # l_int32 * pbps
-                           POINTER(c_int),  # l_int32 * pspp
-                           POINTER(c_int),  # l_int32 * piscmap
+                           c_int_p,  # l_int32 * pwidth
+                           c_int_p,  # l_int32 * pheight
+                           c_int_p,  # l_int32 * pbps
+                           c_int_p,  # l_int32 * pspp
+                           c_int_p,  # l_int32 * piscmap
                            ),
         'freadHeaderSpix': (c_int,
                             LPFile,  # FILE * fp
-                            POINTER(c_int),  # l_int32 * pwidth
-                            POINTER(c_int),  # l_int32 * pheight
-                            POINTER(c_int),  # l_int32 * pbps
-                            POINTER(c_int),  # l_int32 * pspp
-                            POINTER(c_int),  # l_int32 * piscmap
+                            c_int_p,  # l_int32 * pwidth
+                            c_int_p,  # l_int32 * pheight
+                            c_int_p,  # l_int32 * pbps
+                            c_int_p,  # l_int32 * pspp
+                            c_int_p,  # l_int32 * piscmap
                             ),
         'sreadHeaderSpix': (c_int,
-                            POINTER(c_uint),  # const l_uint32 * data
+                            c_uint_p,  # const l_uint32 * data
                             c_size_t,  # size_t size
-                            POINTER(c_int),  # l_int32 * pwidth
-                            POINTER(c_int),  # l_int32 * pheight
-                            POINTER(c_int),  # l_int32 * pbps
-                            POINTER(c_int),  # l_int32 * pspp
-                            POINTER(c_int),  # l_int32 * piscmap
+                            c_int_p,  # l_int32 * pwidth
+                            c_int_p,  # l_int32 * pheight
+                            c_int_p,  # l_int32 * pbps
+                            c_int_p,  # l_int32 * pspp
+                            c_int_p,  # l_int32 * piscmap
                             ),
         'pixWriteStreamSpix': (c_int,
                                LPFile,  # FILE * fp
                                LPPix,  # PIX * pix
                                ),
         'pixReadMemSpix': (LPPix,  # PIX *
-                           POINTER(c_ubyte),  # const l_uint8 * data
+                           c_ubyte_p,  # const l_uint8 * data
                            c_size_t,  # size_t size
                            ),
         'pixWriteMemSpix': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                            POINTER(c_size_t),  # size_t * psize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                            c_size_t_p,  # size_t * psize
                             LPPix,  # PIX * pix
                             ),
         'pixSerializeToMemory': (c_int,
                                  LPPix,  # PIX * pixs
-                                 # l_uint32 * * pdata
-                                 POINTER(POINTER(c_uint)),
-                                 POINTER(c_size_t),  # size_t * pnbytes
+                                 # l_uint32 ** pdata
+                                 POINTER(c_uint_p),
+                                 c_size_t_p,  # size_t * pnbytes
                                  ),
         'pixDeserializeFromMemory': (LPPix,  # PIX *
-                                     POINTER(c_uint),  # const l_uint32 * data
+                                     c_uint_p,  # const l_uint32 * data
                                      c_size_t,  # size_t nbytes
                                      ),
         'strcodeCreateFromFile': (c_int,
@@ -11907,24 +11909,24 @@ class LeptonicaAPI(CAPI):
         'l_getStructStrFromFile': (c_int,
                                    c_char_p,  # const char * filename
                                    c_int,  # l_int32 field
-                                   POINTER(c_char_p),  # char * * pstr
+                                   POINTER(c_char_p),  # char ** pstr
                                    ),
         'pixFindStrokeLength': (c_int,
                                 LPPix,  # PIX * pixs
-                                POINTER(c_int),  # l_int32 * tab8
-                                POINTER(c_int),  # l_int32 * plength
+                                c_int_p,  # l_int32 * tab8
+                                c_int_p,  # l_int32 * plength
                                 ),
         'pixFindStrokeWidth': (c_int,
                                LPPix,  # PIX * pixs
                                c_float,  # l_float32 thresh
-                               POINTER(c_int),  # l_int32 * tab8
-                               POINTER(c_float),  # l_float32 * pwidth
-                               POINTER(LPNuma),  # NUMA * * pnahisto
+                               c_int_p,  # l_int32 * tab8
+                               c_float_p,  # l_float32 * pwidth
+                               LPLPNuma,  # NUMA ** pnahisto
                                ),
         'pixaFindStrokeWidth': (LPNuma,  # NUMA *
                                 LPPixa,  # PIXA * pixa
                                 c_float,  # l_float32 thresh
-                                POINTER(c_int),  # l_int32 * tab8
+                                c_int_p,  # l_int32 * tab8
                                 c_int,  # l_int32 debug
                                 ),
         'pixaModifyStrokeWidth': (LPPixa,  # PIXA *
@@ -11948,15 +11950,15 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 thinfirst
                               c_int,  # l_int32 connectivity
                               ),
-        'sudokuReadFile': (POINTER(c_int),
+        'sudokuReadFile': (c_int_p,
                            c_char_p,  # const char * filename
                            ),
-        'sudokuReadString': (POINTER(c_int),
+        'sudokuReadString': (c_int_p,
                              c_char_p,  # const char * str
                              ),
         'sudokuTestUniqueness': (c_int,
-                                 POINTER(c_int),  # l_int32 * array
-                                 POINTER(c_int),  # l_int32 * punique
+                                 c_int_p,  # l_int32 * array
+                                 c_int_p,  # l_int32 * punique
                                  ),
         'splitStringToParagraphs': (LPSarray,  # SARRAY *
                                     c_char_p,  # char * textstr
@@ -11999,7 +12001,7 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixReadFromMultipageTiff': (LPPix,  # PIX *
                                      c_char_p,  # const char * fname
-                                     POINTER(c_size_t),  # size_t * poffset
+                                     c_size_t_p,  # size_t * poffset
                                      ),
         'pixaReadMultipageTiff': (LPPixa,  # PIXA *
                                   c_char_p,  # const char * filename
@@ -12023,91 +12025,91 @@ class LeptonicaAPI(CAPI):
                            ),
         'tiffGetCount': (c_int,
                          LPFile,  # FILE * fp
-                         POINTER(c_int),  # l_int32 * pn
+                         c_int_p,  # l_int32 * pn
                          ),
         'getTiffResolution': (c_int,
                               LPFile,  # FILE * fp
-                              POINTER(c_int),  # l_int32 * pxres
-                              POINTER(c_int),  # l_int32 * pyres
+                              c_int_p,  # l_int32 * pxres
+                              c_int_p,  # l_int32 * pyres
                               ),
         'readHeaderTiff': (c_int,
                            c_char_p,  # const char * filename
                            c_int,  # l_int32 n
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pbps
-                           POINTER(c_int),  # l_int32 * pspp
-                           POINTER(c_int),  # l_int32 * pres
-                           POINTER(c_int),  # l_int32 * pcmap
-                           POINTER(c_int),  # l_int32 * pformat
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pbps
+                           c_int_p,  # l_int32 * pspp
+                           c_int_p,  # l_int32 * pres
+                           c_int_p,  # l_int32 * pcmap
+                           c_int_p,  # l_int32 * pformat
                            ),
         'freadHeaderTiff': (c_int,
                             LPFile,  # FILE * fp
                             c_int,  # l_int32 n
-                            POINTER(c_int),  # l_int32 * pw
-                            POINTER(c_int),  # l_int32 * ph
-                            POINTER(c_int),  # l_int32 * pbps
-                            POINTER(c_int),  # l_int32 * pspp
-                            POINTER(c_int),  # l_int32 * pres
-                            POINTER(c_int),  # l_int32 * pcmap
-                            POINTER(c_int),  # l_int32 * pformat
+                            c_int_p,  # l_int32 * pw
+                            c_int_p,  # l_int32 * ph
+                            c_int_p,  # l_int32 * pbps
+                            c_int_p,  # l_int32 * pspp
+                            c_int_p,  # l_int32 * pres
+                            c_int_p,  # l_int32 * pcmap
+                            c_int_p,  # l_int32 * pformat
                             ),
         'readHeaderMemTiff': (c_int,
-                              POINTER(c_ubyte),  # const l_uint8 * cdata
+                              c_ubyte_p,  # const l_uint8 * cdata
                               c_size_t,  # size_t size
                               c_int,  # l_int32 n
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
-                              POINTER(c_int),  # l_int32 * pbps
-                              POINTER(c_int),  # l_int32 * pspp
-                              POINTER(c_int),  # l_int32 * pres
-                              POINTER(c_int),  # l_int32 * pcmap
-                              POINTER(c_int),  # l_int32 * pformat
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
+                              c_int_p,  # l_int32 * pbps
+                              c_int_p,  # l_int32 * pspp
+                              c_int_p,  # l_int32 * pres
+                              c_int_p,  # l_int32 * pcmap
+                              c_int_p,  # l_int32 * pformat
                               ),
         'findTiffCompression': (c_int,
                                 LPFile,  # FILE * fp
-                                POINTER(c_int),  # l_int32 * pcomptype
+                                c_int_p,  # l_int32 * pcomptype
                                 ),
         'extractG4DataFromFile': (c_int,
                                   c_char_p,  # const char * filein
-                                  # l_uint8 * * pdata
-                                  POINTER(POINTER(c_ubyte)),
-                                  POINTER(c_size_t),  # size_t * pnbytes
-                                  POINTER(c_int),  # l_int32 * pw
-                                  POINTER(c_int),  # l_int32 * ph
-                                  POINTER(c_int),  # l_int32 * pminisblack
+                                  # l_uint8 ** pdata
+                                  POINTER(c_ubyte_p),
+                                  c_size_t_p,  # size_t * pnbytes
+                                  c_int_p,  # l_int32 * pw
+                                  c_int_p,  # l_int32 * ph
+                                  c_int_p,  # l_int32 * pminisblack
                                   ),
         'pixReadMemTiff': (LPPix,  # PIX *
-                           POINTER(c_ubyte),  # const l_uint8 * cdata
+                           c_ubyte_p,  # const l_uint8 * cdata
                            c_size_t,  # size_t size
                            c_int,  # l_int32 n
                            ),
         'pixReadMemFromMultipageTiff': (LPPix,  # PIX *
                                         # const l_uint8 * cdata
-                                        POINTER(c_ubyte),
+                                        c_ubyte_p,
                                         c_size_t,  # size_t size
-                                        POINTER(c_size_t),  # size_t * poffset
+                                        c_size_t_p,  # size_t * poffset
                                         ),
         'pixaReadMemMultipageTiff': (LPPixa,  # PIXA *
-                                     POINTER(c_ubyte),  # const l_uint8 * data
+                                     c_ubyte_p,  # const l_uint8 * data
                                      c_size_t,  # size_t size
                                      ),
         'pixaWriteMemMultipageTiff': (c_int,
-                                      # l_uint8 * * pdata
-                                      POINTER(POINTER(c_ubyte)),
-                                      POINTER(c_size_t),  # size_t * psize
+                                      # l_uint8 ** pdata
+                                      POINTER(c_ubyte_p),
+                                      c_size_t_p,  # size_t * psize
                                       LPPixa,  # PIXA * pixa
                                       ),
         'pixWriteMemTiff': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                            POINTER(c_size_t),  # size_t * psize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                            c_size_t_p,  # size_t * psize
                             LPPix,  # PIX * pix
                             c_int,  # l_int32 comptype
                             ),
         'pixWriteMemTiffCustom': (c_int,
-                                  # l_uint8 * * pdata
-                                  POINTER(POINTER(c_ubyte)),
-                                  POINTER(c_size_t),  # size_t * psize
+                                  # l_uint8 ** pdata
+                                  POINTER(c_ubyte_p),
+                                  c_size_t_p,  # size_t * psize
                                   LPPix,  # PIX * pix
                                   c_int,  # l_int32 comptype
                                   LPNuma,  # NUMA * natags
@@ -12139,7 +12141,7 @@ class LeptonicaAPI(CAPI):
         'filesAreIdentical': (c_int,
                               c_char_p,  # const char * fname1
                               c_char_p,  # const char * fname2
-                              POINTER(c_int),  # l_int32 * psame
+                              c_int_p,  # l_int32 * psame
                               ),
         'convertOnLittleEnd16': (c_ushort,
                                  c_ushort,  # l_uint16 shortin
@@ -12169,7 +12171,7 @@ class LeptonicaAPI(CAPI):
                              c_char_p,  # const char * filein
                              c_int,  # l_int32 start
                              c_int,  # l_int32 nbytes
-                             POINTER(c_ubyte),  # l_uint8 * newdata
+                             c_ubyte_p,  # l_uint8 * newdata
                              c_size_t,  # size_t newsize
                              c_char_p,  # const char * fileout
                              ),
@@ -12177,36 +12179,36 @@ class LeptonicaAPI(CAPI):
                                    c_int,  # l_int32 start
                                    c_int,  # l_int32 end
                                    c_int,  # l_int32 seed
-                                   POINTER(c_int),  # l_int32 * pval
+                                   c_int_p,  # l_int32 * pval
                                    ),
         'lept_roundftoi': (c_int,
                            c_float,  # l_float32 fval
                            ),
         'l_hashStringToUint64': (c_int,
                                  c_char_p,  # const char * str
-                                 POINTER(c_ulonglong),  # l_uint64 * phash
+                                 c_ulonglong_p,  # l_uint64 * phash
                                  ),
         'l_hashStringToUint64Fast': (c_int,
                                      c_char_p,  # const char * str
-                                     POINTER(c_ulonglong),  # l_uint64 * phash
+                                     c_ulonglong_p,  # l_uint64 * phash
                                      ),
         'l_hashPtToUint64': (c_int,
                              c_int,  # l_int32 x
                              c_int,  # l_int32 y
-                             POINTER(c_ulonglong),  # l_uint64 * phash
+                             c_ulonglong_p,  # l_uint64 * phash
                              ),
         'l_hashFloat64ToUint64': (c_int,
                                   c_double,  # l_float64 val
-                                  POINTER(c_ulonglong),  # l_uint64 * phash
+                                  c_ulonglong_p,  # l_uint64 * phash
                                   ),
         'findNextLargerPrime': (c_int,
                                 c_int,  # l_int32 start
-                                POINTER(c_uint),  # l_uint32 * pprime
+                                c_uint_p,  # l_uint32 * pprime
                                 ),
         'lept_isPrime': (c_int,
                          c_ulonglong,  # l_uint64 n
-                         POINTER(c_int),  # l_int32 * pis_prime
-                         POINTER(c_uint),  # l_uint32 * pfactor
+                         c_int_p,  # l_int32 * pis_prime
+                         c_uint_p,  # l_uint32 * pfactor
                          ),
         'convertIntToGrayCode': (c_uint,
                                  c_uint,  # l_uint32 val
@@ -12214,12 +12216,12 @@ class LeptonicaAPI(CAPI):
         'convertGrayCodeToInt': (c_uint,
                                  c_uint,  # l_uint32 val
                                  ),
-        'getLeptonicaVersion': (c_char_p, ),
+        'getLeptonicaVersion': (LP_c_char, ),
         'startTimer': (None, ),
         'stopTimer': (c_float, ),
         'l_getCurrentTime': (None,
-                             POINTER(c_int),  # l_int32 * sec
-                             POINTER(c_int),  # l_int32 * usec
+                             c_int_p,  # l_int32 * sec
+                             c_int_p,  # l_int32 * usec
                              ),
         'l_getFormattedDate': (c_char_p, ),
         'stringNew': (c_char_p,
@@ -12236,7 +12238,7 @@ class LeptonicaAPI(CAPI):
                               c_int,  # l_int32 nbytes
                               ),
         'stringReplace': (c_int,
-                          POINTER(c_char_p),  # char * * pdest
+                          POINTER(c_char_p),  # char ** pdest
                           c_char_p,  # const char * src
                           ),
         'stringLength': (c_int,
@@ -12256,7 +12258,7 @@ class LeptonicaAPI(CAPI):
                        c_char_p,  # const char * src2
                        ),
         'stringJoinIP': (c_int,
-                         POINTER(c_char_p),  # char * * psrc1
+                         POINTER(c_char_p),  # char ** psrc1
                          c_char_p,  # const char * src2
                          ),
         'stringReverse': (c_char_p,
@@ -12265,18 +12267,18 @@ class LeptonicaAPI(CAPI):
         'strtokSafe': (c_char_p,
                        c_char_p,  # char * cstr
                        c_char_p,  # const char * seps
-                       POINTER(c_char_p),  # char * * psaveptr
+                       POINTER(c_char_p),  # char ** psaveptr
                        ),
         'stringSplitOnToken': (c_int,
                                c_char_p,  # char * cstr
                                c_char_p,  # const char * seps
-                               POINTER(c_char_p),  # char * * phead
-                               POINTER(c_char_p),  # char * * ptail
+                               POINTER(c_char_p),  # char ** phead
+                               POINTER(c_char_p),  # char ** ptail
                                ),
         'stringCheckForChars': (c_int,
                                 c_char_p,  # const char * src
                                 c_char_p,  # const char * chars
-                                POINTER(c_int),  # l_int32 * pfound
+                                c_int_p,  # l_int32 * pfound
                                 ),
         'stringRemoveChars': (c_char_p,
                               c_char_p,  # const char * src
@@ -12286,64 +12288,64 @@ class LeptonicaAPI(CAPI):
                                     c_char_p,  # const char * src
                                     c_char_p,  # const char * sub1
                                     c_char_p,  # const char * sub2
-                                    POINTER(c_int),  # l_int32 * pcount
+                                    c_int_p,  # l_int32 * pcount
                                     ),
         'stringReplaceSubstr': (c_char_p,
                                 c_char_p,  # const char * src
                                 c_char_p,  # const char * sub1
                                 c_char_p,  # const char * sub2
-                                POINTER(c_int),  # l_int32 * ploc
-                                POINTER(c_int),  # l_int32 * pfound
+                                c_int_p,  # l_int32 * ploc
+                                c_int_p,  # l_int32 * pfound
                                 ),
         'stringFindSubstr': (c_int,
                              c_char_p,  # const char * src
                              c_char_p,  # const char * sub
-                             POINTER(c_int),  # l_int32 * ploc
+                             c_int_p,  # l_int32 * ploc
                              ),
-        'arrayReplaceEachSequence': (POINTER(c_ubyte),
+        'arrayReplaceEachSequence': (c_ubyte_p,
                                      # const l_uint8 * datas
-                                     POINTER(c_ubyte),
+                                     c_ubyte_p,
                                      c_size_t,  # size_t dataslen
-                                     POINTER(c_ubyte),  # const l_uint8 * seq
+                                     c_ubyte_p,  # const l_uint8 * seq
                                      c_size_t,  # size_t seqlen
                                      # const l_uint8 * newseq
-                                     POINTER(c_ubyte),
+                                     c_ubyte_p,
                                      c_size_t,  # size_t newseqlen
-                                     POINTER(c_size_t),  # size_t * pdatadlen
-                                     POINTER(c_int),  # l_int32 * pcount
+                                     c_size_t_p,  # size_t * pdatadlen
+                                     c_int_p,  # l_int32 * pcount
                                      ),
         'arrayFindSequence': (c_int,
-                              POINTER(c_ubyte),  # const l_uint8 * data
+                              c_ubyte_p,  # const l_uint8 * data
                               c_size_t,  # size_t datalen
-                              POINTER(c_ubyte),  # const l_uint8 * sequence
+                              c_ubyte_p,  # const l_uint8 * sequence
                               c_size_t,  # size_t seqlen
-                              POINTER(c_int),  # l_int32 * poffset
-                              POINTER(c_int),  # l_int32 * pfound
+                              c_int_p,  # l_int32 * poffset
+                              c_int_p,  # l_int32 * pfound
                               ),
         'reallocNew': (c_void_p,
-                       POINTER(c_void_p),  # void * * pindata
+                       POINTER(c_void_p),  # void ** pindata
                        c_size_t,  # size_t oldsize
                        c_size_t,  # size_t newsize
                        ),
-        'l_binaryRead': (POINTER(c_ubyte),
+        'l_binaryRead': (c_ubyte_p,
                          c_char_p,  # const char * filename
-                         POINTER(c_size_t),  # size_t * pnbytes
+                         c_size_t_p,  # size_t * pnbytes
                          ),
-        'l_binaryReadStream': (POINTER(c_ubyte),
+        'l_binaryReadStream': (c_ubyte_p,
                                LPFile,  # FILE * fp
-                               POINTER(c_size_t),  # size_t * pnbytes
+                               c_size_t_p,  # size_t * pnbytes
                                ),
-        'l_binaryReadSelect': (POINTER(c_ubyte),
+        'l_binaryReadSelect': (c_ubyte_p,
                                c_char_p,  # const char * filename
                                c_size_t,  # size_t start
                                c_size_t,  # size_t nbytes
-                               POINTER(c_size_t),  # size_t * pnread
+                               c_size_t_p,  # size_t * pnread
                                ),
-        'l_binaryReadSelectStream': (POINTER(c_ubyte),
+        'l_binaryReadSelectStream': (c_ubyte_p,
                                      LPFile,  # FILE * fp
                                      c_size_t,  # size_t start
                                      c_size_t,  # size_t nbytes
-                                     POINTER(c_size_t),  # size_t * pnread
+                                     c_size_t_p,  # size_t * pnread
                                      ),
         'l_binaryWrite': (c_int,
                           c_char_p,  # const char * filename
@@ -12357,16 +12359,16 @@ class LeptonicaAPI(CAPI):
         'fnbytesInFile': (c_size_t,
                           LPFile,  # FILE * fp
                           ),
-        'l_binaryCopy': (POINTER(c_ubyte),
-                         POINTER(c_ubyte),  # const l_uint8 * datas
+        'l_binaryCopy': (c_ubyte_p,
+                         c_ubyte_p,  # const l_uint8 * datas
                          c_size_t,  # size_t size
                          ),
         'l_binaryCompare': (c_int,
-                            POINTER(c_ubyte),  # const l_uint8 * data1
+                            c_ubyte_p,  # const l_uint8 * data1
                             c_size_t,  # size_t size1
-                            POINTER(c_ubyte),  # const l_uint8 * data2
+                            c_ubyte_p,  # const l_uint8 * data2
                             c_size_t,  # size_t size2
-                            POINTER(c_int),  # l_int32 * psame
+                            c_int_p,  # l_int32 * psame
                             ),
         'fileCopy': (c_int,
                      c_char_p,  # const char * srcfile
@@ -12395,7 +12397,7 @@ class LeptonicaAPI(CAPI):
                              c_char_p,  # const char * modestring
                              ),
         'fopenReadFromMemory': (LPFile,  # FILE *
-                                POINTER(c_ubyte),  # const l_uint8 * data
+                                c_ubyte_p,  # const l_uint8 * data
                                 c_size_t,  # size_t size
                                 ),
         'fopenWriteWinTempfile': (LPFile, ),  # FILE *
@@ -12421,7 +12423,7 @@ class LeptonicaAPI(CAPI):
                        ),
         'lept_direxists': (None,
                            c_char_p,  # const char * dir
-                           POINTER(c_int),  # l_int32 * pexists
+                           c_int_p,  # l_int32 * pexists
                            ),
         'lept_rm_match': (c_int,
                           c_char_p,  # const char * subdir
@@ -12438,26 +12440,26 @@ class LeptonicaAPI(CAPI):
                     c_char_p,  # const char * srcfile
                     c_char_p,  # const char * newdir
                     c_char_p,  # const char * newtail
-                    POINTER(c_char_p),  # char * * pnewpath
+                    POINTER(c_char_p),  # char ** pnewpath
                     ),
         'lept_cp': (c_int,
                     c_char_p,  # const char * srcfile
                     c_char_p,  # const char * newdir
                     c_char_p,  # const char * newtail
-                    POINTER(c_char_p),  # char * * pnewpath
+                    POINTER(c_char_p),  # char ** pnewpath
                     ),
         'callSystemDebug': (None,
                             c_char_p,  # const char * cmd
                             ),
         'splitPathAtDirectory': (c_int,
                                  c_char_p,  # const char * pathname
-                                 POINTER(c_char_p),  # char * * pdir
-                                 POINTER(c_char_p),  # char * * ptail
+                                 POINTER(c_char_p),  # char ** pdir
+                                 POINTER(c_char_p),  # char ** ptail
                                  ),
         'splitPathAtExtension': (c_int,
                                  c_char_p,  # const char * pathname
-                                 POINTER(c_char_p),  # char * * pbasename
-                                 POINTER(c_char_p),  # char * * pextension
+                                 POINTER(c_char_p),  # char ** pbasename
+                                 POINTER(c_char_p),  # char ** pextension
                                  ),
         'pathJoin': (c_char_p,
                      c_char_p,  # const char * dir
@@ -12587,9 +12589,9 @@ class LeptonicaAPI(CAPI):
                                     c_int,  # l_int32 lossless
                                     ),
         'pixaWriteMemWebPAnim': (c_int,
-                                 # l_uint8 * * pencdata
-                                 POINTER(POINTER(c_ubyte)),
-                                 POINTER(c_size_t),  # size_t * pencsize
+                                 # l_uint8 ** pencdata
+                                 POINTER(c_ubyte_p),
+                                 c_size_t_p,  # size_t * pencsize
                                  LPPixa,  # PIXA * pixa
                                  c_int,  # l_int32 loopcount
                                  c_int,  # l_int32 duration
@@ -12600,21 +12602,21 @@ class LeptonicaAPI(CAPI):
                               LPFile,  # FILE * fp
                               ),
         'pixReadMemWebP': (LPPix,  # PIX *
-                           POINTER(c_ubyte),  # const l_uint8 * filedata
+                           c_ubyte_p,  # const l_uint8 * filedata
                            c_size_t,  # size_t filesize
                            ),
         'readHeaderWebP': (c_int,
                            c_char_p,  # const char * filename
-                           POINTER(c_int),  # l_int32 * pw
-                           POINTER(c_int),  # l_int32 * ph
-                           POINTER(c_int),  # l_int32 * pspp
+                           c_int_p,  # l_int32 * pw
+                           c_int_p,  # l_int32 * ph
+                           c_int_p,  # l_int32 * pspp
                            ),
         'readHeaderMemWebP': (c_int,
-                              POINTER(c_ubyte),  # const l_uint8 * data
+                              c_ubyte_p,  # const l_uint8 * data
                               c_size_t,  # size_t size
-                              POINTER(c_int),  # l_int32 * pw
-                              POINTER(c_int),  # l_int32 * ph
-                              POINTER(c_int),  # l_int32 * pspp
+                              c_int_p,  # l_int32 * pw
+                              c_int_p,  # l_int32 * ph
+                              c_int_p,  # l_int32 * pspp
                               ),
         'pixWriteWebP': (c_int,
                          c_char_p,  # const char * filename
@@ -12629,8 +12631,8 @@ class LeptonicaAPI(CAPI):
                                c_int,  # l_int32 lossless
                                ),
         'pixWriteMemWebP': (c_int,
-                            POINTER(POINTER(c_ubyte)),  # l_uint8 * * pencdata
-                            POINTER(c_size_t),  # size_t * pencsize
+                            POINTER(c_ubyte_p),  # l_uint8 ** pencdata
+                            c_size_t_p,  # size_t * pencsize
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 quality
                             c_int,  # l_int32 lossless
@@ -12679,14 +12681,14 @@ class LeptonicaAPI(CAPI):
                                  ),
         'pixGetAutoFormat': (c_int,
                              LPPix,  # PIX * pix
-                             POINTER(c_int),  # l_int32 * pformat
+                             c_int_p,  # l_int32 * pformat
                              ),
         'getFormatExtension': (c_char_p,
                                c_int,  # l_int32 format
                                ),
         'pixWriteMem': (c_int,
-                        POINTER(POINTER(c_ubyte)),  # l_uint8 * * pdata
-                        POINTER(c_size_t),  # size_t * psize
+                        POINTER(c_ubyte_p),  # l_uint8 ** pdata
+                        c_size_t_p,  # size_t * psize
                         LPPix,  # PIX * pix
                         c_int,  # l_int32 format
                         ),
@@ -12719,23 +12721,255 @@ class LeptonicaAPI(CAPI):
                                 c_int,  # l_int32 selection
                                 ),
         'changeFormatForMissingLib': (None,
-                                      POINTER(c_int),  # l_int32 * pformat
+                                      c_int_p,  # l_int32 * pformat
                                       ),
         'pixDisplayWrite': (c_int,
                             LPPix,  # PIX * pixs
                             c_int,  # l_int32 reduction
                             ),
-        'zlibCompress': (POINTER(c_ubyte),
-                         POINTER(c_ubyte),  # const l_uint8 * datain
+        'zlibCompress': (c_ubyte_p,
+                         c_ubyte_p,  # const l_uint8 * datain
                          c_size_t,  # size_t nin
-                         POINTER(c_size_t),  # size_t * pnout
+                         c_size_t_p,  # size_t * pnout
                          ),
-        'zlibUncompress': (POINTER(c_ubyte),
-                           POINTER(c_ubyte),  # const l_uint8 * datain
+        'zlibUncompress': (c_ubyte_p,
+                           c_ubyte_p,  # const l_uint8 * datain
                            c_size_t,  # size_t nin
-                           POINTER(c_size_t),  # size_t * pnout
+                           c_size_t_p,  # size_t * pnout
                            ),
     }
+
+    def capi_lept_stderr(self, fmt: bytes, *args):
+        self.lept_stderr.argtypes = [c_char_p] * (len(args) + 1)
+        self.lept_stderr(fmt, *args)
+
+    def capi_lept_roundftoi(self, fval: float) -> int:
+        return self.lept_roundftoi(fval)
+
+    def capi_lept_isPrime(
+            self,
+            n: int,
+            pis_prime: c_int_p,
+            pfactor: c_uint_p) -> int:
+        return self.lept_isPrime(n, pis_prime, pfactor)
+
+    def capi_lept_fopen(self, filename: bytes, mode: bytes) -> LPFile:
+        return self.lept_fopen(filename, mode)
+
+    def capi_lept_fclose(self, fp: LPFile) -> int:
+        return self.lept_fclose(fp)
+
+    def capi_lept_calloc(self, nmemb: int, size: int) -> c_void_p:
+        return self.lept_calloc(nmemb, size)
+
+    def capi_lept_free(self, ptr: c_void_p):
+        self.lept_free(ptr)
+
+    def capi_lept_mkdir(self, subdir: bytes) -> int:
+        return self.lept_mkdir(subdir)
+
+    def capi_lept_rmdir(self, subdir: bytes) -> int:
+        return self.lept_rmdir(subdir)
+
+    def capi_lept_direxists(self, dir: bytes, pexists: c_int_p):
+        self.lept_direxists(dir, pexists)
+
+    def capi_lept_rm_match(self, subdir: bytes, substr: bytes) -> int:
+        return self.lept_rm_match(subdir, substr)
+
+    def capi_lept_rm(self, subdir: bytes, tail: bytes) -> int:
+        return self.lept_rm(subdir, tail)
+
+    def capi_lept_rmfile(self, filepath: bytes) -> int:
+        return self.lept_rmfile(filepath)
+
+    def capi_lept_mv(
+            self,
+            srcfile: bytes,
+            newdir: bytes,
+            newtail: bytes,
+            pnewpath: POINTER(POINTER(c_char))) -> int:
+        return self.lept_mv(srcfile, newdir, newtail, pnewpath)
+
+    def capi_lept_cp(
+            self,
+            srcfile: bytes,
+            newdir: bytes,
+            newtail: bytes,
+            pnewpath: POINTER(POINTER(c_char))) -> int:
+        return self.lept_cp(srcfile, newdir, newtail, pnewpath)
+
+    def capi_pix_otsu_adaptive_threshold(
+            self,
+            pixs: LPPix,
+            sx: int,
+            sy: int,
+            smoothx: int,
+            smoothy: int,
+            scorefract: float,
+            ppixth: LPLPPix,
+            ppixd: LPLPPix) -> int:
+        return self.pixOtsuAdaptiveThreshold(
+            pixs, sx, sy, smoothx, smoothy, scorefract, ppixth, ppixd)
+
+    def capi_pix_sauvola_binarize_tiled(
+            self,
+            pixs: LPPix,
+            whsize: int,
+            factor: float,
+            nx: int,
+            ny: int,
+            ppixth: LPLPPix,
+            ppixd: LPLPPix) -> int:
+        return self.pixSauvolaBinarizeTiled(
+            pixs, whsize, factor, nx, ny, ppixth, ppixd)
+
+    def capi_pix_reduce_rank_binary_cascade(
+            self,
+            pixs: LPPix,
+            level1: int,
+            level2: int,
+            level3: int,
+            level4: int) -> LPPix:
+        return self.pixReduceRankBinaryCascade(
+            pixs, level1, level2, level3, level4)
+
+    def capi_pix_conn_comp(
+            self,
+            pixs: LPPix,
+            ppixa: LPLPPixa,
+            connectivity: int) -> LPBoxa:
+        return self.pixConnComp(pixs, ppixa, connectivity)
+
+    def capi_pix_count_conn_comp(
+            self,
+            pixs: LPPix,
+            connectivity: int,
+            pcount: c_int_p) -> int:
+        return self.pixCountConnComp(pixs, connectivity, pcount)
+
+    def capi_pix_blockconv(self, pix: LPPix, wc: int, hc: int) -> LPPix:
+        return self.pixBlockconv(pix, wc, hc)
+
+    def capi_pix_add_gaussian_noise(self, pixs: LPPix, stdev: float) -> LPPix:
+        return self.pixAddGaussianNoise(pixs, stdev)
+
+    def capi_pix_render_box_arb(
+            self,
+            pix: LPPix,
+            box: LPBox,
+            width: int,
+            rval: int,
+            gval: int,
+            bval: int) -> int:
+        return self.pixRenderBoxArb(pix, box, width, rval, gval, bval)
+
+    def capi_pix_render_polyline(
+            self,
+            pix: LPPix,
+            ptas: LPPta,
+            width: int,
+            op: int,
+            closeflag: int) -> int:
+        return self.pixRenderPolyline(pix, ptas, width, op, closeflag)
+
+    def capi_pix_render_polyline_arb(
+            self,
+            pix: LPPix,
+            ptas: LPPta,
+            width: int,
+            rval: int,
+            gval: int,
+            bval: int,
+            closeflag: int) -> int:
+        return self.pixRenderPolylineArb(
+            pix, ptas, width, rval, gval, bval, closeflag)
+
+    def capi_pix_erode_gray(
+            self,
+            pixs: LPPix,
+            hsize: int,
+            vsize: int) -> LPPix:
+        return self.pixErodeGray(pixs, hsize, vsize)
+
+    def capi_pix_threshold_to_binary(self, pixs: LPPix, thresh: int) -> LPPix:
+        return self.pixThresholdToBinary(pixs, thresh)
+
+    def capi_pix_write_jpeg(
+            self,
+            filename: bytes,
+            pix: LPPix,
+            quality: int,
+            progressive: int) -> int:
+        return self.pixWriteJpeg(filename, pix, quality, progressive)
+
+    def capi_pix_dilate_brick(
+            self,
+            pixd: LPPix,
+            pixs: LPPix,
+            hsize: int,
+            vsize: int) -> LPPix:
+        return self.pixDilateBrick(pixd, pixs, hsize, vsize)
+
+    def capi_pix_erode_brick(
+            self,
+            pixd: LPPix,
+            pixs: LPPix,
+            hsize: int,
+            vsize: int) -> LPPix:
+        return self.pixErodeBrick(pixd, pixs, hsize, vsize)
+
+    def capi_pix_open_brick(
+            self,
+            pixd: LPPix,
+            pixs: LPPix,
+            hsize: int,
+            vsize: int) -> LPPix:
+        return self.pixOpenBrick(pixd, pixs, hsize, vsize)
+
+    def capi_pix_close_brick(
+            self,
+            pixd: LPPix,
+            pixs: LPPix,
+            hsize: int,
+            vsize: int) -> LPPix:
+        return self.pixCloseBrick(pixd, pixs, hsize, vsize)
+
+    def capi_pix_gen_halftone_mask(
+            self,
+            pixs: LPPix,
+            ppixtext: LPLPPix,
+            phtfound: c_int_p,
+            debug: int) -> LPPix:
+        return self.pixGenHalftoneMask(pixs, ppixtext, phtfound, debug)
+
+    def capi_pix_generate_halftone_mask(
+            self,
+            pixs: LPPix,
+            ppixtext: LPLPPix,
+            phtfound: c_int_p,
+            pixadb: LPPixa) -> LPPix:
+        return self.pixGenerateHalftoneMask(pixs, ppixtext, phtfound, pixadb)
+
+    def capi_pix_create(self, width: int, height: int, depth: int) -> LPPix:
+        return self.pixCreate(width, height, depth)
+
+    def capi_pix_create_no_init(self, width: int, height: int,
+                                depth: int) -> LPPix:
+        return self.pixCreateNoInit(width, height, depth)
+
+    def capi_pix_create_template(self, pixs: LPPix) -> LPPix:
+        return self.pixCreateTemplate(pixs)
+
+    def capi_pix_create_template_no_init(self, pixs: LPPix) -> LPPix:
+        return self.pixCreateTemplateNoInit(pixs)
+
+    def capi_pix_create_header(
+            self,
+            width: int,
+            height: int,
+            depth: int) -> LPPix:
+        return self.pixCreateHeader(width, height, depth)
 
     def capi_pix_clone(self, pixs: LPPix) -> LPPix:
         return self.pixClone(pixs)
@@ -12746,14 +12980,288 @@ class LeptonicaAPI(CAPI):
     def capi_pix_copy(self, pixd: LPPix, pixs: LPPix) -> LPPix:
         return self.pixCopy(pixd, pixs)
 
-    def capi_pix_read(self, path: bytes) -> LPPix:
-        return self.pixRead(path)
+    def capi_pix_get_width(self, pix: LPPix) -> int:
+        return self.pixGetWidth(pix)
 
-    def capi_get_leptonica_version(self) -> bytes:
+    def capi_pix_get_height(self, pix: LPPix) -> int:
+        return self.pixGetHeight(pix)
+
+    def capi_pix_get_depth(self, pix: LPPix) -> int:
+        return self.pixGetDepth(pix)
+
+    def capi_pix_get_dimensions(
+            self,
+            pix: LPPix,
+            pw: c_int_p,
+            ph: c_int_p,
+            pd: c_int_p) -> int:
+        return self.pixGetDimensions(pix, pw, ph, pd)
+
+    def capi_pix_get_spp(self, pix: LPPix) -> int:
+        return self.pixGetSpp(pix)
+
+    def capi_pix_set_spp(self, pix: LPPix, spp: int) -> int:
+        return self.pixSetSpp(pix, spp)
+
+    def capi_pix_get_wpl(self, pix: LPPix) -> int:
+        return self.pixGetWpl(pix)
+
+    def capi_pix_get_x_res(self, pix: LPPix) -> int:
+        return self.pixGetXRes(pix)
+
+    def capi_pix_set_x_res(self, pix: LPPix, res: int) -> int:
+        return self.pixSetXRes(pix, res)
+
+    def capi_pix_get_y_res(self, pix: LPPix) -> int:
+        return self.pixGetYRes(pix)
+
+    def capi_pix_set_y_res(self, pix: LPPix, res: int) -> int:
+        return self.pixSetYRes(pix, res)
+
+    def capi_pix_get_input_format(self, pix: LPPix) -> int:
+        return self.pixGetInputFormat(pix)
+
+    def capi_pix_set_text(self, pix: LPPix, textstring: bytes) -> int:
+        return self.pixSetText(pix, textstring)
+
+    def capi_pix_get_data(self, pix: LPPix) -> c_uint_p:
+        return self.pixGetData(pix)
+
+    def capi_pix_set_data(self, pix: LPPix, data: c_uint_p) -> int:
+        return self.pixSetData(pix, data)
+
+    def capi_pix_get_pixel(
+            self,
+            pix: LPPix,
+            x: int,
+            y: int,
+            pval: c_uint_p) -> int:
+        return self.pixGetPixel(pix, x, y, pval)
+
+    def capi_pix_set_pixel(self, pix: LPPix, x: int, y: int, val: int) -> int:
+        return self.pixSetPixel(pix, x, y, val)
+
+    def capi_pix_set_all(self, pix: LPPix) -> int:
+        return self.pixSetAll(pix)
+
+    def capi_pix_set_all_arbitrary(self, pix: LPPix, val: int) -> int:
+        return self.pixSetAllArbitrary(pix, val)
+
+    def capi_pix_clear_in_rect(self, pix: LPPix, box: LPBox) -> int:
+        return self.pixClearInRect(pix, box)
+
+    def capi_pix_set_in_rect(self, pix: LPPix, box: LPBox) -> int:
+        return self.pixSetInRect(pix, box)
+
+    def capi_pix_set_or_clear_border(
+            self,
+            pixs: LPPix,
+            left: int,
+            right: int,
+            top: int,
+            bot: int,
+            op: int) -> int:
+        return self.pixSetOrClearBorder(pixs, left, right, top, bot, op)
+
+    def capi_pix_add_border(self, pixs: LPPix, npix: int, val: int) -> LPPix:
+        return self.pixAddBorder(pixs, npix, val)
+
+    def capi_pix_set_masked(self, pixd: LPPix, pixm: LPPix, val: int) -> int:
+        return self.pixSetMasked(pixd, pixm, val)
+
+    def capi_pix_invert(self, pixd: LPPix, pixs: LPPix) -> LPPix:
+        return self.pixInvert(pixd, pixs)
+
+    def capi_pix_or(self, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+        return self.pixOr(pixd, pixs1, pixs2)
+
+    def capi_pix_and(self, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+        return self.pixAnd(pixd, pixs1, pixs2)
+
+    def capi_pix_xor(
+            self,
+            pixd: LPPix,
+            pixs1: LPPix,
+            pixs2: LPPix) -> LPPix:
+        return self.pixXor(pixd, pixs1, pixs2)
+
+    def capi_pix_subtract(
+            self,
+            pixd: LPPix,
+            pixs1: LPPix,
+            pixs2: LPPix) -> LPPix:
+        return self.pixSubtract(pixd, pixs1, pixs2)
+
+    def capi_pix_zero(self, pix: LPPix, pempty: c_int_p) -> int:
+        return self.pixZero(pix, pempty)
+
+    def capi_pix_foreground_fraction(
+            self, pix: LPPix, pfract: c_float_p) -> int:
+        return self.pixForegroundFraction(pix, pfract)
+
+    def capi_pix_count_pixels(
+            self,
+            pixs: LPPix,
+            pcount: c_int_p,
+            tab8: c_int_p) -> int:
+        return self.pixCountPixels(pixs, pcount, tab8)
+
+    def capi_pix_count_pixels_by_row(self, pix: LPPix,
+                                     tab8: c_int_p) -> LPNuma:
+        return self.pixCountPixelsByRow(pix, tab8)
+
+    def capi_pix_count_pixels_in_row(
+            self,
+            pix: LPPix,
+            row: int,
+            pcount: c_int_p,
+            tab8: c_int_p) -> int:
+        return self.pixCountPixelsInRow(pix, row, pcount, tab8)
+
+    def capi_pix_clip_rectangle(
+            self,
+            pixs: LPPix,
+            box: LPBox,
+            pboxc: LPLPBox) -> LPPix:
+        return self.pixClipRectangle(pixs, box, pboxc)
+
+    def capi_pix_clip_box_to_foreground(
+            self,
+            pixs: LPPix,
+            boxs: LPBox,
+            ppixd: LPLPPix,
+            pboxd: LPLPBox) -> int:
+        return self.pixClipBoxToForeground(pixs, boxs, ppixd, pboxd)
+
+    def capi_pix_convert_to8(self, pixs: LPPix, cmapflag: int) -> LPPix:
+        return self.pixConvertTo8(pixs, cmapflag)
+
+    def capi_pix_convert_to32(self, pixs: LPPix) -> LPPix:
+        return self.pixConvertTo32(pixs)
+
+    def capi_pix_convert24to32(self, pixs: LPPix) -> LPPix:
+        return self.pixConvert24To32(pixs)
+
+    def capi_pix_remove_alpha(self, pixs: LPPix) -> LPPix:
+        return self.pixRemoveAlpha(pixs)
+
+    def capi_pix_projective(
+            self,
+            pixs: LPPix,
+            vc: c_float_p,
+            incolor: int) -> LPPix:
+        return self.pixProjective(pixs, vc, incolor)
+
+    def capi_pix_read(self, filename: bytes) -> LPPix:
+        return self.pixRead(filename)
+
+    def capi_pix_read_mem(self, data: c_ubyte_p, size: int) -> LPPix:
+        return self.pixReadMem(data, size)
+
+    def capi_pix_rasterop(
+            self,
+            pixd: LPPix,
+            dx: int,
+            dy: int,
+            dw: int,
+            dh: int,
+            op: int,
+            pixs: LPPix,
+            sx: int,
+            sy: int) -> int:
+        return self.pixRasterop(pixd, dx, dy, dw, dh, op, pixs, sx, sy)
+
+    def capi_pix_rotate(
+            self,
+            pixs: LPPix,
+            angle: float,
+            type: int,
+            incolor: int,
+            width: int,
+            height: int) -> LPPix:
+        return self.pixRotate(pixs, angle, type, incolor, width, height)
+
+    def capi_pix_rotate_orth(self, pixs: LPPix, quads: int) -> LPPix:
+        return self.pixRotateOrth(pixs, quads)
+
+    def capi_pix_rotate180(self, pixd: LPPix, pixs: LPPix) -> LPPix:
+        return self.pixRotate180(pixd, pixs)
+
+    def capi_pix_scale(
+            self,
+            pixs: LPPix,
+            scalex: float,
+            scaley: float) -> LPPix:
+        return self.pixScale(pixs, scalex, scaley)
+
+    def capi_pix_scale_to_size(self, pixs: LPPix, wd: int, hd: int) -> LPPix:
+        return self.pixScaleToSize(pixs, wd, hd)
+
+    def capi_pix_expand_replicate(self, pixs: LPPix, factor: int) -> LPPix:
+        return self.pixExpandReplicate(pixs, factor)
+
+    def capi_pix_seedfill_binary(
+            self,
+            pixd: LPPix,
+            pixs: LPPix,
+            pixm: LPPix,
+            connectivity: int) -> LPPix:
+        return self.pixSeedfillBinary(pixd, pixs, pixm, connectivity)
+
+    def capi_pix_distance_function(
+            self,
+            pixs: LPPix,
+            connectivity: int,
+            outdepth: int,
+            boundcond: int) -> LPPix:
+        return self.pixDistanceFunction(
+            pixs, connectivity, outdepth, boundcond)
+
+    def capi_pix_read_tiff(self, filename: bytes, n: int) -> LPPix:
+        return self.pixReadTiff(filename, n)
+
+    def capi_pix_write_tiff(
+            self,
+            filename: bytes,
+            pix: LPPix,
+            comptype: int,
+            modestr: bytes) -> int:
+        return self.pixWriteTiff(filename, pix, comptype, modestr)
+
+    def capi_pix_read_from_multipage_tiff(
+            self, fname: bytes, poffset: c_size_t_p) -> LPPix:
+        return self.pixReadFromMultipageTiff(fname, poffset)
+
+    def capi_pix_read_mem_tiff(
+            self,
+            cdata: c_ubyte_p,
+            size: int,
+            n: int) -> LPPix:
+        return self.pixReadMemTiff(cdata, size, n)
+
+    def capi_pix_read_mem_from_multipage_tiff(
+            self,
+            cdata: c_ubyte_p,
+            size: int,
+            poffset: c_size_t_p) -> LPPix:
+        return self.pixReadMemFromMultipageTiff(cdata, size, poffset)
+
+    def capi_pix_write(self, fname: bytes, pix: LPPix, format: int) -> int:
+        return self.pixWrite(fname, pix, format)
+
+    def capi_pix_write_mem(
+            self,
+            pdata: POINTER(c_ubyte_p),
+            psize: c_size_t_p,
+            pix: LPPix,
+            format: int) -> int:
+        return self.pixWriteMem(pdata, psize, pix, format)
+
+    def capi_get_leptonica_version(self) -> LP_c_char:
         return self.getLeptonicaVersion()
 
 
-LEPTONICA_API = LeptonicaAPI(LEPT_DLL)
+LEPTONICA_API = LeptCAPI(LEPT_DLL)
 
 
 def test():
