@@ -9,9 +9,8 @@ import locale
 import logging
 from ctypes import (CDLL, POINTER, c_int, c_bool, c_ubyte, c_float, c_double,
                     c_char, c_uint, c_size_t, c_ulonglong, c_void_p,
-                    c_char_p)
-
-from .utils import arch_hex_bit
+                    c_char_p, Array, cast)
+from .utils import arch_hex_bit, load_data_from_xml
 
 c_int_p = POINTER(c_int)
 c_bool_p = POINTER(c_bool)
@@ -22,11 +21,13 @@ c_double_p = POINTER(c_double)
 c_size_t_p = POINTER(c_size_t)
 c_ulonglong_p = POINTER(c_ulonglong)
 LP_c_char = POINTER(c_char)
+c_char_p_p = POINTER(c_char_p)
 
 
 class CAPI:
     NAME = ''
     API = {}
+    GLOBALS = None
 
     def __init__(self, path):
         self.logger = logging.getLogger()
@@ -43,18 +44,32 @@ class CAPI:
         try:
             self.dll = CDLL(self._path)
             self.init_dll()
-        except Exception:
+            # self.init_dll_from_xml()
+        except Exception as e:
+            self.logger.error('%s: %s', e.__class__.__name__, e)
             self.dll = None
 
+    def init_dll_from_xml(self):
+        current_dir = osp.dirname(__file__)
+        dirname, basename = osp.split(self._path)
+        name = osp.splitext(basename)[0]
+        result = load_data_from_xml(name, current_dir, dirname,
+                                    variables=self.GLOBALS)
+        if result is None:
+            self.init_dll()
+        else:
+            self._init_dll(result)
+
     def init_dll(self):
-        for name, types in self.API.items():
+        self._init_dll(self.API)
+
+    def _init_dll(self, info):
+        for name, types in info.items():
             self.init_func_ptr(name, *types)
 
     def init_func_ptr(self, name, restype, *argtypes):
         if not hasattr(self.dll, name):
-            self.logger.error('The %s capi do not contain %s',
-                              self.NAME,
-                              name)
+            self.logger.error('The %s capi do not contain %s', self.NAME, name)
             return
         func = getattr(self.dll, name)
         func.restype = restype
@@ -158,7 +173,7 @@ def get_point_value(var, quote: int = 1):
         return v.value
 
 
-def list_to_array(obj: list[str]) -> tuple[POINTER(c_char_p), int]:
+def list_to_array(obj: list[str]) -> tuple[Array, int]:
     encode_obj = [CommonAPI.encode(x) for x in obj]
     size = len(encode_obj)
     array = c_char_p * size
@@ -166,10 +181,23 @@ def list_to_array(obj: list[str]) -> tuple[POINTER(c_char_p), int]:
     return c_object, size
 
 
-def dict_to_array(obj: dict[str, str]) -> tuple[POINTER(c_char_p),
-                                                POINTER(c_char_p),
-                                                int]:
+def list_to_points(obj: list[str]) -> tuple[c_char_p_p, int]:
+    c_object, size = list_to_array(obj)
+    p_object = cast(c_object, c_char_p_p)
+    return p_object, size
+
+
+def dict_to_array(obj: dict[str, str]) -> tuple[Array, Array, int]:
     names, values = tuple(zip(*obj.items()))
     ppnames, names_size = list_to_array(names)
     ppvalues, values_size = list_to_array(values)
+    return ppnames, ppvalues, names_size
+
+
+def dict_to_points(obj: list[str]) -> tuple[c_char_p_p, int]:
+    names, values = tuple(zip(*obj.items()))
+    array_names, names_size = list_to_array(names)
+    array_values, _ = list_to_array(values)
+    ppnames = cast(array_names, c_char_p_p)
+    ppvalues = cast(array_values, c_char_p_p)
     return ppnames, ppvalues, names_size

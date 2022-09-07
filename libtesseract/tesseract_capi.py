@@ -10,7 +10,7 @@ from ctypes import (POINTER, CFUNCTYPE, c_float, c_void_p, c_int, c_char_p,
                     c_bool, c_size_t, c_double, cast)
 from .common import TESS_DLL
 from .datatype import (c_int_p, c_bool_p, c_double_p, c_ubyte_p, c_float_p,
-                       LP_c_char, CAPI)
+                       LP_c_char, CAPI, c_char_p_p)
 from .leptonica_capi import LPPix, LPBoxa, LPLPPixa
 
 
@@ -139,7 +139,7 @@ class TessCAPI(CAPI):
                            c_char_p,  # const char * text
                            ),
         'TessDeleteTextArray': (None,
-                                POINTER(c_char_p),  # char ** arr
+                                c_char_p_p,  # char ** arr
                                 ),
         'TessDeleteIntArray': (None,
                                c_int_p,  # const int * arr
@@ -301,7 +301,7 @@ class TessCAPI(CAPI):
                              c_char_p,  # const char * datapath
                              c_char_p,  # const char * language
                              c_int,  # TessOcrEngineMode oem
-                             POINTER(c_char_p),  # char ** configs
+                             c_char_p_p,  # char ** configs
                              c_int,  # int configs_size
                              ),
         'TessBaseAPIInit2': (c_int,
@@ -320,10 +320,10 @@ class TessCAPI(CAPI):
                              c_char_p,  # const char * datapath
                              c_char_p,  # const char * language
                              c_int,  # TessOcrEngineMode mode
-                             POINTER(c_char_p),  # char ** configs
+                             c_char_p_p,  # char ** configs
                              c_int,  # int configs_size
-                             POINTER(c_char_p),  # char ** vars_vec
-                             POINTER(c_char_p),  # char ** vars_values
+                             c_char_p_p,  # char ** vars_vec
+                             c_char_p_p,  # char ** vars_values
                              c_size_t,  # size_t vars_vec_size
                              c_bool,  # BOOL set_only_non_debug_params
                              ),
@@ -333,10 +333,10 @@ class TessCAPI(CAPI):
                              c_int,  # int data_size
                              c_char_p,  # const char * language
                              c_int,  # TessOcrEngineMode mode
-                             POINTER(c_char_p),  # char ** configs
+                             c_char_p_p,  # char ** configs
                              c_int,  # int configs_size
-                             POINTER(c_char_p),  # char ** vars_vec
-                             POINTER(c_char_p),  # char ** vars_values
+                             c_char_p_p,  # char ** vars_vec
+                             c_char_p_p,  # char ** vars_values
                              c_size_t,  # size_t vars_vec_size
                              c_bool,  # BOOL set_only_non_debug_params
                              ),
@@ -344,11 +344,11 @@ class TessCAPI(CAPI):
                                                 # const TessBaseAPI * handle
                                                 LPTessBaseAPI,
                                                 ),
-        'TessBaseAPIGetLoadedLanguagesAsVector': (POINTER(c_char_p),
+        'TessBaseAPIGetLoadedLanguagesAsVector': (c_char_p_p,
                                                   # const TessBaseAPI * handle
                                                   LPTessBaseAPI,
                                                   ),
-        'TessBaseAPIGetAvailableLanguagesAsVector': (POINTER(c_char_p),
+        'TessBaseAPIGetAvailableLanguagesAsVector': (c_char_p_p,
                                                      # const TessBaseAPI * handle
                                                      LPTessBaseAPI,
                                                      ),
@@ -582,7 +582,7 @@ class TessCAPI(CAPI):
                                                # float * orient_conf
                                                c_float_p,
                                                # const char ** script_name
-                                               POINTER(c_char_p),
+                                               c_char_p_p,
                                                # float * script_conf
                                                c_float_p,
                                                ),
@@ -825,7 +825,7 @@ class TessCAPI(CAPI):
     def capi_delete_text(self, text: c_char_p):
         self.TessDeleteText(text)
 
-    def capi_delete_text_array(self, arr: POINTER(c_char_p)):
+    def capi_delete_text_array(self, arr: c_char_p_p):
         self.TessDeleteTextArray(arr)
 
     def capi_delete_int_array(self, arr: c_int_p):
@@ -966,7 +966,7 @@ class TessCAPI(CAPI):
         return self.TessBaseAPIPrintVariablesToFile(handle, filename)
 
     def capi_base_api_init1(self, handle, datapath: bytes, language: bytes,
-                            oem: OcrEngineMode, configs: bytes,
+                            oem: OcrEngineMode, configs: c_char_p_p,
                             configs_size: int) -> int:
         return self.TessBaseAPIInit1(handle, datapath, language, oem,
                                      configs, configs_size)
@@ -983,10 +983,10 @@ class TessCAPI(CAPI):
 
     def capi_base_api_init4(self, handle, datapath: bytes, language: bytes,
                             mode: OcrEngineMode,
-                            configs: bytes,
+                            configs: c_char_p_p,
                             configs_size: int,
-                            vars_vec: bytes,
-                            vars_values: bytes,
+                            vars_vec: c_char_p_p,
+                            vars_values: c_char_p_p,
                             vars_vec_size: int,
                             set_only_non_debug_params: bool) -> int:
         return self.TessBaseAPIInit4(handle, datapath, language, mode, configs,
@@ -996,10 +996,10 @@ class TessCAPI(CAPI):
     def capi_base_api_init5(self, handle, data: bytes, data_size: int,
                             language: bytes,
                             mode: OcrEngineMode,
-                            configs: bytes,
+                            configs: c_char_p_p,
                             configs_size: int,
-                            vars_vec: bytes,
-                            vars_values: bytes,
+                            vars_vec: c_char_p_p,
+                            vars_values: c_char_p_p,
                             vars_vec_size: int,
                             set_only_non_debug_params: bool) -> int:
         return self.TessBaseAPIInit5(handle, data, data_size, language, mode,
@@ -1219,7 +1219,7 @@ class TessCAPI(CAPI):
 
     def capi_base_api_detect_orientation_script(self, handle, orient_deg: int,
                                                 orient_conf: float,
-                                                script_name: bytes,
+                                                script_name: c_char_p_p,
                                                 script_conf: float) -> bool:
         return self.TessBaseAPIDetectOrientationScript(handle, orient_deg,
                                                        orient_conf,

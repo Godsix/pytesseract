@@ -10,7 +10,7 @@ from collections import namedtuple
 from ctypes import (POINTER, pointer, byref, c_float, c_double, c_int, c_bool,
                     c_void_p, c_char_p, cast)
 from .datatype import (c_int_p, c_bool_p, LP_c_char,  CommonAPI, get_point,
-                       get_point_value, list_to_array, dict_to_array)
+                       get_point_value, list_to_points, dict_to_points)
 from .error import TesseractError
 from .leptonica_capi import LPBoxa, LPPix, LPPixa
 from .tesseract_capi import (TESSERACT_API, OcrEngineMode, PageSegMode,
@@ -280,7 +280,7 @@ class BaseAPI(CommonAPI):
     @classmethod
     def init1(cls, handle, datapath: str, language: str, oem: OcrEngineMode,
               configs: list[str]) -> int:
-        config_object, configs_size = list_to_array(configs)
+        config_object, configs_size = list_to_points(configs)
         return TESSERACT_API.capi_base_api_init1(handle,
                                                  cls.encode(datapath),
                                                  cls.encode(language), oem,
@@ -303,8 +303,8 @@ class BaseAPI(CommonAPI):
     def init4(cls, handle, datapath: str, language: str, mode: OcrEngineMode,
               configs: list[str], variables: dict[str, str],
               set_only_non_debug_params: bool) -> int:
-        config_object, configs_size = list_to_array(configs)
-        vars_vec, vars_values, vars_vec_size = dict_to_array(variables)
+        config_object, configs_size = list_to_points(configs)
+        vars_vec, vars_values, vars_vec_size = dict_to_points(variables)
         return TESSERACT_API.capi_base_api_init4(handle,
                                                  cls.encode(datapath),
                                                  cls.encode(language),
@@ -318,8 +318,8 @@ class BaseAPI(CommonAPI):
     def init5(cls, handle, data: bytes, language: str, mode: OcrEngineMode,
               configs: list[str], variables: dict[str, str],
               set_only_non_debug_params: bool) -> int:
-        config_object, configs_size = list_to_array(configs)
-        vars_vec, vars_values, vars_vec_size = dict_to_array(variables)
+        config_object, configs_size = list_to_points(configs)
+        vars_vec, vars_values, vars_vec_size = dict_to_points(variables)
         return TESSERACT_API.capi_base_api_init5(handle, data, len(data),
                                                  language, mode, config_object,
                                                  configs_size, vars_vec,

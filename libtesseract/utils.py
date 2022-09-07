@@ -10,7 +10,14 @@ import re
 import time
 from functools import wraps, lru_cache
 from glob import glob
+import logging
 import platform
+from zipfile import ZipFile, is_zipfile
+import importlib
+try:
+    import lxml.etree as ET
+except ModuleNotFoundError:
+    import xml.etree.ElementTree as ET
 
 
 @lru_cache()
@@ -70,7 +77,8 @@ def sub_snake(match):
     return '{}_{}'.format(ret[0], ret[1])
 
 
-SNAKE = re.compile('([A-Z])([A-Z](?=[a-z]))|([a-z])([A-Z](?=[A-Z]))|([a-z])([A-Z](?=[a-z]))')
+SNAKE = re.compile(
+    '([A-Z])([A-Z](?=[a-z]))|([a-z])([A-Z](?=[A-Z]))|([a-z])([A-Z](?=[a-z]))')
 
 
 def name_convert_to_snake(name: str) -> str:
@@ -111,6 +119,78 @@ def get_file_path(path):
     if files:
         return files[-1]
     return None
+
+
+def find_xml(name, *paths):
+    for path in paths:
+        xml_path = osp.join(path, f'{name}.xml')
+        if osp.exists(xml_path):
+            data_path = xml_path
+            is_zip = False
+            break
+        zip_path = osp.join(path, f'{name}.zip')
+        if osp.exists(zip_path):
+            data_path = zip_path
+            is_zip = True
+            break
+    else:
+        return None
+    if is_zip:
+        if not is_zipfile(data_path):
+            return None
+        xml_name = f'{name}.xml'
+        with ZipFile(data_path) as zf:
+            namelist = zf.namelist()
+            if not namelist:
+                return None
+            zfile = xml_name if xml_name in namelist else namelist[-1]
+            with zf.open(zfile) as fp:
+                logging.debug('Parse zip file %s from %s', zfile, data_path)
+                root = ET.fromstring(fp.read())
+                return ET.ElementTree(root)
+    else:
+        logging.debug('Parse xml file from %s', data_path)
+        return ET.parse(data_path)
+
+
+def load_data_from_xml(name, *paths, variables=None):
+    et = find_xml(name, *paths)
+    if et is None:
+        return None
+    root_node = et.getroot()
+    local_var = {}
+    result = {}
+    imports_node = root_node.find('imports')
+    if imports_node is not None:
+        for module_node in imports_node:
+            module_name = module_node.get('name')
+            if module_name.startswith('.'):
+                package = __package__
+            else:
+                package = None
+            module_object = importlib.import_module(module_name, package)
+            if len(module_node) > 0:
+                for obj in module_node:
+                    obj_name = obj.get('name')
+                    obj_value = getattr(module_object, obj_name)
+                    local_var[obj_name] = obj_value
+            else:
+                local_var[module_name] = module_object
+    functions_node = root_node.find('functions')
+    if functions_node is not None:
+        for function in functions_node:
+            name = function.get('name')
+            rtn_ctype = function.get('rtn_ctype')
+            restype = eval(rtn_ctype, variables, local_var)
+            parameters = function.find('parameters')
+            if parameters is None or len(parameters) == 0:
+                argtypes = []
+            else:
+                argtypes = [eval(x.get('ctype'),
+                                 variables,
+                                 local_var) for x in parameters]
+            result[name] = restype, *argtypes
+    return result
 
 
 if __name__ == '__main__':
