@@ -139,63 +139,69 @@ class PyPix(BaseObject):
             self.handle, ptas, width, rval, gval, bval, closeflag)
 
     @instance_of
-    def erode_gray(self, hsize: int, vsize: int) -> LPPix:
+    def erode_gray(self, hsize: int, vsize: int) -> 'PyPix':
         return self.API.pix_erode_gray(self.handle, hsize, vsize)
 
     @instance_of
-    def threshold_to_binary(self, thresh: int) -> LPPix:
+    def threshold_to_binary(self, thresh: int) -> 'PyPix':
         return self.API.pix_threshold_to_binary(self.handle, thresh)
 
     def write_jpeg(self, filename: str, quality: int, progressive: int) -> int:
         return self.API.pix_write_jpeg(filename, self.handle, quality,
                                        progressive)
 
+    @instance_of
     def dilate_brick(
             self,
             pixd: LPPix,
             pixs: LPPix,
             hsize: int,
-            vsize: int) -> LPPix:
+            vsize: int) -> 'PyPix':
         return self.API.pix_dilate_brick(self.handle, pixs, hsize, vsize)
 
+    @instance_of
     def erode_brick(
             self,
             pixd: LPPix,
             pixs: LPPix,
             hsize: int,
-            vsize: int) -> LPPix:
+            vsize: int) -> 'PyPix':
         return self.API.pix_erode_brick(self.handle, pixs, hsize, vsize)
 
+    @instance_of
     def open_brick(
             self,
             pixd: LPPix,
             pixs: LPPix,
             hsize: int,
-            vsize: int) -> LPPix:
+            vsize: int) -> 'PyPix':
         return self.API.pix_open_brick(self.handle, pixs, hsize, vsize)
 
+    @instance_of
     def close_brick(
             self,
             pixd: LPPix,
             pixs: LPPix,
             hsize: int,
-            vsize: int) -> LPPix:
+            vsize: int) -> 'PyPix':
         return self.API.pix_close_brick(self.handle, pixs, hsize, vsize)
 
+    @instance_of
     def gen_halftone_mask(
             self,
             ppixtext: LPLPPix,
             phtfound: c_int_p,
-            debug: int) -> LPPix:
+            debug: int) -> 'PyPix':
         return self.API.pix_gen_halftone_mask(self.handle, ppixtext,
                                               phtfound, debug)
 
+    @instance_of
     def generate_halftone_mask(
             self,
             pixs: LPPix,
             ppixtext: LPLPPix,
             phtfound: c_int_p,
-            pixadb: LPPixa) -> LPPix:
+            pixadb: LPPixa) -> 'PyPix':
         return self.API.pix_generate_halftone_mask(
             self.handle, ppixtext, phtfound, pixadb)
 
@@ -301,7 +307,8 @@ class PyPix(BaseObject):
         return self.API.pix_set_or_clear_border(
             self.handle, left, right, top, bot, op)
 
-    def add_border(self, npix: int, val: int) -> LPPix:
+    @instance_of
+    def add_border(self, npix: int, val: int) -> 'PyPix':
         return self.API.pix_add_border(self.handle, npix, val)
 
     def set_masked(self, pixd: LPPix, pixm: LPPix, val: int) -> int:
@@ -309,27 +316,27 @@ class PyPix(BaseObject):
 
     @classmethod
     @instance_of
-    def invert(cls, pixd: LPPix, pixs: LPPix) -> LPPix:
+    def invert(cls, pixd: LPPix, pixs: LPPix) -> 'PyPix':
         return cls.API.pix_invert(pixd, pixs)
 
     @classmethod
     @instance_of
-    def pix_or(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+    def pix_or(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> 'PyPix':
         return cls.API.pix_or(pixd, pixs1, pixs2)
 
     @classmethod
     @instance_of
-    def pix_and(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+    def pix_and(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> 'PyPix':
         return cls.API.pix_and(pixd, pixs1, pixs2)
 
     @classmethod
     @instance_of
-    def xor(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+    def xor(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> 'PyPix':
         return cls.API.pix_xor(pixd, pixs1, pixs2)
 
     @classmethod
     @instance_of
-    def subtract(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> LPPix:
+    def subtract(cls, pixd: LPPix, pixs1: LPPix, pixs2: LPPix) -> 'PyPix':
         return cls.API.pix_subtract(pixd, pixs1, pixs2)
 
     def zero(self) -> int:
@@ -363,7 +370,8 @@ class PyPix(BaseObject):
     def count_pixels_in_row(self, row: int) -> int:
         return self.API.pix_count_pixels_in_row(self.handle, row)
 
-    def clip_rectangle(self, box: LPBox, pboxc: LPLPBox) -> LPPix:
+    @instance_of
+    def clip_rectangle(self, box: LPBox, pboxc: LPLPBox) -> 'PyPix':
         return self.API.pix_clip_rectangle(self.handle, box, pboxc)
 
     def clip_box_to_foreground(
@@ -375,19 +383,24 @@ class PyPix(BaseObject):
         return self.API.pix_clip_box_to_foreground(
             self.handle, boxs, ppixd, pboxd)
 
-    def convert_to8(self, cmapflag: int) -> LPPix:
+    @instance_of
+    def convert_to8(self, cmapflag: int) -> 'PyPix':
         return self.API.pix_convert_to8(self.handle, cmapflag)
 
-    def convert_to32(self) -> LPPix:
+    @instance_of
+    def convert_to32(self) -> 'PyPix':
         return self.API.pix_convert_to32(self.handle)
 
-    def convert24to32(self) -> LPPix:
+    @instance_of
+    def convert24to32(self) -> 'PyPix':
         return self.API.pix_convert24to32(self.handle)
 
-    def remove_alpha(self) -> LPPix:
+    @instance_of
+    def remove_alpha(self) -> 'PyPix':
         return self.API.pix_remove_alpha(self.handle)
 
-    def projective(self, vc: c_float_p, incolor: int) -> LPPix:
+    @instance_of
+    def projective(self, vc: c_float_p, incolor: int) -> 'PyPix':
         return self.API.pix_projective(self.handle, vc, incolor)
 
     @classmethod
@@ -395,7 +408,8 @@ class PyPix(BaseObject):
     def read(cls, filename: str) -> 'PyPix':
         return cls.API.pix_read(filename)
 
-    def read_mem(self, data: c_ubyte_p, size: int) -> LPPix:
+    @instance_of
+    def read_mem(self, data: c_ubyte_p, size: int) -> 'PyPix':
         return self.API.pix_read_mem(self.handle, size)
 
     def rasterop(
@@ -413,49 +427,52 @@ class PyPix(BaseObject):
 
     @instance_of
     def rotate(self, angle: float, type: int, incolor: int, width: int,
-               height: int) -> LPPix:
+               height: int) -> 'PyPix':
         return self.API.pix_rotate(self.handle, angle, type, incolor, width,
                                    height)
 
-    def rotate_orth(self, quads: int) -> LPPix:
+    @instance_of
+    def rotate_orth(self, quads: int) -> 'PyPix':
         return self.API.pix_rotate_orth(self.handle, quads)
 
-    def rotate180(self, pixd: LPPix, pixs: LPPix) -> LPPix:
+    @instance_of
+    def rotate180(self, pixd: LPPix, pixs: LPPix) -> 'PyPix':
         return self.API.pix_rotate180(self.handle, pixs)
 
     @instance_of
-    def scale(self, scalex: float, scaley: float) -> LPPix:
+    def scale(self, scalex: float, scaley: float) -> 'PyPix':
         return self.API.pix_scale(self.handle, scalex, scaley)
 
     @instance_of
-    def scale_tosize(self, wd: int, hd: int) -> LPPix:
+    def scale_tosize(self, wd: int, hd: int) -> 'PyPix':
         return self.API.pix_scale_to_size(self.handle, wd, hd)
 
     @instance_of
-    def expand_replicate(self, factor: int) -> LPPix:
+    def expand_replicate(self, factor: int) -> 'PyPix':
         return self.API.pix_expand_replicate(self.handle, factor)
 
+    @instance_of
     def seedfill_binary(
             self,
             pixd: LPPix,
             pixs: LPPix,
             pixm: LPPix,
-            connectivity: int) -> LPPix:
+            connectivity: int) -> 'PyPix':
         return self.API.pix_seedfill_binary(
             self.handle, pixs, pixm, connectivity)
 
+    @instance_of
     def distance_function(
             self,
-            pixs: LPPix,
             connectivity: int,
             outdepth: int,
-            boundcond: int) -> LPPix:
+            boundcond: int) -> 'PyPix':
         return self.API.pix_distance_function(
             self.handle, connectivity, outdepth, boundcond)
 
     @classmethod
     @instance_of
-    def read_tiff(self, filename: str, n: int) -> LPPix:
+    def read_tiff(self, filename: str, n: int) -> 'PyPix':
         '''
         Notes:
         (1) This is a version of read(), specialized for tiff
@@ -555,7 +572,7 @@ class PyPix(BaseObject):
 
     @classmethod
     @instance_of
-    def read_mem_tiff(self, cdata: bytes, n: int) -> LPPix:
+    def read_mem_tiff(self, cdata: bytes, n: int) -> 'PyPix':
         '''
         Notes:
         (1) This is a version of pixReadTiff(), where the data is read

@@ -22,6 +22,7 @@ c_size_t_p = POINTER(c_size_t)
 c_ulonglong_p = POINTER(c_ulonglong)
 LP_c_char = POINTER(c_char)
 c_char_p_p = POINTER(c_char_p)
+LPFile = c_void_p
 
 
 class CAPI:
