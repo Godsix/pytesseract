@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:05 2022
+
+@author: 皓
+"""
 from ctypes import Structure, POINTER, c_ubyte, c_int, c_short
 
 
@@ -21,13 +27,13 @@ class BMP_FileHeader(Structure):
           access to the BMP_FileHeader easier.
     '''
     _fields_ = [
-        ("bfType", c_ubyte),   # file type; must be "BM"
+        ("bfType", c_ubyte * 2),   # file type; must be "BM"
         # length of the file; sizeof(BMP_FileHeader) + sizeof(BMP_InfoHeader)+
         # size of optional extra data + size of color table + size of DIB bits
-        ("bfSize", c_ubyte),
-        ("bfReserved1", c_ubyte),   # don't care (set to 0)
-        ("bfReserved2", c_ubyte),   # don't care (set to 0)
-        ("bfOffBits", c_ubyte)  # offset from beginning of file
+        ("bfSize", c_ubyte * 4),
+        ("bfReserved1", c_ubyte * 2),   # don't care (set to 0)
+        ("bfReserved2", c_ubyte * 2),   # don't care (set to 0)
+        ("bfOffBits", c_ubyte * 4)  # offset from beginning of file
     ]
 
 

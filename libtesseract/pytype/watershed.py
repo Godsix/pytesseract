@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:07 2022
+
+@author: 皓
+"""
 from ctypes import Structure, c_int, c_void_p, POINTER
 from ..datatype import c_int_p
 from .pix import LPPix, LPPixa, LPPta

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:05 2022
+
+@author: 皓
+"""
 from ctypes import Structure, POINTER, c_int
 from .pix import LPPix, LPFPix
 from .array_h import LPNuma

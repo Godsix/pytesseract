@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:06 2022
+
+@author: 皓
+"""
 from enum import IntEnum
 from ctypes import Structure, POINTER, c_int, c_float
 from .pix import LPPix, LPPixa, LPPixaa, LPPta

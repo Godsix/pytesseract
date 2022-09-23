@@ -1,9 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:06 2022
+
+@author: 皓
+"""
 from enum import IntEnum
 from ctypes import Structure, POINTER, c_int, c_size_t, c_char_p
 from ..datatype import c_ubyte_p, LP_c_char
 from .pix import LPBox, LPPta
 from .array_h import LPSarray, LPL_Dna
-from ptra import LPL_Ptra
+from .ptra import LPL_Ptra
 
 
 class ImageFormats(IntEnum):

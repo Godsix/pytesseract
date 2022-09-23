@@ -226,7 +226,6 @@ class PyPix(BaseObject):
 
     def destroy(self, handle):
         phandle = pointer(handle)
-        print('pix_destroy', handle)
         self.API.pix_destroy(phandle)
 
     @instance_of

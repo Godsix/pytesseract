@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:07 2022
+
+@author: 皓
+"""
 from enum import IntEnum
-from ctypes import (Structure, c_uint, c_int, c_void_p, c_ubyte, POINTER,
-                    c_size_t, c_char_p)
+from ctypes import (Structure, CFUNCTYPE, POINTER, c_uint, c_int, c_void_p,
+                    c_ubyte, c_size_t, c_char_p)
 from ..datatype import c_uint_p, c_float_p, c_double_p, c_ubyte_p
 
 
@@ -706,3 +712,12 @@ class PixaComp(Structure):
 
 LPPixaComp = POINTER(PixaComp)
 LPLPPixaComp = POINTER(LPPixaComp)
+
+#  Allocator function type
+# typedef void * (*alloc_fn)(size_t)
+alloc_fn = CFUNCTYPE(c_void_p, c_size_t)
+
+
+# Deallocator function type
+# typedef void (*dealloc_fn)(void * )
+dealloc_fn = CFUNCTYPE(None, c_void_p)

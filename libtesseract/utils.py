@@ -168,7 +168,11 @@ def load_data_from_xml(name, *paths, variables=None):
                 package = __package__
             else:
                 package = None
-            module_object = importlib.import_module(module_name, package)
+            try:
+                module_object = importlib.import_module(module_name, package)
+            except ImportError as e:
+                logging.error('from %s import %s error.', module_name, package)
+                raise e
             if len(module_node) > 0:
                 for obj in module_node:
                     obj_name = obj.get('name')
@@ -180,7 +184,8 @@ def load_data_from_xml(name, *paths, variables=None):
     if functions_node is not None:
         for function in functions_node:
             name = function.get('name')
-            rtn_ctype = function.get('rtn_ctype')
+            return_node = function.find('return')
+            rtn_ctype = return_node.get('ctype')
             restype = eval(rtn_ctype, variables, local_var)
             parameters = function.find('parameters')
             if parameters is None or len(parameters) == 0:

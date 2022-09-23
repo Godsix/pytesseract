@@ -42,31 +42,41 @@ class CAPI:
     def path(self, value):
         self._path = osp.realpath(value)
         # import API dll
-        try:
-            self.dll = CDLL(self._path)
-            self.init_dll()
-            # self.init_dll_from_xml()
-        except Exception as e:
-            self.logger.error('%s: %s', e.__class__.__name__, e)
-            self.dll = None
+        self.dll = CDLL(self._path)
+        self.init_dll()
 
-    def init_dll_from_xml(self):
+    def init_dll(self):
+        if self.init_dll_from_dict():
+            self.logger.info('%s init capi with API dict.',
+                             self.__class__.__name__)
+            return
+        if self.init_dll_from_xml():
+            self.logger.info('%s init capi with XML file.',
+                             self.__class__.__name__)
+            return
+        self.logger.exception('%s init fail.', self.__class__.__name__)
+
+    def get_xml_info(self):
         current_dir = osp.dirname(__file__)
         dirname, basename = osp.split(self._path)
         name = osp.splitext(basename)[0]
-        result = load_data_from_xml(name, current_dir, dirname,
-                                    variables=self.GLOBALS)
+        find_paths = (current_dir, dirname)
+        return load_data_from_xml(name, *find_paths, variables=self.GLOBALS)
+
+    def init_dll_from_xml(self):
+        result = self.get_xml_info()
         if result is None:
-            self.init_dll()
-        else:
-            self._init_dll(result)
-
-    def init_dll(self):
-        self._init_dll(self.API)
-
-    def _init_dll(self, info):
-        for name, types in info.items():
+            return False
+        for name, types in result.items():
             self.init_func_ptr(name, *types)
+        return True
+
+    def init_dll_from_dict(self):
+        if not self.API:
+            return False
+        for name, types in self.API.items():
+            self.init_func_ptr(name, *types)
+        return True
 
     def init_func_ptr(self, name, restype, *argtypes):
         if not hasattr(self.dll, name):

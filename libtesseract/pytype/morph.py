@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Sep  9 15:19:06 2022
+
+@author: 皓
+"""
 from enum import IntEnum
 from ctypes import Structure, c_int, c_char_p, POINTER
 from ..datatype import c_int_p, c_float_p
